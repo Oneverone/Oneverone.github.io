@@ -90,10 +90,8 @@
       }
 
       .hero {
-        min-height: 74vh;
+        min-height: 82vh;
         display: grid;
-        grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-        gap: 40px;
         align-items: center;
         padding: 58px 0 72px;
       }
@@ -124,18 +122,11 @@
       }
 
       .intro {
-        max-width: 620px;
+        max-width: 680px;
         color: var(--muted);
         font-family: "Segoe UI", "Noto Sans SC", sans-serif;
         font-size: 18px;
         line-height: 1.9;
-      }
-
-      .hero-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 14px;
-        margin-top: 34px;
       }
 
       .button {
@@ -155,36 +146,79 @@
         background: rgba(255, 255, 255, 0.5);
       }
 
-      .now-card {
-        align-self: stretch;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        min-height: 430px;
-        padding: 30px;
+      .carousel {
+        margin-top: 54px;
+      }
+
+      .carousel-card {
+        position: relative;
+        min-height: 340px;
+        overflow: hidden;
+        display: grid;
+        align-items: end;
+        padding: 34px;
         border: 1px solid var(--line);
         border-radius: 8px;
-        background: var(--panel);
+        color: #fff;
+        background: #24221f;
         box-shadow: var(--shadow);
       }
 
-      .date-line {
-        color: var(--soft);
+      .carousel-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(0, 0, 0, 0.58), rgba(0, 0, 0, 0.18)),
+          var(--slide-bg, linear-gradient(135deg, #3d685f, #a16346));
+      }
+
+      .carousel-content {
+        position: relative;
+        max-width: 620px;
+      }
+
+      .carousel-tag {
+        display: inline-flex;
+        margin-bottom: 18px;
+        color: rgba(255, 255, 255, 0.72);
         font-family: "Segoe UI", "Noto Sans SC", sans-serif;
-        font-size: 13px;
+        font-size: 12px;
       }
 
-      .large-date {
-        margin: 28px 0 18px;
-        font-size: 82px;
-        line-height: 0.9;
-        font-weight: 400;
+      .carousel-title {
+        margin-bottom: 14px;
+        font-size: clamp(32px, 5vw, 58px);
+        line-height: 1;
+        font-weight: 500;
       }
 
-      .quiet-note {
-        color: var(--muted);
+      .carousel-text {
+        max-width: 540px;
+        margin-bottom: 0;
+        color: rgba(255, 255, 255, 0.78);
         font-family: "Segoe UI", "Noto Sans SC", sans-serif;
         line-height: 1.8;
+      }
+
+      .carousel-dots {
+        display: flex;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .carousel-dot {
+        appearance: none;
+        width: 34px;
+        height: 2px;
+        border: 0;
+        padding: 0;
+        background: rgba(23, 23, 23, 0.18);
+        cursor: pointer;
+      }
+
+      .carousel-dot.is-active {
+        background: var(--ink);
       }
 
       .section {
@@ -489,7 +523,6 @@
       }
 
       @media (max-width: 840px) {
-        .hero,
         .two,
         .three,
         .comment-box {
@@ -499,10 +532,6 @@
         .hero {
           min-height: auto;
           padding-top: 42px;
-        }
-
-        .now-card {
-          min-height: 300px;
         }
 
         .section-head {
@@ -527,8 +556,9 @@
           font-size: 52px;
         }
 
-        .large-date {
-          font-size: 64px;
+        .carousel-card {
+          min-height: 300px;
+          padding: 24px;
         }
 
         .section {
@@ -567,18 +597,17 @@
           <p class="eyebrow">Private blog since 2026</p>
           <h1>Chen & Gao</h1>
           <p class="intro">这里记录我们的日常、纪念日、走过的城市和想留住的小事。页面先保持安静克制，像一本慢慢写下去的双人手账。</p>
-          <div class="hero-actions">
-            <a class="button" href="#updates">查看最近动态</a>
-            <a class="button secondary" href="#travel">打开旅行地图</a>
+          <div class="carousel" aria-label="重要事件轮播">
+            <a class="carousel-card" id="featureSlide" href="#updates">
+              <div class="carousel-content">
+                <span class="carousel-tag" id="featureTag">重要事件</span>
+                <h2 class="carousel-title" id="featureTitle">Chen & Gao</h2>
+                <p class="carousel-text" id="featureText">从这里开始记录。</p>
+              </div>
+            </a>
+            <div class="carousel-dots" id="featureDots" aria-label="切换重要事件"></div>
           </div>
         </div>
-        <aside class="now-card" aria-label="今日状态">
-          <div>
-            <span class="date-line" id="todayLine">Today</span>
-            <div class="large-date" id="dayNumber">--</div>
-          </div>
-          <p class="quiet-note">今天也在把一个小小的网站，慢慢变成我们自己的地方。</p>
-        </aside>
       </header>
 
       <section class="section" id="calendar">
@@ -714,8 +743,50 @@
     <script>
       const today = new Date();
       const monthFormatter = new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "long" });
-      const lineFormatter = new Intl.DateTimeFormat("zh-CN", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
       const eventDateFormatter = new Intl.DateTimeFormat("zh-CN", { month: "2-digit", day: "2-digit", weekday: "long" });
+
+      const featuredEvents = [
+        {
+          priority: 1,
+          tag: "重要日子",
+          title: "网站上线",
+          text: "www.chenandgao.com 已经点亮，属于 Chen & Gao 的小小空间正式开始。",
+          href: "#days",
+          background: "linear-gradient(135deg, #2f504b 0%, #8b5a45 100%)"
+        },
+        {
+          priority: 2,
+          tag: "旅行打卡",
+          title: "第一枚地图钉",
+          text: "把走过的城市慢慢连起来，旅行日志会成为这个网站最有温度的路线。",
+          href: "#travel",
+          background: "linear-gradient(135deg, #394b5f 0%, #8b7250 100%)"
+        },
+        {
+          priority: 3,
+          tag: "动态",
+          title: "博客开始建设",
+          text: "从首页开始，把日常、文章、照片和纪念日一点点放进来。",
+          href: "#updates",
+          background: "linear-gradient(135deg, #5a5147 0%, #2f6a68 100%)"
+        },
+        {
+          priority: 4,
+          tag: "日历",
+          title: "重要安排归档",
+          text: "每个被点亮的日期，都可以留下当天发生的事。",
+          href: "#calendar",
+          background: "linear-gradient(135deg, #6a5a46 0%, #55665c 100%)"
+        },
+        {
+          priority: 5,
+          tag: "评论区",
+          title: "留言入口待接入",
+          text: "评论功能会在下一阶段接入真实服务，让朋友也能留下祝福。",
+          href: "#comments",
+          background: "linear-gradient(135deg, #44535a 0%, #8a5b59 100%)"
+        }
+      ].sort((a, b) => a.priority - b.priority).slice(0, 5);
 
       const calendarEvents = {
         "2026-06-20": [
@@ -732,9 +803,54 @@
         ]
       };
 
-      document.getElementById("todayLine").textContent = lineFormatter.format(today);
-      document.getElementById("dayNumber").textContent = String(today.getDate()).padStart(2, "0");
       document.getElementById("calendarTitle").textContent = monthFormatter.format(today);
+
+      let activeFeatureIndex = 0;
+      let featureTimer;
+
+      function renderFeature(index) {
+        const feature = featuredEvents[index];
+        const slide = document.getElementById("featureSlide");
+
+        activeFeatureIndex = index;
+        slide.href = feature.href;
+        slide.style.setProperty("--slide-bg", feature.background);
+        document.getElementById("featureTag").textContent = feature.tag;
+        document.getElementById("featureTitle").textContent = feature.title;
+        document.getElementById("featureText").textContent = feature.text;
+
+        document.querySelectorAll(".carousel-dot").forEach((dot, dotIndex) => {
+          dot.classList.toggle("is-active", dotIndex === index);
+          dot.setAttribute("aria-pressed", String(dotIndex === index));
+        });
+      }
+
+      function buildFeatureCarousel() {
+        const dots = document.getElementById("featureDots");
+        dots.innerHTML = "";
+
+        featuredEvents.forEach((feature, index) => {
+          const dot = document.createElement("button");
+          dot.className = "carousel-dot";
+          dot.type = "button";
+          dot.setAttribute("aria-label", `查看${feature.title}`);
+          dot.addEventListener("click", () => {
+            window.clearInterval(featureTimer);
+            renderFeature(index);
+            startFeatureCarousel();
+          });
+          dots.appendChild(dot);
+        });
+
+        renderFeature(0);
+        startFeatureCarousel();
+      }
+
+      function startFeatureCarousel() {
+        featureTimer = window.setInterval(() => {
+          renderFeature((activeFeatureIndex + 1) % featuredEvents.length);
+        }, 5200);
+      }
 
       function dateKey(date) {
         const year = date.getFullYear();
@@ -840,6 +956,7 @@
       renderCalendarDetail(today);
       updateCounters();
       setInterval(updateCounters, 1000);
+      buildFeatureCarousel();
     </script>
   </body>
 </html>
