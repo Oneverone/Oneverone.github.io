@@ -1,0 +1,2842 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chen & Gao</title>
+    <link rel="stylesheet" href="./assets/vendor/leaflet/leaflet.css">
+    <meta name="description" content="Chen & Gao 的专属博客。">
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #20231f;
+        --ink-soft: #3f453e;
+        --muted: #71776f;
+        --quiet: #9ba298;
+        --paper: #f7f3ea;
+        --paper-soft: #fbf8f1;
+        --paper-deep: #ebe5d9;
+        --sage: #657568;
+        --sage-soft: #d9e1d6;
+        --clay: #b76e55;
+        --clay-soft: #ead2c7;
+        --blue: #617083;
+        --blue-soft: #d8dee5;
+        --gold: #c7a356;
+        --line: rgba(32, 35, 31, 0.12);
+        --line-strong: rgba(32, 35, 31, 0.22);
+        --surface: rgba(255, 253, 247, 0.78);
+        --surface-solid: #fffdf7;
+        --shadow: 0 18px 50px rgba(60, 52, 42, 0.12);
+        --shadow-hover: 0 28px 70px rgba(60, 52, 42, 0.17);
+        --radius: 8px;
+        --sans: "Segoe UI", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+        --serif: Georgia, "Times New Roman", "Noto Serif SC", "Songti SC", serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        font-family: var(--sans);
+        background:
+          radial-gradient(circle at 12% 8%, rgba(101, 117, 104, 0.16), transparent 24rem),
+          radial-gradient(circle at 88% 14%, rgba(183, 110, 85, 0.12), transparent 26rem),
+          linear-gradient(180deg, #fbf8f1 0%, var(--paper) 44%, #efe7db 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        pointer-events: none;
+        opacity: 0.42;
+        background-image:
+          linear-gradient(rgba(32, 35, 31, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(32, 35, 31, 0.028) 1px, transparent 1px);
+        background-size: 72px 72px;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        opacity: 0.16;
+        background-image: radial-gradient(circle, rgba(32, 35, 31, 0.22) 0.7px, transparent 0.7px);
+        background-size: 14px 14px;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      input,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      ::selection {
+        color: #fff;
+        background: var(--sage);
+      }
+
+      :focus-visible {
+        outline: 3px solid rgba(183, 110, 85, 0.45);
+        outline-offset: 4px;
+      }
+
+      .wrap {
+        width: min(1180px, calc(100vw - 40px));
+        margin: 0 auto;
+      }
+
+      .site-nav {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        padding: 14px 0;
+        backdrop-filter: blur(18px);
+        background: rgba(247, 243, 234, 0.78);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .nav-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 750;
+      }
+
+      .monogram {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border: 1px solid var(--line-strong);
+        border-radius: 50%;
+        color: var(--paper-soft);
+        background: var(--ink);
+        box-shadow: 0 10px 28px rgba(32, 35, 31, 0.16);
+      }
+
+      .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .nav-links a {
+        padding: 9px 12px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        color: var(--muted);
+        font-size: 13px;
+        transition: color 180ms ease, border-color 180ms ease, background 180ms ease;
+      }
+
+      .nav-links a:hover,
+      .nav-links a.is-active {
+        color: var(--ink);
+        border-color: var(--line);
+        background: rgba(255, 253, 247, 0.72);
+      }
+
+      .hero {
+        min-height: calc(100vh - 68px);
+        display: grid;
+        align-items: center;
+        padding: 62px 0 72px;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 470px);
+        gap: 48px;
+        align-items: center;
+      }
+
+      .eyebrow,
+      .section-code,
+      .meta {
+        color: var(--clay);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0 0 24px;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 42px;
+        height: 1px;
+        background: currentColor;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: var(--serif);
+        letter-spacing: 0;
+      }
+
+      h1 {
+        max-width: 760px;
+        margin-bottom: 24px;
+        font-size: clamp(64px, 12vw, 148px);
+        line-height: 0.9;
+        font-weight: 700;
+      }
+
+      h2 {
+        margin-bottom: 0;
+        font-size: clamp(40px, 6vw, 78px);
+        line-height: 1;
+      }
+
+      h3 {
+        margin-bottom: 10px;
+        font-size: 25px;
+        line-height: 1.2;
+      }
+
+      .hero-copy {
+        max-width: 650px;
+        margin-bottom: 28px;
+        color: var(--ink-soft);
+        font-size: 18px;
+        line-height: 1.9;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .button,
+      .icon-button {
+        min-height: 42px;
+        border: 1px solid var(--line-strong);
+        color: var(--ink);
+        background: rgba(255, 253, 247, 0.72);
+        transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 0 17px;
+        border-radius: 999px;
+      }
+
+      .icon-button {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        padding: 0;
+        border-radius: 50%;
+      }
+
+      .button:hover,
+      .icon-button:hover {
+        transform: translateY(-2px);
+        border-color: rgba(32, 35, 31, 0.36);
+        background: var(--surface-solid);
+        box-shadow: var(--shadow);
+      }
+
+      .memory-card {
+        position: relative;
+        min-height: 560px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface-solid);
+        box-shadow: var(--shadow);
+      }
+
+      .memory-visual {
+        position: absolute;
+        inset: 0;
+        background: var(--slide-bg, linear-gradient(135deg, #d9e1d6, #ead2c7));
+        transition: background 420ms ease;
+      }
+
+      .memory-visual::before {
+        content: "";
+        position: absolute;
+        inset: 18px;
+        border: 1px solid rgba(255, 253, 247, 0.52);
+      }
+
+      .memory-visual::after {
+        content: "";
+        position: absolute;
+        right: -72px;
+        bottom: -90px;
+        width: 270px;
+        height: 270px;
+        border: 1px solid rgba(255, 253, 247, 0.48);
+        border-radius: 50%;
+      }
+
+      .memory-content {
+        position: relative;
+        z-index: 1;
+        min-height: inherit;
+        display: grid;
+        align-content: end;
+        padding: 28px;
+        color: #fff;
+        background: linear-gradient(180deg, rgba(32, 35, 31, 0.04) 0%, rgba(32, 35, 31, 0.58) 100%);
+        transition: opacity 220ms ease, transform 220ms ease;
+      }
+
+      .memory-card.is-changing .memory-content {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+
+      .memory-tag {
+        display: inline-flex;
+        width: fit-content;
+        margin-bottom: 18px;
+        padding: 7px 10px;
+        color: var(--ink);
+        background: rgba(255, 253, 247, 0.86);
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .memory-title {
+        margin-bottom: 14px;
+        font-size: clamp(34px, 5vw, 58px);
+        line-height: 1;
+      }
+
+      .memory-text {
+        max-width: 360px;
+        margin-bottom: 24px;
+        line-height: 1.8;
+      }
+
+      .carousel-tools {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 18px 18px;
+        border-top: 1px solid var(--line);
+        background: rgba(255, 253, 247, 0.84);
+      }
+
+      .dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .dot {
+        width: 9px;
+        height: 9px;
+        padding: 0;
+        border: 1px solid var(--line-strong);
+        border-radius: 999px;
+        background: transparent;
+        transition: width 180ms ease, background 180ms ease;
+      }
+
+      .dot.is-active {
+        width: 28px;
+        background: var(--sage);
+      }
+
+      .progress {
+        position: absolute;
+        right: 18px;
+        bottom: 0;
+        left: 18px;
+        height: 2px;
+        overflow: hidden;
+        background: rgba(32, 35, 31, 0.1);
+      }
+
+      .progress-bar {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background: var(--sage);
+        transform: scaleX(0);
+        transform-origin: left;
+      }
+
+      .progress-bar.is-running {
+        animation: progress 6200ms linear forwards;
+      }
+
+      .section {
+        padding: 86px 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .section-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 480px);
+        gap: 32px;
+        align-items: end;
+        margin-bottom: 30px;
+      }
+
+      .section-kicker,
+      .body-copy {
+        color: var(--muted);
+        line-height: 1.85;
+      }
+
+      .section-kicker {
+        margin-bottom: 0;
+        font-size: 16px;
+      }
+
+      .archive-toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: center;
+        margin-bottom: 22px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: linear-gradient(135deg, rgba(255, 253, 247, 0.9), rgba(247, 243, 234, 0.72));
+        box-shadow: 0 14px 36px rgba(60, 52, 42, 0.08);
+      }
+
+      .view-tabs,
+      .date-jump {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .view-tabs {
+        width: fit-content;
+        padding: 5px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 253, 247, 0.82);
+      }
+
+      .view-tab {
+        min-height: 38px;
+        padding: 0 16px;
+        border: 0;
+        border-radius: calc(var(--radius) - 2px);
+        color: var(--muted);
+        background: transparent;
+        font-size: 13px;
+        font-weight: 800;
+        transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+      }
+
+      .view-tab:hover,
+      .view-tab.is-active {
+        color: var(--ink);
+        background: var(--surface-solid);
+        box-shadow: 0 8px 22px rgba(60, 52, 42, 0.08);
+      }
+
+      .date-jump {
+        justify-content: flex-end;
+        padding: 5px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 253, 247, 0.82);
+      }
+
+      .date-jump-label {
+        padding: 0 8px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      .month-select,
+      .year-input {
+        min-height: 38px;
+        border: 1px solid transparent;
+        border-radius: calc(var(--radius) - 2px);
+        color: var(--ink);
+        background: rgba(247, 243, 234, 0.78);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .month-select {
+        padding: 0 12px;
+      }
+
+      .year-input {
+        width: 92px;
+        padding: 0 10px;
+      }
+
+      .month-select:focus-visible,
+      .year-input:focus-visible {
+        outline: 2px solid rgba(183, 110, 85, 0.38);
+        outline-offset: 2px;
+      }
+
+      .archive-view {
+        display: none;
+      }
+
+      .archive-view.is-active {
+        display: block;
+      }
+
+
+      .calendar-panel {
+        padding: 0;
+        overflow: hidden;
+        background: linear-gradient(180deg, rgba(255, 253, 247, 0.96), rgba(247, 243, 234, 0.82));
+      }
+
+      .calendar-top {
+        margin: 0;
+        padding: 22px 24px 18px;
+        border-bottom: 1px solid var(--line);
+        background:
+          radial-gradient(circle at 88% 18%, rgba(199, 163, 86, 0.14), transparent 8rem),
+          rgba(255, 253, 247, 0.78);
+      }
+
+      .calendar-title {
+        font-family: var(--serif);
+        font-size: clamp(28px, 4vw, 46px);
+        font-weight: 900;
+      }
+
+      .weekdays {
+        padding: 18px 18px 8px;
+      }
+
+      .weekdays span {
+        color: var(--clay);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .days {
+        padding: 0 18px 18px;
+      }
+
+      .day {
+        position: relative;
+        min-height: 76px;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 12px;
+        border: 1px solid rgba(32, 35, 31, 0.08);
+        border-radius: var(--radius);
+        background: rgba(255, 253, 247, 0.56);
+        font-family: var(--serif);
+        font-size: 19px;
+        font-weight: 900;
+        transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      }
+
+      .day:hover {
+        transform: translateY(-2px);
+        background: var(--surface-solid);
+        box-shadow: 0 10px 24px rgba(60, 52, 42, 0.08);
+      }
+
+      .day.is-today {
+        border-color: rgba(101, 117, 104, 0.34);
+        background: rgba(217, 225, 214, 0.38);
+      }
+
+      .day.is-selected {
+        color: var(--surface-solid);
+        border-color: var(--clay);
+        background: linear-gradient(135deg, var(--clay), #8f5748);
+        box-shadow: 0 14px 30px rgba(183, 110, 85, 0.22);
+      }
+
+      .day.has-event::after {
+        content: "";
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--gold);
+      }
+
+      .day.is-selected.has-event::after {
+        background: var(--surface-solid);
+      }
+
+      .calendar-detail {
+        padding: 24px;
+        background:
+          linear-gradient(180deg, rgba(255, 253, 247, 0.94), rgba(247, 243, 234, 0.78)),
+          var(--surface);
+      }
+
+      .surface {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .bento {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .story-card {
+        min-height: 300px;
+        display: grid;
+        align-content: space-between;
+        padding: 22px;
+        transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
+      }
+
+      .story-card:hover {
+        transform: translateY(-5px);
+        background: var(--surface-solid);
+        box-shadow: var(--shadow-hover);
+      }
+
+      .story-card.is-large {
+        grid-column: span 2;
+        background:
+          linear-gradient(135deg, rgba(101, 117, 104, 0.12), rgba(183, 110, 85, 0.1)),
+          var(--surface);
+      }
+
+      .story-topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .story-mark {
+        width: 44px;
+        height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--sage-soft), var(--clay-soft));
+      }
+
+      .calendar-layout,
+      .travel-layout,
+      .comment-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+        gap: 18px;
+      }
+
+      .calendar-panel {
+        padding: 22px;
+      }
+
+      .calendar-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+
+      .calendar-title {
+        font-size: 18px;
+        font-weight: 800;
+      }
+
+      .weekdays,
+      .days {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .weekdays {
+        margin-bottom: 8px;
+        color: var(--quiet);
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .day {
+        min-height: 48px;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        color: var(--muted);
+        background: rgba(255, 253, 247, 0.68);
+        transition: transform 160ms ease, color 160ms ease, background 160ms ease, border-color 160ms ease;
+      }
+
+      .day:hover {
+        transform: translateY(-2px);
+        border-color: var(--line-strong);
+        color: var(--ink);
+      }
+
+      .day.is-today {
+        color: var(--clay);
+        border-color: rgba(183, 110, 85, 0.36);
+      }
+
+      .day.has-event {
+        background: linear-gradient(180deg, rgba(255, 253, 247, 0.82), rgba(217, 225, 214, 0.7));
+      }
+
+      .day.is-selected {
+        color: #fff;
+        background: var(--sage);
+        border-color: var(--sage);
+      }
+
+      .calendar-detail {
+        min-height: 100%;
+        padding: 28px;
+        background:
+          linear-gradient(135deg, rgba(97, 112, 131, 0.08), transparent 45%),
+          var(--surface);
+      }
+
+      .event + .event {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+      }
+
+      .updates-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .update-row {
+        display: grid;
+        grid-template-columns: 128px minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: center;
+        padding: 18px;
+        transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
+      }
+
+      .update-row:hover {
+        transform: translateY(-3px);
+        background: var(--surface-solid);
+        box-shadow: var(--shadow);
+      }
+
+      .update-row h3 {
+        margin-bottom: 4px;
+      }
+
+      .update-badge {
+        padding: 7px 10px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--sage);
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .calendar-panel {
+        padding: 0;
+        overflow: hidden;
+        background: linear-gradient(180deg, rgba(255, 253, 247, 0.96), rgba(247, 243, 234, 0.82));
+      }
+
+      .calendar-top {
+        margin: 0;
+        padding: 22px 24px 18px;
+        border-bottom: 1px solid var(--line);
+        background:
+          radial-gradient(circle at 88% 18%, rgba(199, 163, 86, 0.14), transparent 8rem),
+          rgba(255, 253, 247, 0.78);
+      }
+
+      .calendar-title {
+        font-family: var(--serif);
+        font-size: clamp(28px, 4vw, 46px);
+        font-weight: 900;
+      }
+
+      .weekdays {
+        margin: 0;
+        padding: 18px 18px 8px;
+      }
+
+      .weekdays span {
+        color: var(--clay);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .days {
+        padding: 0 18px 18px;
+      }
+
+      .day {
+        position: relative;
+        min-height: 76px;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 12px;
+        border: 1px solid rgba(32, 35, 31, 0.08);
+        border-radius: var(--radius);
+        color: var(--ink);
+        background: rgba(255, 253, 247, 0.56);
+        font-family: var(--serif);
+        font-size: 19px;
+        font-weight: 900;
+        transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      }
+
+      .day:hover {
+        transform: translateY(-2px);
+        border-color: rgba(183, 110, 85, 0.24);
+        background: var(--surface-solid);
+        box-shadow: 0 10px 24px rgba(60, 52, 42, 0.08);
+      }
+
+      .day.is-today {
+        color: var(--ink);
+        border-color: rgba(101, 117, 104, 0.34);
+        background: rgba(217, 225, 214, 0.38);
+      }
+
+      .day.has-event {
+        background: rgba(255, 253, 247, 0.76);
+      }
+
+      .day.has-event::after {
+        content: "";
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--gold);
+      }
+
+      .day.is-selected {
+        color: var(--surface-solid);
+        border-color: var(--clay);
+        background: linear-gradient(135deg, var(--clay), #8f5748);
+        box-shadow: 0 14px 30px rgba(183, 110, 85, 0.22);
+      }
+
+      .day.is-selected.has-event::after {
+        background: var(--surface-solid);
+      }
+
+      .calendar-detail {
+        padding: 24px;
+        background:
+          linear-gradient(180deg, rgba(255, 253, 247, 0.94), rgba(247, 243, 234, 0.78)),
+          var(--surface);
+      }
+
+      .travel-dashboard {
+        display: grid;
+        gap: 18px;
+      }
+
+      .map-shell {
+        padding: 18px;
+      }
+
+      .map-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+
+      .map-tabs {
+        display: inline-flex;
+        gap: 8px;
+        padding: 6px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 253, 247, 0.72);
+      }
+
+      .map-tab {
+        min-height: 34px;
+        padding: 0 13px;
+        border: 0;
+        border-radius: 999px;
+        color: var(--muted);
+        background: transparent;
+        font-size: 13px;
+        font-weight: 750;
+        transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+      }
+
+      .map-tab:hover,
+      .map-tab.is-active {
+        color: var(--ink);
+        background: var(--surface-solid);
+        box-shadow: 0 8px 22px rgba(60, 52, 42, 0.08);
+      }
+
+      .map-hint {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .map-stage {
+        position: relative;
+        min-height: 560px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #e9efe5;
+      }
+
+      .leaflet-map {
+        position: absolute;
+        inset: 0;
+        display: none;
+        z-index: 1;
+      }
+
+      .leaflet-map.is-active {
+        display: block;
+      }
+
+      .leaflet-marker-icon.travel-marker {
+        border: 0;
+        background: transparent;
+      }
+
+      .travel-marker-core {
+        position: absolute;
+        inset: 0;
+        border: 3px solid var(--surface-solid);
+        border-radius: 50% 50% 50% 0;
+        background: var(--marker-color, var(--clay));
+        box-shadow: 0 10px 22px rgba(60, 52, 42, 0.22);
+        transform: rotate(-45deg);
+      }
+
+      .travel-marker-core::after {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        border-radius: 50%;
+        background: var(--surface-solid);
+      }
+
+      .travel-visited-legend {
+        position: absolute;
+        left: 14px;
+        bottom: 14px;
+        z-index: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border: 1px solid rgba(183, 110, 85, 0.2);
+        border-radius: var(--radius);
+        color: var(--ink);
+        background: rgba(255, 253, 247, 0.88);
+        box-shadow: 0 10px 28px rgba(60, 52, 42, 0.12);
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      .travel-visited-legend::before {
+        content: "";
+        width: 14px;
+        height: 14px;
+        border: 1px solid rgba(183, 110, 85, 0.68);
+        border-radius: 4px;
+        background: rgba(183, 110, 85, 0.38);
+      }
+
+      .map-scale {
+        position: absolute;
+        right: 14px;
+        bottom: 14px;
+        z-index: 500;
+        min-width: 96px;
+        padding: 8px 10px;
+        border: 1px solid rgba(32, 35, 31, 0.16);
+        border-radius: var(--radius);
+        color: var(--ink);
+        background: rgba(255, 253, 247, 0.88);
+        box-shadow: 0 10px 28px rgba(60, 52, 42, 0.12);
+        font-size: 12px;
+        font-weight: 850;
+        text-align: center;
+      }
+
+      .leaflet-popup-content-wrapper {
+        border-radius: var(--radius);
+        box-shadow: 0 18px 48px rgba(60, 52, 42, 0.18);
+      }
+
+      .travel-popup {
+        min-width: 190px;
+      }
+
+      .travel-popup h3 {
+        margin: 4px 0 10px;
+        font-size: 24px;
+      }
+
+      .travel-popup p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .travel-popup-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .travel-popup-meta span {
+        padding: 5px 7px;
+        border-radius: 999px;
+        background: rgba(247, 243, 234, 0.9);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .geo-label-tooltip {
+        border: 0;
+        box-shadow: none;
+        background: transparent;
+      }
+
+      .geo-label-tooltip::before {
+        display: none;
+      }
+
+      .geo-label-icon {
+        border: 0;
+        background: transparent;
+      }
+
+      .geo-label {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--ink);
+        white-space: nowrap;
+        text-shadow:
+          0 1px 2px rgba(255, 253, 247, 0.95),
+          0 0 10px rgba(255, 253, 247, 0.7);
+        transform: translate(-50%, -50%);
+      }
+
+      .geo-label--province {
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        color: rgba(32, 35, 31, 0.78);
+      }
+
+      .geo-label--country {
+        color: rgba(97, 112, 131, 0.9);
+        font-size: 10px;
+        font-weight: 750;
+      }
+
+      .geo-label--country-major {
+        color: rgba(32, 35, 31, 0.78);
+        font-size: 11px;
+        font-weight: 850;
+        letter-spacing: 0.02em;
+      }
+
+      .geo-label--capital {
+        color: rgba(101, 117, 104, 0.98);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .geo-label--city {
+        color: rgba(183, 110, 85, 0.94);
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .explore-stats {
+        padding: 22px;
+      }
+
+      .stats-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .stat-topline {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 8px;
+        font-weight: 800;
+      }
+
+      .stat-bar {
+        height: 9px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(32, 35, 31, 0.08);
+      }
+
+      .stat-fill {
+        display: block;
+        height: 100%;
+        width: var(--value);
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--sage), var(--clay));
+      }
+
+      .milestone-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .milestone-card {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        gap: 18px;
+        min-height: 360px;
+        padding: 24px;
+        overflow: hidden;
+        border: 1px solid rgba(32, 35, 31, 0.12);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(160deg, rgba(255, 253, 247, 0.98), rgba(247, 243, 234, 0.86)),
+          var(--surface-solid);
+        box-shadow: 0 16px 44px rgba(60, 52, 42, 0.09);
+        transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+      }
+
+      .milestone-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: var(--accent, var(--clay));
+      }
+
+      .milestone-card::after {
+        content: "";
+        position: absolute;
+        right: -58px;
+        bottom: -72px;
+        width: 180px;
+        height: 180px;
+        border: 1px solid color-mix(in srgb, var(--accent, var(--clay)) 34%, transparent);
+        border-radius: 50%;
+      }
+
+      .milestone-card:hover {
+        transform: translateY(-5px);
+        border-color: color-mix(in srgb, var(--accent, var(--clay)) 42%, transparent);
+        box-shadow: var(--shadow-hover);
+      }
+
+      .milestone-card > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .milestone-card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .milestone-label {
+        color: var(--accent, var(--clay));
+        font-size: 12px;
+        font-weight: 850;
+        text-transform: uppercase;
+      }
+
+      .milestone-card h3 {
+        margin: 8px 0 0;
+        font-size: clamp(30px, 4vw, 52px);
+        line-height: 1.04;
+      }
+
+      .milestone-order {
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 40px;
+        height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        color: var(--muted);
+        font-family: var(--serif);
+        font-weight: 900;
+      }
+
+      .milestone-date-block {
+        display: grid;
+        gap: 8px;
+        padding: 18px 0 20px;
+        border-top: 1px solid rgba(32, 35, 31, 0.1);
+        border-bottom: 1px solid rgba(32, 35, 31, 0.1);
+      }
+
+      .date-caption {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      .date-value {
+        font-family: var(--serif);
+        color: var(--ink);
+        font-size: clamp(22px, 2.4vw, 32px);
+        line-height: 1.05;
+        font-weight: 900;
+        letter-spacing: 0.01em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .milestone-card-body {
+        display: grid;
+        align-content: start;
+        gap: 14px;
+      }
+
+      .counter {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 7px 12px;
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .counter::before {
+        content: "已过去";
+        flex-basis: 100%;
+        color: var(--accent, var(--clay));
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      .counter-part {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 3px;
+      }
+
+      .counter-number {
+        display: inline-block;
+        min-width: 2ch;
+        font-family: var(--serif);
+        color: var(--ink);
+        font-size: clamp(22px, 3vw, 34px);
+        line-height: 1;
+        font-weight: 900;
+        transition: transform 180ms ease;
+      }
+
+      .counter-part.is-primary .counter-number {
+        min-width: auto;
+        font-size: clamp(42px, 6vw, 84px);
+      }
+
+      .counter.is-ticking .counter-number {
+        transform: translateY(-2px);
+      }
+
+      .counter-unit {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .comment-form,
+      .giscus-ready {
+        padding: 22px;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        margin-bottom: 12px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        color: var(--ink);
+        background: rgba(255, 253, 247, 0.72);
+      }
+
+      textarea {
+        min-height: 132px;
+        resize: vertical;
+      }
+
+      .disabled-button {
+        opacity: 0.58;
+        cursor: not-allowed;
+      }
+
+      .comment-preview {
+        min-height: 220px;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        border: 1px dashed var(--line-strong);
+        border-radius: var(--radius);
+        background: rgba(217, 225, 214, 0.32);
+        text-align: center;
+      }
+
+      .footer {
+        padding: 44px 0 64px;
+        color: var(--muted);
+        border-top: 1px solid var(--line);
+      }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 680ms ease, transform 680ms ease;
+      }
+
+      .reveal.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .lightbox {
+        position: fixed;
+        inset: 0;
+        z-index: 80;
+        display: none;
+        place-items: center;
+        padding: 28px;
+        background: rgba(32, 35, 31, 0.78);
+      }
+
+      .lightbox.is-open {
+        display: grid;
+      }
+
+      .lightbox-card {
+        width: min(860px, 100%);
+        overflow: hidden;
+        border: 1px solid rgba(255, 253, 247, 0.28);
+        border-radius: var(--radius);
+        background: var(--surface-solid);
+        box-shadow: 0 36px 110px rgba(0, 0, 0, 0.36);
+      }
+
+      .lightbox-image {
+        min-height: 440px;
+        background: var(--lightbox-bg);
+      }
+
+      .lightbox-caption {
+        padding: 18px 20px;
+        color: var(--ink-soft);
+      }
+
+      @keyframes progress {
+        from { transform: scaleX(0); }
+        to { transform: scaleX(1); }
+      }
+
+      @keyframes routeDraw {
+        from { stroke-dashoffset: 1000; }
+        to { stroke-dashoffset: 0; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          animation-duration: 1ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 1ms !important;
+        }
+      }
+
+      @media (max-width: 980px) {
+        .hero-grid,
+        .section-head,
+        .calendar-layout,
+        .travel-dashboard,
+        .travel-layout,
+        .comment-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .map-toolbar {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .hero {
+          min-height: auto;
+        }
+
+        .memory-card {
+          min-height: 460px;
+        }
+
+        .bento {
+          grid-template-columns: 1fr;
+        }
+
+        .milestone-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .story-card.is-large {
+          grid-column: auto;
+        }
+      }
+
+      @media (max-width: 660px) {
+        .wrap {
+          width: min(100% - 24px, 1180px);
+        }
+
+        .nav-inner {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .nav-links {
+          justify-content: flex-start;
+        }
+
+        h1 {
+          font-size: clamp(52px, 18vw, 86px);
+        }
+
+        h2 {
+          font-size: clamp(38px, 13vw, 58px);
+        }
+
+        .section {
+          padding: 68px 0;
+        }
+
+        .gallery {
+          grid-template-columns: 1fr;
+        }
+
+        .map-stage {
+          min-height: 380px;
+        }
+
+        .milestone-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .milestone-card {
+          min-height: 0;
+        }
+
+        .weekdays,
+        .days {
+          gap: 5px;
+        }
+
+        .day {
+          min-height: 42px;
+        }
+
+        .archive-toolbar,
+        .update-row {
+          align-items: stretch;
+          grid-template-columns: 1fr;
+          flex-direction: column;
+        }
+
+        .view-tabs,
+        .date-jump {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="site-nav" aria-label="主导航">
+      <div class="wrap nav-inner">
+        <a class="brand" href="#top">
+          <span class="monogram">C·G</span>
+          <span>Chen & Gao</span>
+        </a>
+        <div class="nav-links">
+          <a href="#days">纪念时刻</a>
+          <a href="#calendar">时光档案</a>
+          <a href="#travel">旅行足迹</a>
+          <a href="#comments">亲友留言</a>
+        </div>
+      </div>
+    </nav>
+
+    <header class="hero" id="top">
+      <div class="wrap hero-grid">
+        <div>
+          <p class="eyebrow">Private Journal · Chen and Gao</p>
+          <h1>Chen & Gao</h1>
+          <p class="hero-copy">一个慢慢长出来的专属博客。先把重要的日子、走过的地方、零碎的动态和未来的留言板放好，等真实照片和故事一点点补进来。</p>
+          <div class="hero-actions">
+            <a class="button" href="#calendar">看时光档案</a>
+            <a class="button" href="#days">查看纪念时刻</a>
+          </div>
+        </div>
+
+        <div>
+          <article class="memory-card" id="featureCard">
+            <div class="memory-visual" id="featureVisual"></div>
+            <a class="memory-content" id="featureLink" href="#calendar">
+              <span class="memory-tag" id="featureTag">重要事件</span>
+              <h2 class="memory-title" id="featureTitle">从这里开始</h2>
+              <p class="memory-text" id="featureText">记录会慢慢变多，页面也会慢慢长成真正的家。</p>
+              <span class="button">进入这一页</span>
+            </a>
+            <div class="carousel-tools">
+              <button class="icon-button" id="featurePrev" type="button" aria-label="上一张">‹</button>
+              <div class="dots" id="featureDots" aria-label="轮播切换"></div>
+              <button class="icon-button" id="featureNext" type="button" aria-label="下一张">›</button>
+              <span class="progress" aria-hidden="true">
+                <span class="progress-bar" id="featureProgress"></span>
+              </span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="section reveal" id="days">
+        <div class="section-head">
+          <div>
+            <span class="section-code">01 · Milestones</span>
+            <h2>纪念时刻</h2>
+          </div>
+          <p class="section-kicker">每个重要日子独立成卡。先看它是什么日子和起始日期，再看它已经陪我们走过多久。</p>
+        </div>
+
+        <div class="milestone-grid">
+          <article class="milestone-card" style="--accent: var(--sage);">
+            <div class="milestone-card-head">
+              <div>
+                <span class="milestone-label">First Met</span>
+                <h3>相识日</h3>
+              </div>
+              <span class="milestone-order">01</span>
+            </div>
+            <div class="milestone-date-block">
+              <span class="date-caption">起始日期</span>
+              <time class="date-value" datetime="2016-09-01">2016.09.01</time>
+            </div>
+            <div class="milestone-card-body">
+              <div class="counter" data-since="2016-09-01T00:00:00"></div>
+              <p class="body-copy">从第一次相识开始算。</p>
+            </div>
+          </article>
+
+          <article class="milestone-card" style="--accent: var(--clay);">
+            <div class="milestone-card-head">
+              <div>
+                <span class="milestone-label">Together</span>
+                <h3>恋爱日</h3>
+              </div>
+              <span class="milestone-order">02</span>
+            </div>
+            <div class="milestone-date-block">
+              <span class="date-caption">起始日期</span>
+              <time class="date-value" datetime="2019-02-02">2019.02.02</time>
+            </div>
+            <div class="milestone-card-body">
+              <div class="counter" data-since="2019-02-02T00:00:00"></div>
+              <p class="body-copy">从正式在一起开始算。</p>
+            </div>
+          </article>
+
+          <article class="milestone-card" style="--accent: var(--gold);">
+            <div class="milestone-card-head">
+              <div>
+                <span class="milestone-label">Marriage License</span>
+                <h3>领证日</h3>
+              </div>
+              <span class="milestone-order">03</span>
+            </div>
+            <div class="milestone-date-block">
+              <span class="date-caption">起始日期</span>
+              <time class="date-value" datetime="2024-05-24">2024.05.24</time>
+            </div>
+            <div class="milestone-card-body">
+              <div class="counter" data-since="2024-05-24T00:00:00"></div>
+              <p class="body-copy">从成为法律意义上的一家人开始算。</p>
+            </div>
+          </article>
+
+          <article class="milestone-card" style="--accent: var(--blue);">
+            <div class="milestone-card-head">
+              <div>
+                <span class="milestone-label">Wedding</span>
+                <h3>婚礼日</h3>
+              </div>
+              <span class="milestone-order">04</span>
+            </div>
+            <div class="milestone-date-block">
+              <span class="date-caption">起始日期</span>
+              <time class="date-value" datetime="2026-03-31">2026.03.31</time>
+            </div>
+            <div class="milestone-card-body">
+              <div class="counter" data-since="2026-03-31T00:00:00"></div>
+              <p class="body-copy">从婚礼那天开始算。</p>
+            </div>
+          </article>
+
+          <article class="milestone-card" style="--accent: var(--clay);">
+            <div class="milestone-card-head">
+              <div>
+                <span class="milestone-label">Birthday · Gao</span>
+                <h3>小高生日</h3>
+              </div>
+              <span class="milestone-order">05</span>
+            </div>
+            <div class="milestone-date-block">
+              <span class="date-caption">起始日期</span>
+              <time class="date-value" datetime="1998-01-20">1998.01.20</time>
+            </div>
+            <div class="milestone-card-body">
+              <div class="counter" data-since="1998-01-20T00:00:00"></div>
+              <p class="body-copy">女方生日。</p>
+            </div>
+          </article>
+
+          <article class="milestone-card" style="--accent: var(--sage);">
+            <div class="milestone-card-head">
+              <div>
+                <span class="milestone-label">Birthday · Chen</span>
+                <h3>小陈生日</h3>
+              </div>
+              <span class="milestone-order">06</span>
+            </div>
+            <div class="milestone-date-block">
+              <span class="date-caption">起始日期</span>
+              <time class="date-value" datetime="1999-03-01">1999.03.01</time>
+            </div>
+            <div class="milestone-card-body">
+              <div class="counter" data-since="1999-03-01T00:00:00"></div>
+              <p class="body-copy">男方生日。</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section reveal" id="calendar">
+        <div class="section-head">
+          <div>
+            <span class="section-code">02 · Timeline</span>
+            <h2>时光档案</h2>
+          </div>
+          <p class="section-kicker">动态默认以日历方式展示，也可以切换成列表。点击年月可以快速跳转，点击日期查看当天记录。</p>
+        </div>
+
+        <div class="archive-toolbar">
+          <div class="view-tabs" aria-label="动态展示方式">
+            <button class="view-tab is-active" type="button" data-archive-view="calendar" aria-pressed="true">日历</button>
+            <button class="view-tab" type="button" data-archive-view="list" aria-pressed="false">列表</button>
+          </div>
+          <div class="date-jump" aria-label="快速切换年月"><span class="date-jump-label">跳转</span>
+            <button class="icon-button" id="prevMonth" type="button" aria-label="上个月">‹</button>
+            <input class="year-input" id="yearInput" type="number" min="2000" max="2099" aria-label="年份">
+            <select class="month-select" id="monthSelect" aria-label="月份">
+              <option value="0">1 月</option>
+              <option value="1">2 月</option>
+              <option value="2">3 月</option>
+              <option value="3">4 月</option>
+              <option value="4">5 月</option>
+              <option value="5">6 月</option>
+              <option value="6">7 月</option>
+              <option value="7">8 月</option>
+              <option value="8">9 月</option>
+              <option value="9">10 月</option>
+              <option value="10">11 月</option>
+              <option value="11">12 月</option>
+            </select>
+            <button class="icon-button" id="nextMonth" type="button" aria-label="下个月">›</button>
+          </div>
+        </div>
+
+        <div class="archive-view is-active" id="calendarView">
+          <div class="calendar-layout">
+            <div class="surface calendar-panel">
+              <div class="calendar-top">
+                <strong class="calendar-title" id="calendarTitle">2026 年 6 月</strong>
+                <span class="meta">默认视图</span>
+              </div>
+              <div class="weekdays" aria-hidden="true">
+                <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+              </div>
+              <div class="days" id="calendarDays" aria-label="动态月历"></div>
+            </div>
+            <div class="surface calendar-detail" id="calendarDetail" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div class="archive-view" id="listView">
+          <div class="updates-list" id="updatesList" aria-label="动态列表"></div>
+        </div>
+      </section>
+
+      <section class="section reveal" id="travel">
+        <div class="section-head">
+          <div>
+            <span class="section-code">03 · Footprints</span>
+            <h2>旅行足迹</h2>
+          </div>
+          <p class="section-kicker">这里使用标准地图展示已经旅行过的地点。用鼠标滚轮放大缩小，点击图钉会直接弹出旅行详情。</p>
+        </div>
+
+        <div class="travel-dashboard">
+          <div class="surface map-shell" aria-label="旅行地图">
+            <div class="map-toolbar">
+              <div class="map-tabs" role="tablist" aria-label="地图切换">
+                <button class="map-tab is-active" type="button" data-map-tab="world" role="tab" aria-selected="true">世界地图</button>
+                <button class="map-tab" type="button" data-map-tab="china" role="tab" aria-selected="false">中国地图</button>
+              </div>
+              <span class="map-hint">滚轮缩放 · 点击图钉查看详情</span>
+            </div>
+
+            <div class="map-stage">
+              <div class="leaflet-map is-active" id="worldMap" data-map="world"></div>
+              <div class="leaflet-map" id="chinaMap" data-map="china"></div>
+              <div class="travel-visited-legend">已旅行</div>
+              <div class="map-scale" id="mapScale">缩放 1x</div>
+            </div>
+          </div>
+
+          <div class="surface explore-stats">
+            <div>
+              <span class="meta">Explore Score</span>
+              <h3>探索进度</h3>
+              <p class="body-copy">先用已记录地点做基础统计，后续每增加一个真实目的地，进度会一起更新。</p>
+            </div>
+            <div class="stats-grid">
+              <div>
+                <div class="stat-topline"><span>世界探索</span><strong id="worldPercent">0%</strong></div>
+                <div class="stat-bar" aria-hidden="true"><span class="stat-fill" id="worldFill" style="--value: 0%;"></span></div>
+                <p class="body-copy">按国家 / 地区粗略统计</p>
+              </div>
+              <div>
+                <div class="stat-topline"><span>中国省份探索</span><strong id="chinaProvincePercent">0%</strong></div>
+                <div class="stat-bar" aria-hidden="true"><span class="stat-fill" id="chinaProvinceFill" style="--value: 0%;"></span></div>
+                <p class="body-copy">按省级行政区粗略统计</p>
+              </div>
+              <div>
+                <div class="stat-topline"><span>中国城市探索</span><strong id="chinaCityPercent">0%</strong></div>
+                <div class="stat-bar" aria-hidden="true"><span class="stat-fill" id="chinaCityFill" style="--value: 0%;"></span></div>
+                <p class="body-copy">按城市粗略统计</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section reveal" id="comments">
+        <div class="section-head">
+          <div>
+            <span class="section-code">04 · Guestbook</span>
+            <h2>亲友留言</h2>
+          </div>
+          <p class="section-kicker">现在先保留 Giscus-ready 的评论位。仓库开启 Discussions 后，可以把这里接成真正留言板。</p>
+        </div>
+
+        <div class="comment-layout">
+          <div class="surface comment-form">
+            <input type="text" placeholder="你的名字" aria-label="你的名字">
+            <textarea placeholder="想留下些什么..." aria-label="评论内容"></textarea>
+            <button class="button disabled-button" type="button" disabled>评论功能待接入 Giscus</button>
+          </div>
+          <div class="surface giscus-ready">
+            <div class="comment-preview">
+              <div>
+                <span class="meta">Giscus Placeholder</span>
+                <h3>未来这里会显示 GitHub Discussions 评论</h3>
+                <p class="body-copy">不需要单独服务器，但访客需要 GitHub 登录才能留言。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="wrap footer">
+      <span>www.chenandgao.com · A quiet archive for two.</span>
+    </footer>
+
+    <div class="lightbox" id="lightbox" aria-hidden="true">
+      <div class="lightbox-card" role="dialog" aria-label="照片预览">
+        <div class="lightbox-image" id="lightboxImage"></div>
+        <div class="lightbox-caption" id="lightboxCaption"></div>
+      </div>
+    </div>
+
+    <script src="./assets/vendor/leaflet/leaflet.js"></script>
+    <script src="./assets/maps/world-countries.data.js"></script>
+    <script src="./assets/maps/china-admin.data.js"></script>
+    <script src="./assets/maps/china-cities.data.js"></script>
+    <script src="./assets/data/travel-places.data.js"></script>
+    <script>
+      const today = new Date();
+      let visibleMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const monthFormatter = new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "long" });
+      const eventDateFormatter = new Intl.DateTimeFormat("zh-CN", { month: "2-digit", day: "2-digit", weekday: "long" });
+
+      const featuredEvents = [
+        {
+          tag: "纪念时刻",
+          title: "网站上线",
+          text: "www.chenandgao.com 已经点亮，属于 Chen & Gao 的小小空间正式开始。",
+          href: "#days",
+          background: "linear-gradient(135deg, #657568 0%, #b76e55 100%)"
+        },
+        {
+          tag: "旅行足迹",
+          title: "第一枚地图钉",
+          text: "把走过的城市慢慢连起来，旅行日志会成为这里最有温度的路线。",
+          href: "#travel",
+          background: "linear-gradient(135deg, #617083 0%, #c7a356 100%)"
+        },
+        {
+          tag: "动态",
+          title: "博客开始建设",
+          text: "从首页开始，把日常、文章、照片和纪念日一点点放进来。",
+          href: "#calendar",
+          background: "linear-gradient(135deg, #9ba298 0%, #657568 100%)"
+        },
+        {
+          tag: "时光档案",
+          title: "时光归档",
+          text: "每个被点亮的日期，都可以留下当天发生的事。",
+          href: "#calendar",
+          background: "linear-gradient(135deg, #d8dee5 0%, #617083 100%)"
+        },
+        {
+          tag: "亲友留言",
+          title: "亲友留言待接入",
+          text: "评论功能会在下一阶段接入真实服务，让朋友也能留下祝福。",
+          href: "#comments",
+          background: "linear-gradient(135deg, #ead2c7 0%, #657568 100%)"
+        }
+      ];
+
+      const calendarEvents = {
+        "2026-06-20": [
+          {
+            type: "里程碑",
+            title: "网站上线",
+            text: "www.chenandgao.com 能够打开，属于这个博客的第一盏灯亮起来了。"
+          }
+        ],
+        "2026-06-21": [
+          {
+            type: "设计",
+            title: "整理首页想法",
+            text: "把日历、动态、旅行和重要日子这些模块先放进同一个清爽的首页。"
+          },
+          {
+            type: "设计",
+            title: "重新整理视觉方向",
+            text: "少一点用力过猛，多一点纸感、留白和照片感。"
+          }
+        ],
+        "2026-06-22": [
+          {
+            type: "计划",
+            title: "等待真实素材",
+            text: "真实照片到位后，旅行和相册会更像两个人的记忆档案。"
+          }
+        ]
+      };
+
+      let activeFeatureIndex = 0;
+      let featureTimer;
+      let carouselPaused = false;
+
+      function renderFeature(index) {
+        const feature = featuredEvents[index];
+        const card = document.getElementById("featureCard");
+        const visual = document.getElementById("featureVisual");
+        const link = document.getElementById("featureLink");
+        const progress = document.getElementById("featureProgress");
+
+        activeFeatureIndex = (index + featuredEvents.length) % featuredEvents.length;
+        card.classList.add("is-changing");
+
+        window.setTimeout(() => {
+          const current = featuredEvents[activeFeatureIndex];
+          visual.style.setProperty("--slide-bg", current.background);
+          link.href = current.href;
+          document.getElementById("featureTag").textContent = current.tag;
+          document.getElementById("featureTitle").textContent = current.title;
+          document.getElementById("featureText").textContent = current.text;
+          card.classList.remove("is-changing");
+        }, 140);
+
+        document.querySelectorAll(".dot").forEach((dot, dotIndex) => {
+          dot.classList.toggle("is-active", dotIndex === activeFeatureIndex);
+          dot.setAttribute("aria-pressed", String(dotIndex === activeFeatureIndex));
+        });
+
+        progress.classList.remove("is-running");
+        void progress.offsetWidth;
+        if (!carouselPaused) progress.classList.add("is-running");
+      }
+
+      function nextFeature(step = 1) {
+        renderFeature(activeFeatureIndex + step);
+      }
+
+      function startCarousel() {
+        window.clearInterval(featureTimer);
+        featureTimer = window.setInterval(() => {
+          if (!carouselPaused) nextFeature(1);
+        }, 6200);
+      }
+
+      function setupCarousel() {
+        const dots = document.getElementById("featureDots");
+        const card = document.getElementById("featureCard");
+
+        featuredEvents.forEach((feature, index) => {
+          const dot = document.createElement("button");
+          dot.className = "dot";
+          dot.type = "button";
+          dot.setAttribute("aria-label", `查看${feature.title}`);
+          dot.addEventListener("click", () => {
+            renderFeature(index);
+            startCarousel();
+          });
+          dots.appendChild(dot);
+        });
+
+        document.getElementById("featurePrev").addEventListener("click", () => {
+          nextFeature(-1);
+          startCarousel();
+        });
+
+        document.getElementById("featureNext").addEventListener("click", () => {
+          nextFeature(1);
+          startCarousel();
+        });
+
+        card.addEventListener("mouseenter", () => {
+          carouselPaused = true;
+          document.getElementById("featureProgress").classList.remove("is-running");
+        });
+
+        card.addEventListener("mouseleave", () => {
+          carouselPaused = false;
+          renderFeature(activeFeatureIndex);
+          startCarousel();
+        });
+
+        renderFeature(0);
+        startCarousel();
+      }
+
+      function dateKey(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function renderCalendarDetail(selectedDate) {
+        const detail = document.getElementById("calendarDetail");
+        const key = dateKey(selectedDate);
+        const events = calendarEvents[key] || [];
+        const formattedDate = eventDateFormatter.format(selectedDate);
+
+        if (!events.length) {
+          detail.innerHTML = `
+            <div class="calendar-empty">
+              <span class="meta">${formattedDate}</span>
+              <h3>这一天还没有记录</h3>
+              <p class="body-copy">以后可以把约会、旅行、纪念日或一件小事写到这里。</p>
+            </div>
+          `;
+          return;
+        }
+
+        detail.innerHTML = events.map((event) => `
+          <article class="event">
+            <span class="meta">${formattedDate} · ${event.type || "动态"}</span>
+            <h3>${event.title}</h3>
+            <p class="body-copy">${event.text}</p>
+          </article>
+        `).join("");
+      }
+
+      function getAllArchiveEvents() {
+        return Object.entries(calendarEvents)
+          .flatMap(([date, events]) => events.map((event) => ({ date, ...event })))
+          .sort((a, b) => b.date.localeCompare(a.date));
+      }
+
+      function renderArchiveList() {
+        const root = document.getElementById("updatesList");
+        root.innerHTML = getAllArchiveEvents().map((event) => `
+          <article class="surface update-row">
+            <span class="meta">${event.date.replaceAll("-", ".")}</span>
+            <div>
+              <h3>${event.title}</h3>
+              <p class="body-copy">${event.text}</p>
+            </div>
+            <span class="update-badge">${event.type || "动态"}</span>
+          </article>
+        `).join("");
+      }
+
+      function syncDateControls(monthDate) {
+        document.getElementById("yearInput").value = monthDate.getFullYear();
+        document.getElementById("monthSelect").value = monthDate.getMonth();
+      }
+
+      function buildCalendar(monthDate, selectedDate = today) {
+        const root = document.getElementById("calendarDays");
+        const year = monthDate.getFullYear();
+        const month = monthDate.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const totalDays = new Date(year, month + 1, 0).getDate();
+        const mondayStartOffset = (firstDay.getDay() + 6) % 7;
+
+        document.getElementById("calendarTitle").textContent = monthFormatter.format(monthDate);
+        syncDateControls(monthDate);
+        root.innerHTML = "";
+
+        for (let i = 0; i < mondayStartOffset; i += 1) {
+          root.appendChild(document.createElement("span"));
+        }
+
+        for (let day = 1; day <= totalDays; day += 1) {
+          const item = document.createElement("button");
+          const current = new Date(year, month, day);
+          item.className = "day";
+          item.type = "button";
+          item.textContent = day;
+          item.setAttribute("aria-label", "查看 " + (month + 1) + " 月 " + day + " 日事件");
+
+          if (dateKey(current) === dateKey(today)) item.classList.add("is-today");
+          if (dateKey(current) === dateKey(selectedDate)) item.classList.add("is-selected");
+          if (calendarEvents[dateKey(current)]) item.classList.add("has-event");
+
+          item.addEventListener("click", () => {
+            root.querySelectorAll(".day").forEach((node) => node.classList.remove("is-selected"));
+            item.classList.add("is-selected");
+            renderCalendarDetail(current);
+          });
+
+          root.appendChild(item);
+        }
+      }
+
+      function setupCalendar() {
+        const yearInput = document.getElementById("yearInput");
+        const monthSelect = document.getElementById("monthSelect");
+
+        function jumpToSelectedMonth() {
+          const year = Number(yearInput.value);
+          const month = Number(monthSelect.value);
+          if (!Number.isInteger(year) || year < 2000 || year > 2099) return;
+          visibleMonth = new Date(year, month, 1);
+          buildCalendar(visibleMonth, visibleMonth);
+          renderCalendarDetail(visibleMonth);
+        }
+
+        document.getElementById("prevMonth").addEventListener("click", () => {
+          visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
+          buildCalendar(visibleMonth, visibleMonth);
+          renderCalendarDetail(visibleMonth);
+        });
+
+        document.getElementById("nextMonth").addEventListener("click", () => {
+          visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1);
+          buildCalendar(visibleMonth, visibleMonth);
+          renderCalendarDetail(visibleMonth);
+        });
+
+        yearInput.addEventListener("change", jumpToSelectedMonth);
+        monthSelect.addEventListener("change", jumpToSelectedMonth);
+
+        buildCalendar(visibleMonth, today);
+        renderCalendarDetail(today);
+        renderArchiveList();
+      }
+
+      function setupArchiveViews() {
+        const buttons = document.querySelectorAll("[data-archive-view]");
+        const views = {
+          calendar: document.getElementById("calendarView"),
+          list: document.getElementById("listView")
+        };
+
+        buttons.forEach((button) => {
+          button.addEventListener("click", () => {
+            const target = button.dataset.archiveView;
+            buttons.forEach((node) => {
+              const isActive = node === button;
+              node.classList.toggle("is-active", isActive);
+              node.setAttribute("aria-pressed", String(isActive));
+            });
+            Object.entries(views).forEach(([name, view]) => {
+              view.classList.toggle("is-active", name === target);
+            });
+          });
+        });
+      }
+
+      function splitDuration(totalSeconds) {
+        const days = Math.max(0, Math.floor(totalSeconds / 86400));
+        const years = Math.floor(days / 365);
+        const months = Math.floor((days % 365) / 30);
+        const restDays = days - (years * 365) - (months * 30);
+        return { years, months, days: restDays };
+      }
+
+      function formatDuration(duration) {
+        return [
+          '<span class="counter-part is-primary"><span class="counter-number">' + duration.years + '</span><span class="counter-unit">年</span></span>',
+          '<span class="counter-part"><span class="counter-number">' + duration.months + '</span><span class="counter-unit">月</span></span>',
+          '<span class="counter-part"><span class="counter-number">' + duration.days + '</span><span class="counter-unit">日</span></span>'
+        ].join("");
+      }
+
+      function updateCounters() {
+        const now = new Date();
+        document.querySelectorAll("[data-since]").forEach((node) => {
+          const start = new Date(node.dataset.since);
+          node.innerHTML = formatDuration(splitDuration((now - start) / 1000));
+        });
+      }
+
+      const travelPlaces = window.__TRAVEL_PLACES__ || {};
+
+      const explorationTotals = {
+        world: 195,
+        chinaProvince: 34,
+        chinaCity: 370
+      };
+
+      const normalizePlaceName = function (name) {
+        return String(name || "")
+          .replace(/\s+/g, "")
+          .replace(/特别行政区$/, "")
+          .replace(/维吾尔自治区$/, "")
+          .replace(/壮族自治区$/, "")
+          .replace(/回族自治区$/, "")
+          .replace(/哈萨克自治州$/, "")
+          .replace(/自治区$/, "")
+          .replace(/自治州$/, "")
+          .replace(/省$/, "")
+          .replace(/市$/, "")
+          .replace(/地区$/, "")
+          .replace(/盟$/, "");
+      };
+
+      const getVisitedPlaceSets = function () {
+        const visited = {
+          world: new Set(),
+          chinaCity: new Set()
+        };
+
+        Object.values(travelPlaces).forEach(function (place) {
+          if (!place.title) return;
+          if (place.map === "world") {
+            visited.world.add(normalizePlaceName(place.country || place.title));
+          }
+          if (place.map === "china") {
+            visited.chinaCity.add(normalizePlaceName(place.title));
+          }
+        });
+
+        return visited;
+      };
+
+      const getVisitedChinaProvinceCodes = function (visitedChinaCityNames) {
+        const provinceCodes = new Set();
+        if (!window.__CHINA_CITIES__ || !window.__CHINA_ADMIN__) {
+          return provinceCodes;
+        }
+
+        window.__CHINA_CITIES__.features.forEach(function (feature) {
+          const props = feature.properties || {};
+          if (!visitedChinaCityNames.has(normalizePlaceName(props.name))) return;
+          const provinceCode = props.parent && props.parent.adcode;
+          if (provinceCode) {
+            provinceCodes.add(String(provinceCode));
+          }
+        });
+
+        window.__CHINA_ADMIN__.features.forEach(function (feature) {
+          const props = feature.properties || {};
+          if (visitedChinaCityNames.has(normalizePlaceName(props.name)) && props.adcode) {
+            provinceCodes.add(String(props.adcode));
+          }
+        });
+
+        return provinceCodes;
+      };
+
+      const getExplorationStats = function () {
+        const visited = getVisitedPlaceSets();
+        const visitedChinaProvinceCodes = getVisitedChinaProvinceCodes(visited.chinaCity);
+
+        return {
+          world: {
+            visited: visited.world.size,
+            total: explorationTotals.world
+          },
+          chinaProvince: {
+            visited: visitedChinaProvinceCodes.size,
+            total: explorationTotals.chinaProvince
+          },
+          chinaCity: {
+            visited: visited.chinaCity.size,
+            total: explorationTotals.chinaCity
+          }
+        };
+      };
+
+      const chinaCapitalLabels = [
+        { name: "北京", coords: [39.9042, 116.4074] },
+        { name: "天津", coords: [39.0842, 117.2009] },
+        { name: "上海", coords: [31.2304, 121.4737] },
+        { name: "重庆", coords: [29.563, 106.5516] },
+        { name: "石家庄", coords: [38.0428, 114.5149] },
+        { name: "太原", coords: [37.8706, 112.5489] },
+        { name: "呼和浩特", coords: [40.8415, 111.751] },
+        { name: "沈阳", coords: [41.8057, 123.4315] },
+        { name: "长春", coords: [43.8171, 125.3235] },
+        { name: "哈尔滨", coords: [45.7567, 126.6425] },
+        { name: "南京", coords: [32.0603, 118.7969] },
+        { name: "杭州", coords: [30.2741, 120.1551] },
+        { name: "合肥", coords: [31.8206, 117.2272] },
+        { name: "福州", coords: [26.0745, 119.2965] },
+        { name: "南昌", coords: [28.682, 115.8579] },
+        { name: "济南", coords: [36.6512, 117.1201] },
+        { name: "郑州", coords: [34.7466, 113.6254] },
+        { name: "武汉", coords: [30.5928, 114.3055] },
+        { name: "长沙", coords: [28.2282, 112.9388] },
+        { name: "广州", coords: [23.1291, 113.2644] },
+        { name: "南宁", coords: [22.817, 108.3669] },
+        { name: "海口", coords: [20.044, 110.1983] },
+        { name: "成都", coords: [30.5728, 104.0668] },
+        { name: "贵阳", coords: [26.647, 106.6302] },
+        { name: "昆明", coords: [25.0389, 102.7183] },
+        { name: "拉萨", coords: [29.6525, 91.1721] },
+        { name: "西安", coords: [34.3416, 108.9398] },
+        { name: "兰州", coords: [36.0611, 103.8343] },
+        { name: "西宁", coords: [36.6171, 101.7782] },
+        { name: "银川", coords: [38.4872, 106.2309] },
+        { name: "乌鲁木齐", coords: [43.8256, 87.6168] },
+        { name: "香港", coords: [22.3193, 114.1694] },
+        { name: "澳门", coords: [22.1987, 113.5439] },
+        { name: "台北", coords: [25.033, 121.5654] }
+      ];
+
+      const worldMajorCountryCodes = new Set([
+        "CHN", "USA", "CAN", "MEX", "BRA", "ARG", "GBR", "FRA", "DEU", "ESP",
+        "ITA", "RUS", "IND", "JPN", "KOR", "IDN", "AUS", "ZAF", "EGY", "SAU"
+      ]);
+
+      const worldCountryNameOverrides = {
+        CHN: "中国",
+        USA: "美国",
+        FRA: "法国",
+        NOR: "挪威",
+        GBR: "英国",
+        RUS: "俄罗斯",
+        KOR: "韩国",
+        PRK: "朝鲜",
+        IRN: "伊朗",
+        SYR: "叙利亚",
+        LAO: "老挝",
+        VNM: "越南",
+        BOL: "玻利维亚",
+        VEN: "委内瑞拉",
+        TZA: "坦桑尼亚",
+        COD: "刚果（金）",
+        COG: "刚果（布）",
+        PSE: "巴勒斯坦",
+        XKX: "科索沃"
+      };
+
+      const worldCountryCodeByName = {
+        France: "FRA",
+        Norway: "NOR",
+        Kosovo: "XKX"
+      };
+
+      const worldCountryAlpha2ByName = {
+        France: "FR",
+        Norway: "NO",
+        Kosovo: "XK"
+      };
+
+      const regionNameFormatter = typeof Intl !== "undefined" && Intl.DisplayNames
+        ? new Intl.DisplayNames(["zh-CN"], { type: "region" })
+        : null;
+
+      function renderTravelStats() {
+        const explorationStats = getExplorationStats();
+        const setStat = (name, percentNodeId, fillNodeId) => {
+          const stat = explorationStats[name];
+          const percent = Math.max(0, Math.min(100, (stat.visited / stat.total) * 100));
+          const label = percent < 1 ? percent.toFixed(1) : percent.toFixed(0);
+          const percentNode = document.getElementById(percentNodeId);
+          const fillNode = document.getElementById(fillNodeId);
+          if (percentNode) percentNode.textContent = label + "%";
+          if (fillNode) fillNode.style.setProperty("--value", percent + "%");
+        };
+
+        setStat("world", "worldPercent", "worldFill");
+        setStat("chinaProvince", "chinaProvincePercent", "chinaProvinceFill");
+        setStat("chinaCity", "chinaCityPercent", "chinaCityFill");
+      }
+
+      function setupTravelMap() {
+        renderTravelStats();
+        const scaleNode = document.getElementById("mapScale");
+        const tabs = document.querySelectorAll("[data-map-tab]");
+        const mapNodes = document.querySelectorAll(".leaflet-map");
+
+        if (!window.L || !window.__WORLD_COUNTRIES__ || !window.__CHINA_ADMIN__ || !window.__CHINA_CITIES__) {
+          scaleNode.textContent = "地图数据未加载";
+          return;
+        }
+
+        const baseZoom = { world: 1, china: 1 };
+
+        const maps = {
+          world: L.map("worldMap", {
+            zoomControl: false,
+            scrollWheelZoom: true,
+            worldCopyJump: true,
+            minZoom: 1,
+            maxZoom: 6,
+            preferCanvas: true
+          }).setView([18, 10], 1),
+          china: L.map("chinaMap", {
+            zoomControl: false,
+            scrollWheelZoom: true,
+            minZoom: 3,
+            maxZoom: 8,
+            preferCanvas: true
+          }).setView([35.4, 104.2], 4)
+        };
+
+        const visitedPlaces = getVisitedPlaceSets();
+        const visitedWorldNames = visitedPlaces.world;
+        const visitedChinaCityNames = visitedPlaces.chinaCity;
+        const visitedChinaProvinceCodes = getVisitedChinaProvinceCodes(visitedChinaCityNames);
+
+        const isVisitedCountry = function (feature) {
+          const props = feature.properties || {};
+          const code = getCountryCode(props);
+          const names = [
+            code,
+            getCountryDisplayName(props),
+            props.name,
+            props.NAME,
+            props.ADMIN
+          ];
+          return names.some(function (name) {
+            return visitedWorldNames.has(normalizePlaceName(name));
+          });
+        };
+
+        const isVisitedChinaCity = function (feature) {
+          const props = feature.properties || {};
+          return visitedChinaCityNames.has(normalizePlaceName(props.name));
+        };
+
+        const isVisitedChinaProvince = function (feature) {
+          const props = feature.properties || {};
+          return props.adcode && visitedChinaProvinceCodes.has(String(props.adcode));
+        };
+
+        const worldStyle = {
+          color: "rgba(97, 112, 131, 0.88)",
+          weight: 0.9,
+          opacity: 1,
+          fillOpacity: 0,
+          lineJoin: "round"
+        };
+
+        const chinaStyle = {
+          color: "rgba(101, 117, 104, 0.96)",
+          weight: 1.15,
+          opacity: 1,
+          fillOpacity: 0,
+          lineJoin: "round"
+        };
+
+        const cityBoundaryStyle = {
+          color: "rgba(183, 110, 85, 0.72)",
+          weight: 0.7,
+          opacity: 1,
+          fillOpacity: 0,
+          lineJoin: "round"
+        };
+
+        const visitedWorldStyle = Object.assign({}, worldStyle, {
+          color: "rgba(183, 110, 85, 0.95)",
+          weight: 1.35,
+          fillColor: "#b76e55",
+          fillOpacity: 0.36
+        });
+
+        const visitedChinaRegionStyle = Object.assign({}, chinaStyle, {
+          color: "rgba(183, 110, 85, 0.96)",
+          weight: 1.45,
+          fillColor: "#b76e55",
+          fillOpacity: 0.34
+        });
+
+        const visitedChinaCityStyle = Object.assign({}, cityBoundaryStyle, {
+          color: "rgba(183, 110, 85, 0.98)",
+          weight: 1.1,
+          fillColor: "#b76e55",
+          fillOpacity: 0.4
+        });
+
+        const worldLayer = L.geoJSON(window.__WORLD_COUNTRIES__, {
+          style: function (feature) {
+            return isVisitedCountry(feature) ? visitedWorldStyle : worldStyle;
+          }
+        }).addTo(maps.world);
+
+        const chinaLayer = L.geoJSON(window.__CHINA_ADMIN__, {
+          style: function (feature) {
+            return isVisitedChinaProvince(feature) ? visitedChinaRegionStyle : chinaStyle;
+          }
+        }).addTo(maps.china);
+
+        const cityBoundaryLayer = L.geoJSON(window.__CHINA_CITIES__, {
+          style: function (feature) {
+            return isVisitedChinaCity(feature) ? visitedChinaCityStyle : cityBoundaryStyle;
+          }
+        });
+
+        const provinceLabelLayer = L.layerGroup().addTo(maps.china);
+        const capitalLabelLayer = L.layerGroup().addTo(maps.china);
+        const cityLabelLayer = L.layerGroup();
+        const worldMajorLabelLayer = L.layerGroup().addTo(maps.world);
+        const worldCountryLabelLayer = L.layerGroup();
+
+        const createLabelMarker = function (coords, name, kind) {
+          return L.marker(coords, {
+            interactive: false,
+            keyboard: false,
+            zIndexOffset:
+              kind === "city" ? 140 :
+              kind === "capital" ? 110 :
+              kind === "country-major" ? 95 :
+              kind === "country" ? 90 :
+              80,
+            icon: L.divIcon({
+              className: "geo-label-icon",
+              iconSize: null,
+              iconAnchor: [0, 0],
+              html:
+                '<span class="geo-label geo-label--' +
+                kind +
+                '">' +
+                name +
+                '</span>'
+            })
+          });
+        };
+
+        function getCountryCode(props) {
+          const code = props["ISO3166-1-Alpha-3"] || props.iso_a3 || props.ISO_A3 || "";
+          if (code && code !== "-99") return code;
+          return worldCountryCodeByName[props.name || props.NAME || props.ADMIN] || code;
+        }
+
+        function getCountryAlpha2(props) {
+          const code = props["ISO3166-1-Alpha-2"] || props.iso_a2 || props.ISO_A2 || "";
+          if (code && code !== "-99") return code;
+          return worldCountryAlpha2ByName[props.name || props.NAME || props.ADMIN] || code;
+        }
+
+        function getCountryDisplayName(props) {
+          const code = getCountryCode(props);
+          const alpha2 = getCountryAlpha2(props);
+          if (worldCountryNameOverrides[code]) {
+            return worldCountryNameOverrides[code];
+          }
+          if (regionNameFormatter && /^[A-Z]{2}$/.test(alpha2)) {
+            return regionNameFormatter.of(alpha2) || props.name || props.NAME || props.ADMIN;
+          }
+          return props.name || props.NAME || props.ADMIN;
+        }
+
+        const getRingAreaAndCentroid = function (ring) {
+          let twiceArea = 0;
+          let centroidX = 0;
+          let centroidY = 0;
+
+          for (let index = 0; index < ring.length - 1; index += 1) {
+            const current = ring[index];
+            const next = ring[index + 1];
+            const cross = current[0] * next[1] - next[0] * current[1];
+            twiceArea += cross;
+            centroidX += (current[0] + next[0]) * cross;
+            centroidY += (current[1] + next[1]) * cross;
+          }
+
+          if (Math.abs(twiceArea) < 0.000001) {
+            const total = ring.reduce(function (acc, point) {
+              acc.lng += point[0];
+              acc.lat += point[1];
+              return acc;
+            }, { lng: 0, lat: 0 });
+            return {
+              area: 0,
+              center: [total.lat / ring.length, total.lng / ring.length]
+            };
+          }
+
+          return {
+            area: Math.abs(twiceArea / 2),
+            center: [centroidY / (3 * twiceArea), centroidX / (3 * twiceArea)]
+          };
+        };
+
+        const getFeatureLabelCoords = function (feature) {
+          const geometry = feature.geometry || {};
+          const polygons = geometry.type === "Polygon"
+            ? [geometry.coordinates]
+            : geometry.type === "MultiPolygon"
+              ? geometry.coordinates
+              : [];
+
+          const largestPolygon = polygons.reduce(function (largest, polygon) {
+            const outerRing = polygon && polygon[0];
+            if (!outerRing || outerRing.length < 4) return largest;
+            const result = getRingAreaAndCentroid(outerRing);
+            return !largest || result.area > largest.area ? result : largest;
+          }, null);
+
+          if (largestPolygon) return largestPolygon.center;
+
+          const bounds = L.geoJSON(feature).getBounds();
+          if (!bounds.isValid()) return null;
+          const center = bounds.getCenter();
+          return [center.lat, center.lng];
+        };
+
+        window.__WORLD_COUNTRIES__.features.forEach(function (feature) {
+          const props = feature.properties || {};
+          const name = props.name || props.NAME || props.ADMIN;
+          const code = getCountryCode(props);
+          if (!name || code === "-99") return;
+          const displayName = getCountryDisplayName(props);
+          const labelCoords = getFeatureLabelCoords(feature);
+          if (!labelCoords) return;
+          if (worldMajorCountryCodes.has(code)) {
+            createLabelMarker(labelCoords, displayName, "country-major").addTo(worldMajorLabelLayer);
+          }
+          createLabelMarker(labelCoords, displayName, "country").addTo(worldCountryLabelLayer);
+        });
+
+        window.__CHINA_ADMIN__.features.forEach(function (feature) {
+          const props = feature.properties || {};
+          const center = props.centroid || props.center;
+          if (!center || !props.name) return;
+          createLabelMarker([center[1], center[0]], props.name, "province").addTo(provinceLabelLayer);
+        });
+
+        chinaCapitalLabels.forEach(function (city) {
+          createLabelMarker(city.coords, city.name, "capital").addTo(capitalLabelLayer);
+        });
+
+        window.__CHINA_CITIES__.features.forEach(function (feature) {
+          const props = feature.properties || {};
+          const center = props.centroid || props.center;
+          if (!center || !props.name) return;
+          createLabelMarker([center[1], center[0]], props.name, "city").addTo(cityLabelLayer);
+        });
+
+        chinaCapitalLabels
+          .filter(function (city) {
+            return ["北京", "天津", "上海", "重庆", "香港", "澳门", "台北"].includes(city.name);
+          })
+          .forEach(function (city) {
+            createLabelMarker(city.coords, city.name, "city").addTo(cityLabelLayer);
+        });
+
+        const markerIcon = function (color) {
+          return L.divIcon({
+            className: "travel-marker",
+            iconSize: [24, 24],
+            iconAnchor: [12, 22],
+            popupAnchor: [0, -18],
+            html: '<span class="travel-marker-core" style="--marker-color:' + color + ';"></span>'
+          });
+        };
+
+        const popupHtml = function (place) {
+          return [
+            '<div class="travel-popup">',
+            '<span class="meta">' + place.area + '</span>',
+            '<h3>' + place.title + '</h3>',
+            '<div class="travel-popup-meta">',
+            '<span>时间：' + place.date + '</span>',
+            '<span>评分：' + place.score + '</span>',
+            '</div>',
+            '<p>' + place.note + '</p>',
+            '</div>'
+          ].join("");
+        };
+
+        Object.values(travelPlaces).forEach(function (place) {
+          if (place.map === "china") return;
+          const targetMap = maps[place.map];
+          if (!targetMap) return;
+          L.marker(place.coords, { icon: markerIcon(place.color) })
+            .addTo(targetMap)
+            .bindPopup(popupHtml(place));
+        });
+
+        const updateScale = function (mapName) {
+          const zoom = maps[mapName].getZoom();
+          const factor = Math.pow(2, zoom - baseZoom[mapName]);
+          scaleNode.textContent = "缩放 " + (Math.round(factor * 10) / 10) + "x";
+        };
+
+        const updateChinaLabels = function () {
+          const zoom = maps.china.getZoom();
+          const showProvince = zoom < 5.1;
+          const showCapital = zoom >= 5.1 && zoom < 6.3;
+          const showMoreCities = zoom >= 6.3;
+          const toggleLayer = function (layer, shouldShow) {
+            if (shouldShow && !maps.china.hasLayer(layer)) {
+              maps.china.addLayer(layer);
+            }
+            if (!shouldShow && maps.china.hasLayer(layer)) {
+              maps.china.removeLayer(layer);
+            }
+          };
+
+          toggleLayer(provinceLabelLayer, showProvince);
+          toggleLayer(capitalLabelLayer, showCapital);
+          toggleLayer(cityLabelLayer, showMoreCities);
+          toggleLayer(cityBoundaryLayer, showMoreCities);
+
+          if (showProvince) {
+            scaleNode.textContent += " · 省份";
+          } else if (showCapital) {
+            scaleNode.textContent += " · 省会";
+          } else {
+            scaleNode.textContent += " · 地级市";
+          }
+        };
+
+        const updateWorldLabels = function () {
+          const zoom = maps.world.getZoom();
+          const showAllCountries = zoom >= 3;
+          const toggleLayer = function (layer, shouldShow) {
+            if (shouldShow && !maps.world.hasLayer(layer)) {
+              maps.world.addLayer(layer);
+            }
+            if (!shouldShow && maps.world.hasLayer(layer)) {
+              maps.world.removeLayer(layer);
+            }
+          };
+
+          toggleLayer(worldMajorLabelLayer, !showAllCountries);
+          toggleLayer(worldCountryLabelLayer, showAllCountries);
+          scaleNode.textContent += showAllCountries ? " · 国家" : " · 主要国家";
+        };
+
+        const syncMap = function (mapName) {
+          tabs.forEach(function (tab) {
+            const isActive = tab.dataset.mapTab === mapName;
+            tab.classList.toggle("is-active", isActive);
+            tab.setAttribute("aria-selected", String(isActive));
+          });
+          mapNodes.forEach(function (node) {
+            node.classList.toggle("is-active", node.dataset.map === mapName);
+          });
+          window.setTimeout(function () {
+            maps[mapName].invalidateSize();
+            updateScale(mapName);
+            if (mapName === "china") {
+              updateChinaLabels();
+            }
+            if (mapName === "world") {
+              updateWorldLabels();
+            }
+          }, 80);
+        };
+
+        Object.entries(maps).forEach(function ([name, map]) {
+          map.on("zoomend", function () {
+            updateScale(name);
+            if (name === "china") {
+              updateChinaLabels();
+            }
+            if (name === "world") {
+              updateWorldLabels();
+            }
+          });
+        });
+
+        tabs.forEach(function (tab) {
+          tab.addEventListener("click", function () {
+            syncMap(tab.dataset.mapTab);
+          });
+        });
+
+        updateChinaLabels();
+        updateWorldLabels();
+        syncMap("world");
+      }
+
+      function setupLightbox() {
+        const lightbox = document.getElementById("lightbox");
+        const image = document.getElementById("lightboxImage");
+        const caption = document.getElementById("lightboxCaption");
+        document.querySelectorAll(".photo").forEach((button) => {
+          button.addEventListener("click", () => {
+            image.style.setProperty("--lightbox-bg", button.dataset.bg);
+            caption.textContent = button.dataset.caption;
+            lightbox.classList.add("is-open");
+            lightbox.setAttribute("aria-hidden", "false");
+          });
+        });
+
+        lightbox.addEventListener("click", () => {
+          lightbox.classList.remove("is-open");
+          lightbox.setAttribute("aria-hidden", "true");
+        });
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            lightbox.classList.remove("is-open");
+            lightbox.setAttribute("aria-hidden", "true");
+          }
+        });
+      }
+
+      function setupRevealAndNav() {
+        const revealObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              revealObserver.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.16 });
+
+        document.querySelectorAll(".reveal").forEach((node) => revealObserver.observe(node));
+
+        const navLinks = [...document.querySelectorAll(".nav-links a")];
+        const sectionObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            navLinks.forEach((link) => {
+              link.classList.toggle("is-active", link.getAttribute("href") === `#${entry.target.id}`);
+            });
+          });
+        }, { rootMargin: "-42% 0px -50% 0px" });
+
+        document.querySelectorAll("main section[id]").forEach((section) => sectionObserver.observe(section));
+      }
+
+      setupCarousel();
+      setupCalendar();
+      setupArchiveViews();
+      setupTravelMap();
+      setupLightbox();
+      setupRevealAndNav();
+      updateCounters();
+      setInterval(updateCounters, 1000);
+    </script>
+  </body>
+</html>
