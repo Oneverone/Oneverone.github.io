@@ -440,6 +440,68 @@
         font-size: 16px;
       }
 
+      .archive-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+
+      .view-tabs,
+      .date-jump {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 253, 247, 0.72);
+      }
+
+      .view-tab {
+        min-height: 34px;
+        padding: 0 13px;
+        border: 0;
+        border-radius: 999px;
+        color: var(--muted);
+        background: transparent;
+        font-size: 13px;
+        transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+      }
+
+      .view-tab:hover,
+      .view-tab.is-active {
+        color: var(--ink);
+        background: var(--surface-solid);
+        box-shadow: 0 8px 22px rgba(60, 52, 42, 0.08);
+      }
+
+      .date-jump {
+        border-radius: var(--radius);
+      }
+
+      .month-select,
+      .year-input {
+        min-height: 34px;
+        border: 0;
+        color: var(--ink);
+        background: transparent;
+        font-size: 13px;
+      }
+
+      .year-input {
+        width: 76px;
+      }
+
+      .archive-view {
+        display: none;
+      }
+
+      .archive-view.is-active {
+        display: block;
+      }
+
       .surface {
         border: 1px solid var(--line);
         border-radius: var(--radius);
@@ -570,6 +632,40 @@
         margin-top: 20px;
         padding-top: 20px;
         border-top: 1px solid var(--line);
+      }
+
+      .updates-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .update-row {
+        display: grid;
+        grid-template-columns: 128px minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: center;
+        padding: 18px;
+        transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
+      }
+
+      .update-row:hover {
+        transform: translateY(-3px);
+        background: var(--surface-solid);
+        box-shadow: var(--shadow);
+      }
+
+      .update-row h3 {
+        margin-bottom: 4px;
+      }
+
+      .update-badge {
+        padding: 7px 10px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--sage);
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
       }
 
       .map-panel {
@@ -921,6 +1017,19 @@
         .day {
           min-height: 42px;
         }
+
+        .archive-toolbar,
+        .update-row {
+          align-items: stretch;
+          grid-template-columns: 1fr;
+          flex-direction: column;
+        }
+
+        .view-tabs,
+        .date-jump {
+          width: 100%;
+          justify-content: center;
+        }
       }
     </style>
   </head>
@@ -932,8 +1041,7 @@
           <span>Chen & Gao</span>
         </a>
         <div class="nav-links">
-          <a href="#calendar">日历</a>
-          <a href="#updates">动态</a>
+          <a href="#calendar">动态档案</a>
           <a href="#travel">旅行</a>
           <a href="#days">重要日子</a>
           <a href="#comments">评论</a>
@@ -948,7 +1056,7 @@
           <h1>Chen & Gao</h1>
           <p class="hero-copy">一个慢慢长出来的专属博客。先把重要的日子、走过的地方、零碎的动态和未来的留言板放好，等真实照片和故事一点点补进来。</p>
           <div class="hero-actions">
-            <a class="button" href="#updates">看最新动态</a>
+            <a class="button" href="#calendar">看动态档案</a>
             <a class="button" href="#days">查看重要日子</a>
           </div>
         </div>
@@ -956,7 +1064,7 @@
         <div>
           <article class="memory-card" id="featureCard">
             <div class="memory-visual" id="featureVisual"></div>
-            <a class="memory-content" id="featureLink" href="#updates">
+            <a class="memory-content" id="featureLink" href="#calendar">
               <span class="memory-tag" id="featureTag">重要事件</span>
               <h2 class="memory-title" id="featureTitle">从这里开始</h2>
               <p class="memory-text" id="featureText">记录会慢慢变多，页面也会慢慢长成真正的家。</p>
@@ -979,68 +1087,56 @@
       <section class="section reveal" id="calendar">
         <div class="section-head">
           <div>
-            <span class="section-code">01 · Calendar</span>
-            <h2>日历</h2>
+            <span class="section-code">01 · Archive</span>
+            <h2>动态档案</h2>
           </div>
-          <p class="section-kicker">日期可以点击，月份可以切换。现在是轻量自定义日历，后续事件变多再考虑 FullCalendar。</p>
+          <p class="section-kicker">动态默认以日历方式展示，也可以切换成列表。点击年月可以快速跳转，点击日期查看当天记录。</p>
         </div>
 
-        <div class="calendar-layout">
-          <div class="surface calendar-panel">
-            <div class="calendar-top">
-              <button class="icon-button" id="prevMonth" type="button" aria-label="上个月">‹</button>
-              <strong class="calendar-title" id="calendarTitle">2026 年 6 月</strong>
-              <button class="icon-button" id="nextMonth" type="button" aria-label="下个月">›</button>
-            </div>
-            <div class="weekdays" aria-hidden="true">
-              <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
-            </div>
-            <div class="days" id="calendarDays" aria-label="月历"></div>
+        <div class="archive-toolbar">
+          <div class="view-tabs" aria-label="动态展示方式">
+            <button class="view-tab is-active" type="button" data-archive-view="calendar" aria-pressed="true">日历</button>
+            <button class="view-tab" type="button" data-archive-view="list" aria-pressed="false">列表</button>
           </div>
-          <div class="surface calendar-detail" id="calendarDetail" aria-live="polite"></div>
-        </div>
-      </section>
-
-      <section class="section reveal" id="updates">
-        <div class="section-head">
-          <div>
-            <span class="section-code">02 · Updates</span>
-            <h2>动态</h2>
+          <div class="date-jump" aria-label="快速切换年月">
+            <button class="icon-button" id="prevMonth" type="button" aria-label="上个月">‹</button>
+            <input class="year-input" id="yearInput" type="number" min="2000" max="2099" aria-label="年份">
+            <select class="month-select" id="monthSelect" aria-label="月份">
+              <option value="0">1 月</option>
+              <option value="1">2 月</option>
+              <option value="2">3 月</option>
+              <option value="3">4 月</option>
+              <option value="4">5 月</option>
+              <option value="5">6 月</option>
+              <option value="6">7 月</option>
+              <option value="7">8 月</option>
+              <option value="8">9 月</option>
+              <option value="9">10 月</option>
+              <option value="10">11 月</option>
+              <option value="11">12 月</option>
+            </select>
+            <button class="icon-button" id="nextMonth" type="button" aria-label="下个月">›</button>
           </div>
-          <p class="section-kicker">用更清爽的卡片承载阶段进展。后续可以把每一条动态扩展成图文文章。</p>
         </div>
 
-        <div class="bento">
-          <article class="surface story-card is-large">
-            <div class="story-topline">
-              <span class="meta">2026.06.20</span>
-              <span class="story-mark"></span>
+        <div class="archive-view is-active" id="calendarView">
+          <div class="calendar-layout">
+            <div class="surface calendar-panel">
+              <div class="calendar-top">
+                <strong class="calendar-title" id="calendarTitle">2026 年 6 月</strong>
+                <span class="meta">默认视图</span>
+              </div>
+              <div class="weekdays" aria-hidden="true">
+                <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+              </div>
+              <div class="days" id="calendarDays" aria-label="动态月历"></div>
             </div>
-            <div>
-              <h3>网站上线</h3>
-              <p class="body-copy">从域名亮起来的那天开始，这里就有了自己的坐标。</p>
-            </div>
-          </article>
-          <article class="surface story-card">
-            <div class="story-topline">
-              <span class="meta">Design</span>
-              <span class="story-mark"></span>
-            </div>
-            <div>
-              <h3>重新整理视觉方向</h3>
-              <p class="body-copy">少一点用力过猛，多一点纸感、留白和照片感。</p>
-            </div>
-          </article>
-          <article class="surface story-card">
-            <div class="story-topline">
-              <span class="meta">Next</span>
-              <span class="story-mark"></span>
-            </div>
-            <div>
-              <h3>等待真实素材</h3>
-              <p class="body-copy">真实照片到位后，旅行和相册会更像两个人的记忆档案。</p>
-            </div>
-          </article>
+            <div class="surface calendar-detail" id="calendarDetail" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div class="archive-view" id="listView">
+          <div class="updates-list" id="updatesList" aria-label="动态列表"></div>
         </div>
       </section>
 
@@ -1189,7 +1285,7 @@
           tag: "动态",
           title: "博客开始建设",
           text: "从首页开始，把日常、文章、照片和纪念日一点点放进来。",
-          href: "#updates",
+          href: "#calendar",
           background: "linear-gradient(135deg, #9ba298 0%, #657568 100%)"
         },
         {
@@ -1211,14 +1307,28 @@
       const calendarEvents = {
         "2026-06-20": [
           {
+            type: "里程碑",
             title: "网站上线",
             text: "www.chenandgao.com 能够打开，属于这个博客的第一盏灯亮起来了。"
           }
         ],
         "2026-06-21": [
           {
+            type: "设计",
             title: "整理首页想法",
             text: "把日历、动态、旅行和重要日子这些模块先放进同一个清爽的首页。"
+          },
+          {
+            type: "设计",
+            title: "重新整理视觉方向",
+            text: "少一点用力过猛，多一点纸感、留白和照片感。"
+          }
+        ],
+        "2026-06-22": [
+          {
+            type: "计划",
+            title: "等待真实素材",
+            text: "真实照片到位后，旅行和相册会更像两个人的记忆档案。"
           }
         ]
       };
@@ -1335,11 +1445,36 @@
 
         detail.innerHTML = events.map((event) => `
           <article class="event">
-            <span class="meta">${formattedDate}</span>
+            <span class="meta">${formattedDate} · ${event.type || "动态"}</span>
             <h3>${event.title}</h3>
             <p class="body-copy">${event.text}</p>
           </article>
         `).join("");
+      }
+
+      function getAllArchiveEvents() {
+        return Object.entries(calendarEvents)
+          .flatMap(([date, events]) => events.map((event) => ({ date, ...event })))
+          .sort((a, b) => b.date.localeCompare(a.date));
+      }
+
+      function renderArchiveList() {
+        const root = document.getElementById("updatesList");
+        root.innerHTML = getAllArchiveEvents().map((event) => `
+          <article class="surface update-row">
+            <span class="meta">${event.date.replaceAll("-", ".")}</span>
+            <div>
+              <h3>${event.title}</h3>
+              <p class="body-copy">${event.text}</p>
+            </div>
+            <span class="update-badge">${event.type || "动态"}</span>
+          </article>
+        `).join("");
+      }
+
+      function syncDateControls(monthDate) {
+        document.getElementById("yearInput").value = monthDate.getFullYear();
+        document.getElementById("monthSelect").value = monthDate.getMonth();
       }
 
       function buildCalendar(monthDate, selectedDate = today) {
@@ -1351,6 +1486,7 @@
         const mondayStartOffset = (firstDay.getDay() + 6) % 7;
 
         document.getElementById("calendarTitle").textContent = monthFormatter.format(monthDate);
+        syncDateControls(monthDate);
         root.innerHTML = "";
 
         for (let i = 0; i < mondayStartOffset; i += 1) {
@@ -1380,6 +1516,18 @@
       }
 
       function setupCalendar() {
+        const yearInput = document.getElementById("yearInput");
+        const monthSelect = document.getElementById("monthSelect");
+
+        function jumpToSelectedMonth() {
+          const year = Number(yearInput.value);
+          const month = Number(monthSelect.value);
+          if (!Number.isInteger(year) || year < 2000 || year > 2099) return;
+          visibleMonth = new Date(year, month, 1);
+          buildCalendar(visibleMonth, visibleMonth);
+          renderCalendarDetail(visibleMonth);
+        }
+
         document.getElementById("prevMonth").addEventListener("click", () => {
           visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
           buildCalendar(visibleMonth, visibleMonth);
@@ -1392,8 +1540,34 @@
           renderCalendarDetail(visibleMonth);
         });
 
+        yearInput.addEventListener("change", jumpToSelectedMonth);
+        monthSelect.addEventListener("change", jumpToSelectedMonth);
+
         buildCalendar(visibleMonth, today);
         renderCalendarDetail(today);
+        renderArchiveList();
+      }
+
+      function setupArchiveViews() {
+        const buttons = document.querySelectorAll("[data-archive-view]");
+        const views = {
+          calendar: document.getElementById("calendarView"),
+          list: document.getElementById("listView")
+        };
+
+        buttons.forEach((button) => {
+          button.addEventListener("click", () => {
+            const target = button.dataset.archiveView;
+            buttons.forEach((node) => {
+              const isActive = node === button;
+              node.classList.toggle("is-active", isActive);
+              node.setAttribute("aria-pressed", String(isActive));
+            });
+            Object.entries(views).forEach(([name, view]) => {
+              view.classList.toggle("is-active", name === target);
+            });
+          });
+        });
       }
 
       function splitDuration(totalSeconds) {
@@ -1497,6 +1671,7 @@
 
       setupCarousel();
       setupCalendar();
+      setupArchiveViews();
       setupTravelMap();
       setupLightbox();
       setupRevealAndNav();
