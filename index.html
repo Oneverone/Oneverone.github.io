@@ -668,118 +668,222 @@
         white-space: nowrap;
       }
 
-      .map-panel {
+      .travel-dashboard {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+        gap: 18px;
+      }
+
+      .map-shell {
+        padding: 18px;
+      }
+
+      .map-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+
+      .map-tabs,
+      .zoom-controls {
+        display: inline-flex;
+        gap: 8px;
+        padding: 6px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 253, 247, 0.72);
+      }
+
+      .map-tab,
+      .zoom-button {
+        min-height: 34px;
+        border: 0;
+        border-radius: 999px;
+        color: var(--muted);
+        background: transparent;
+        font-size: 13px;
+        font-weight: 750;
+        transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+      }
+
+      .map-tab {
+        padding: 0 13px;
+      }
+
+      .zoom-button {
+        width: 34px;
+      }
+
+      .map-tab:hover,
+      .map-tab.is-active,
+      .zoom-button:hover {
+        color: var(--ink);
+        background: var(--surface-solid);
+        box-shadow: 0 8px 22px rgba(60, 52, 42, 0.08);
+      }
+
+      .map-stage {
         position: relative;
         min-height: 500px;
         overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
         background:
           linear-gradient(90deg, rgba(32, 35, 31, 0.04) 1px, transparent 1px),
           linear-gradient(rgba(32, 35, 31, 0.04) 1px, transparent 1px),
-          radial-gradient(circle at 24% 68%, rgba(183, 110, 85, 0.16), transparent 9rem),
-          radial-gradient(circle at 78% 26%, rgba(97, 112, 131, 0.14), transparent 10rem),
+          radial-gradient(circle at 24% 68%, rgba(183, 110, 85, 0.14), transparent 9rem),
+          radial-gradient(circle at 78% 26%, rgba(97, 112, 131, 0.13), transparent 10rem),
           #fbf8f1;
         background-size: 52px 52px, 52px 52px, auto, auto, auto;
       }
 
-      .route {
+      .map-canvas {
         position: absolute;
-        inset: 68px 44px 70px;
+        inset: 0;
+        display: none;
+        transform-origin: center;
+        transform: scale(var(--map-scale));
+        transition: transform 200ms ease;
       }
 
-      .route svg {
+      .map-canvas.is-active {
+        display: block;
+      }
+
+      .map-art {
+        position: absolute;
+        inset: 34px;
+      }
+
+      .map-art svg {
         width: 100%;
         height: 100%;
-        overflow: visible;
       }
 
-      .route-path {
-        fill: none;
-        stroke: var(--clay);
-        stroke-width: 4;
-        stroke-linecap: round;
-        stroke-dasharray: 1000;
-        animation: routeDraw 3800ms ease-in-out infinite alternate;
+      .land {
+        fill: rgba(101, 117, 104, 0.18);
+        stroke: rgba(32, 35, 31, 0.2);
+        stroke-width: 1.5;
+      }
+
+      .map-region {
+        fill: rgba(183, 110, 85, 0.32);
+        stroke: rgba(183, 110, 85, 0.72);
+        stroke-width: 2;
+        cursor: pointer;
+        transition: fill 160ms ease, transform 160ms ease;
+      }
+
+      .map-region:hover,
+      .map-region.is-active {
+        fill: rgba(183, 110, 85, 0.56);
+      }
+
+      .map-region:focus-visible {
+        outline: none;
+        stroke: var(--ink);
+        stroke-width: 3;
       }
 
       .map-pin {
         position: absolute;
-        min-width: 102px;
-        padding: 10px 12px;
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        background: rgba(255, 253, 247, 0.92);
-        box-shadow: 0 14px 34px rgba(60, 52, 42, 0.12);
-        font-size: 14px;
-        font-weight: 800;
-        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+        width: 22px;
+        height: 22px;
+        padding: 0;
+        border: 3px solid var(--surface-solid);
+        border-radius: 50% 50% 50% 0;
+        background: var(--pin-color, var(--clay));
+        box-shadow: 0 10px 24px rgba(60, 52, 42, 0.22);
+        transform: translate(-50%, -50%) rotate(-45deg);
+        transition: transform 180ms ease, box-shadow 180ms ease;
       }
 
-      .map-pin small {
-        display: block;
-        margin-top: 3px;
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 600;
+      .map-pin::after {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        border-radius: 50%;
+        background: var(--surface-solid);
       }
 
       .map-pin:hover,
       .map-pin.is-active {
-        transform: translateY(-5px);
-        border-color: rgba(183, 110, 85, 0.48);
-        background: var(--surface-solid);
+        transform: translate(-50%, -62%) rotate(-45deg) scale(1.08);
+        box-shadow: 0 16px 34px rgba(60, 52, 42, 0.28);
       }
 
-      .pin-shanghai {
-        left: 16%;
-        bottom: 20%;
+      .map-label {
+        position: absolute;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        pointer-events: none;
       }
 
-      .pin-hangzhou {
-        left: 45%;
-        top: 46%;
-      }
+      .pin-world-china { left: 72%; top: 47%; --pin-color: var(--clay); }
+      .label-world-china { left: 74%; top: 43%; }
+      .pin-beijing { left: 57%; top: 32%; --pin-color: var(--blue); }
+      .label-beijing { left: 60%; top: 28%; }
+      .pin-shanghai { left: 65%; top: 58%; --pin-color: var(--clay); }
+      .label-shanghai { left: 68%; top: 56%; }
+      .pin-hangzhou { left: 61%; top: 64%; --pin-color: var(--gold); }
+      .label-hangzhou { left: 64%; top: 67%; }
 
-      .pin-beijing {
-        right: 12%;
-        top: 18%;
-      }
-
-      .travel-list {
+      .travel-side {
         display: grid;
         gap: 14px;
       }
 
-      .travel-log {
-        padding: 19px;
-        transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+      .travel-detail,
+      .explore-stats {
+        padding: 22px;
       }
 
-      .travel-log.is-active {
-        border-color: rgba(183, 110, 85, 0.42);
-        background: rgba(255, 253, 247, 0.94);
-        transform: translateX(4px);
+      .detail-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 14px 0;
       }
 
-      .gallery {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-        margin-top: 18px;
-      }
-
-      .photo {
-        min-height: 180px;
+      .detail-chip {
+        padding: 7px 10px;
         border: 1px solid var(--line);
-        border-radius: var(--radius);
-        background: var(--photo-bg);
-        box-shadow: 0 14px 34px rgba(60, 52, 42, 0.11);
-        transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+        border-radius: 999px;
+        color: var(--muted);
+        background: rgba(255, 253, 247, 0.7);
+        font-size: 12px;
+        font-weight: 750;
       }
 
-      .photo:hover {
-        transform: translateY(-4px);
-        filter: saturate(1.05);
-        box-shadow: var(--shadow);
+      .stats-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .stat-topline {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 8px;
+        font-weight: 800;
+      }
+
+      .stat-bar {
+        height: 9px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(32, 35, 31, 0.08);
+      }
+
+      .stat-fill {
+        display: block;
+        height: 100%;
+        width: var(--value);
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--sage), var(--clay));
       }
 
       .milestones {
@@ -985,9 +1089,15 @@
         .hero-grid,
         .section-head,
         .calendar-layout,
+        .travel-dashboard,
         .travel-layout,
         .comment-layout {
           grid-template-columns: 1fr;
+        }
+
+        .map-toolbar {
+          align-items: stretch;
+          flex-direction: column;
         }
 
         .hero {
@@ -1036,6 +1146,10 @@
 
         .gallery {
           grid-template-columns: 1fr;
+        }
+
+        .map-stage {
+          min-height: 380px;
         }
 
         .counter {
@@ -1259,44 +1373,80 @@
             <span class="section-code">03 · Footprints</span>
             <h2>旅行足迹</h2>
           </div>
-          <p class="section-kicker">先用轻量路线图模拟 Leaflet 的地图体验。点击地点会联动右侧日志，点击照片位会打开大图预览。</p>
+          <p class="section-kicker">这里会同时记录世界地图和中国地图。切换地图、放大缩小、点击图钉或高亮区域，就能看到对应旅行的时间、评分和小记。</p>
         </div>
 
-        <div class="travel-layout">
-          <div class="surface map-panel" aria-label="旅行路线示意图">
-            <div class="route" aria-hidden="true">
-              <svg viewBox="0 0 680 320">
-                <path class="route-path" d="M82 250 C180 80 275 270 380 150 S530 70 604 126"></path>
-              </svg>
+        <div class="travel-dashboard">
+          <div class="surface map-shell" aria-label="旅行地图">
+            <div class="map-toolbar">
+              <div class="map-tabs" role="tablist" aria-label="地图切换">
+                <button class="map-tab is-active" type="button" data-map-tab="world" role="tab" aria-selected="true">世界地图</button>
+                <button class="map-tab" type="button" data-map-tab="china" role="tab" aria-selected="false">中国地图</button>
+              </div>
+              <div class="zoom-controls" aria-label="地图缩放">
+                <button class="zoom-button" type="button" data-zoom="out" aria-label="缩小地图">−</button>
+                <button class="zoom-button" type="button" data-zoom="reset" aria-label="重置缩放">1:1</button>
+                <button class="zoom-button" type="button" data-zoom="in" aria-label="放大地图">+</button>
+              </div>
             </div>
-            <button class="map-pin pin-shanghai is-active" type="button" data-place="shanghai">上海<small>起点</small></button>
-            <button class="map-pin pin-hangzhou" type="button" data-place="hangzhou">杭州<small>周末</small></button>
-            <button class="map-pin pin-beijing" type="button" data-place="beijing">北京<small>远方</small></button>
+
+            <div class="map-stage">
+              <div class="map-canvas is-active" data-map="world" style="--map-scale: 1;">
+                <div class="map-art">
+                  <svg viewBox="0 0 900 480" focusable="false">
+                    <path class="land" d="M76 166 C130 82 236 80 294 126 C338 160 296 222 230 234 C172 246 129 220 92 196 Z"></path>
+                    <path class="land" d="M330 124 C374 78 458 90 490 137 C518 179 478 219 416 217 C366 215 320 177 330 124 Z"></path>
+                    <path class="land" d="M542 116 C615 48 734 74 795 150 C848 216 789 288 690 276 C594 265 494 208 542 116 Z"></path>
+                    <path class="land" d="M572 310 C630 282 715 298 748 352 C778 399 729 438 650 431 C586 426 533 375 572 310 Z"></path>
+                    <path class="map-region is-active" data-place="china" role="button" tabindex="0" d="M626 196 C655 172 707 177 732 205 C754 231 731 260 683 260 C642 260 604 230 626 196 Z"></path>
+                  </svg>
+                </div>
+                <button class="map-pin pin-world-china is-active" type="button" data-place="china" aria-label="中国旅行详情"></button>
+                <span class="map-label label-world-china">中国</span>
+              </div>
+
+              <div class="map-canvas" data-map="china" style="--map-scale: 1;">
+                <div class="map-art">
+                  <svg viewBox="0 0 640 520" focusable="false">
+                    <path class="land" d="M298 60 C374 78 440 124 475 191 C514 266 487 345 418 401 C354 453 260 448 198 392 C133 333 113 245 151 164 C181 101 229 48 298 60 Z"></path>
+                    <path class="land" d="M148 236 C107 248 82 283 89 319 C97 361 142 381 185 362 C223 345 235 292 207 259 C192 242 171 231 148 236 Z"></path>
+                    <path class="map-region" data-place="beijing" role="button" tabindex="0" d="M360 128 C383 118 416 128 429 151 C443 176 423 202 391 201 C359 199 338 178 346 151 Z"></path>
+                    <path class="map-region" data-place="shanghai" role="button" tabindex="0" d="M424 284 C449 273 479 286 487 310 C496 337 471 359 441 351 C414 344 400 314 414 294 Z"></path>
+                    <path class="map-region" data-place="hangzhou" role="button" tabindex="0" d="M388 316 C415 302 447 315 456 340 C466 369 441 393 408 385 C378 378 363 346 378 327 Z"></path>
+                  </svg>
+                </div>
+                <button class="map-pin pin-beijing" type="button" data-place="beijing" aria-label="北京旅行详情"></button>
+                <span class="map-label label-beijing">北京</span>
+                <button class="map-pin pin-shanghai" type="button" data-place="shanghai" aria-label="上海旅行详情"></button>
+                <span class="map-label label-shanghai">上海</span>
+                <button class="map-pin pin-hangzhou" type="button" data-place="hangzhou" aria-label="杭州旅行详情"></button>
+                <span class="map-label label-hangzhou">杭州</span>
+              </div>
+            </div>
           </div>
 
-          <div class="travel-list" id="travelList">
-            <article class="surface travel-log is-active" data-place-card="shanghai">
-              <span class="meta">上海</span>
-              <h3>第一枚地图钉</h3>
-              <p class="body-copy">先用示例城市占位，后续替换成你们真实走过的地方。</p>
-            </article>
-            <article class="surface travel-log" data-place-card="hangzhou">
-              <span class="meta">杭州</span>
-              <h3>适合放短途旅行</h3>
-              <p class="body-copy">这里可以写日期、路线、照片和一句当时的心情。</p>
-            </article>
-            <article class="surface travel-log" data-place-card="beijing">
-              <span class="meta">北京</span>
-              <h3>远一点的城市</h3>
-              <p class="body-copy">等旅行日志变多，地图会成为整个博客最有记忆点的部分。</p>
-            </article>
+          <div class="travel-side">
+            <article class="surface travel-detail" id="travelDetail" aria-live="polite"></article>
+            <div class="surface explore-stats">
+              <div>
+                <span class="meta">Explore Score</span>
+                <h3>探索进度</h3>
+                <p class="body-copy">先用已记录地点做基础统计，后续每增加一个真实目的地，进度会一起更新。</p>
+              </div>
+              <div class="stats-grid">
+                <div>
+                  <div class="stat-topline"><span>世界探索</span><strong id="worldPercent">0%</strong></div>
+                  <div class="stat-bar" aria-hidden="true"><span class="stat-fill" id="worldFill" style="--value: 0%;"></span></div>
+                  <p class="body-copy">按国家 / 地区粗略统计</p>
+                </div>
+                <div>
+                  <div class="stat-topline"><span>中国探索</span><strong id="chinaPercent">0%</strong></div>
+                  <div class="stat-bar" aria-hidden="true"><span class="stat-fill" id="chinaFill" style="--value: 0%;"></span></div>
+                  <p class="body-copy">按省级行政区粗略统计</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-
-        <div class="gallery" aria-label="旅行照片预览">
-          <button class="photo" type="button" data-caption="照片位 01 · 后续替换为真实旅行照片" data-bg="linear-gradient(135deg, #d9e1d6, #b76e55)" style="--photo-bg: linear-gradient(135deg, #d9e1d6, #b76e55);"></button>
-          <button class="photo" type="button" data-caption="照片位 02 · 类似 PhotoSwipe 的轻量预览" data-bg="linear-gradient(135deg, #617083, #ebe5d9)" style="--photo-bg: linear-gradient(135deg, #617083, #ebe5d9);"></button>
-          <button class="photo" type="button" data-caption="照片位 03 · 等真实照片准备好再接正式相册" data-bg="linear-gradient(135deg, #c7a356, #657568)" style="--photo-bg: linear-gradient(135deg, #c7a356, #657568);"></button>
         </div>
       </section>
 
@@ -1678,16 +1828,134 @@
         });
       }
 
+      const travelPlaces = {
+        china: {
+          map: "world",
+          title: "中国",
+          area: "国家 / 地区",
+          date: "当前已点亮",
+          score: "待评分",
+          note: "世界地图中先点亮中国，具体城市会放在中国地图里继续展开。"
+        },
+        shanghai: {
+          map: "china",
+          title: "上海",
+          area: "城市",
+          date: "示例记录",
+          score: "待评分",
+          note: "第一枚城市图钉。后续可以替换成真实旅行时间、照片和评分。"
+        },
+        hangzhou: {
+          map: "china",
+          title: "杭州",
+          area: "城市",
+          date: "示例记录",
+          score: "待评分",
+          note: "适合记录周末短途、散步路线、天气和当时的心情。"
+        },
+        beijing: {
+          map: "china",
+          title: "北京",
+          area: "城市",
+          date: "示例记录",
+          score: "待评分",
+          note: "远一点的目的地可以写成更完整的旅行日志。"
+        }
+      };
+
+      const explorationStats = {
+        world: { visited: 1, total: 195 },
+        china: { visited: 3, total: 34 }
+      };
+
+      function renderTravelStats() {
+        const setStat = (name, percentNodeId, fillNodeId) => {
+          const stat = explorationStats[name];
+          const percent = Math.max(0, Math.min(100, (stat.visited / stat.total) * 100));
+          const label = percent < 1 ? percent.toFixed(1) : percent.toFixed(0);
+          const percentNode = document.getElementById(percentNodeId);
+          const fillNode = document.getElementById(fillNodeId);
+          if (percentNode) percentNode.textContent = label + "%";
+          if (fillNode) fillNode.style.setProperty("--value", percent + "%");
+        };
+
+        setStat("world", "worldPercent", "worldFill");
+        setStat("china", "chinaPercent", "chinaFill");
+      }
+
       function setupTravelMap() {
-        const pins = document.querySelectorAll(".map-pin");
-        const cards = document.querySelectorAll("[data-place-card]");
-        pins.forEach((pin) => {
-          pin.addEventListener("click", () => {
-            const place = pin.dataset.place;
-            pins.forEach((node) => node.classList.toggle("is-active", node === pin));
-            cards.forEach((card) => card.classList.toggle("is-active", card.dataset.placeCard === place));
+        const tabs = document.querySelectorAll("[data-map-tab]");
+        const canvases = document.querySelectorAll("[data-map]");
+        const zoomButtons = document.querySelectorAll("[data-zoom]");
+        const detail = document.getElementById("travelDetail");
+        const zoomState = { world: 1, china: 1 };
+        let activeMap = "world";
+
+        const renderDetail = (placeKey) => {
+          const place = travelPlaces[placeKey];
+          if (!place || !detail) return;
+          detail.innerHTML = [
+            '<span class="meta">' + place.area + '</span>',
+            '<h3>' + place.title + '</h3>',
+            '<div class="detail-meta">',
+            '<span class="detail-chip">时间：' + place.date + '</span>',
+            '<span class="detail-chip">评分：' + place.score + '</span>',
+            '</div>',
+            '<p class="body-copy">' + place.note + '</p>'
+          ].join("");
+        };
+
+        const setMap = (mapName) => {
+          activeMap = mapName;
+          tabs.forEach((tab) => {
+            const isActive = tab.dataset.mapTab === mapName;
+            tab.classList.toggle("is-active", isActive);
+            tab.setAttribute("aria-selected", String(isActive));
+          });
+          canvases.forEach((canvas) => {
+            canvas.classList.toggle("is-active", canvas.dataset.map === mapName);
+            canvas.style.setProperty("--map-scale", zoomState[mapName]);
+          });
+          activatePlace(mapName === "world" ? "china" : "shanghai");
+        };
+
+        function activatePlace(placeKey) {
+          const place = travelPlaces[placeKey];
+          if (!place) return;
+          if (place.map !== activeMap) {
+            activeMap = place.map;
+          }
+          document.querySelectorAll("[data-place]").forEach((node) => {
+            node.classList.toggle("is-active", node.dataset.place === placeKey);
+          });
+          renderDetail(placeKey);
+        }
+
+        document.querySelectorAll("[data-place]").forEach((node) => {
+          node.addEventListener("click", () => activatePlace(node.dataset.place));
+          node.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              activatePlace(node.dataset.place);
+            }
           });
         });
+
+        tabs.forEach((tab) => {
+          tab.addEventListener("click", () => setMap(tab.dataset.mapTab));
+        });
+
+        zoomButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            if (button.dataset.zoom === "in") zoomState[activeMap] = Math.min(2.2, zoomState[activeMap] + 0.2);
+            if (button.dataset.zoom === "out") zoomState[activeMap] = Math.max(1, zoomState[activeMap] - 0.2);
+            if (button.dataset.zoom === "reset") zoomState[activeMap] = 1;
+            document.querySelector('[data-map="' + activeMap + '"]')?.style.setProperty("--map-scale", zoomState[activeMap]);
+          });
+        });
+
+        renderTravelStats();
+        setMap("world");
       }
 
       function setupLightbox() {
