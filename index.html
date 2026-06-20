@@ -4,94 +4,748 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Chen & Gao</title>
-    <meta name="description" content="Chen and Gao's personal blog.">
+    <meta name="description" content="Chen & Gao 的专属博客。">
     <style>
       :root {
         color-scheme: light;
-        --ink: #27231f;
-        --muted: #6c6259;
-        --paper: #fffaf4;
-        --accent: #2f6f73;
-        --line: #e7ded3;
+        --ink: #171717;
+        --muted: #67635d;
+        --soft: #9b9489;
+        --paper: #f7f4ee;
+        --panel: rgba(255, 255, 255, 0.72);
+        --line: rgba(23, 23, 23, 0.13);
+        --accent: #3d685f;
+        --accent-2: #a16346;
+        --shadow: 0 24px 70px rgba(33, 29, 24, 0.08);
       }
 
       * {
         box-sizing: border-box;
       }
 
+      html {
+        scroll-behavior: smooth;
+      }
+
       body {
         margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family: Georgia, "Times New Roman", "Noto Serif SC", "Songti SC", serif;
         color: var(--ink);
         background:
-          linear-gradient(135deg, rgba(47, 111, 115, 0.12), transparent 38%),
-          linear-gradient(315deg, rgba(184, 98, 72, 0.12), transparent 42%),
-          var(--paper);
+          radial-gradient(circle at 16% 8%, rgba(61, 104, 95, 0.16), transparent 26rem),
+          radial-gradient(circle at 84% 2%, rgba(161, 99, 70, 0.13), transparent 24rem),
+          linear-gradient(180deg, #fbfaf7 0%, var(--paper) 46%, #eeebe4 100%);
       }
 
-      main {
-        width: min(720px, calc(100vw - 32px));
-        padding: 56px 0;
+      a {
+        color: inherit;
+        text-decoration: none;
       }
 
-      .mark {
-        width: 72px;
-        height: 72px;
-        display: grid;
-        place-items: center;
-        margin-bottom: 28px;
-        border: 1px solid var(--line);
-        border-radius: 50%;
-        color: var(--accent);
-        background: rgba(255, 255, 255, 0.58);
-        font-size: 22px;
-        font-weight: 650;
+      .page {
+        width: min(1180px, calc(100vw - 36px));
+        margin: 0 auto;
       }
 
-      h1 {
-        margin: 0;
-        font-size: clamp(48px, 10vw, 88px);
-        line-height: 0.95;
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 18px 0;
+        backdrop-filter: blur(18px);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 15px;
         letter-spacing: 0;
       }
 
-      p {
-        max-width: 560px;
-        margin: 24px 0 0;
-        color: var(--muted);
-        font-size: 20px;
-        line-height: 1.7;
+      .seal {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        color: var(--accent);
+        font-size: 13px;
+        background: rgba(255, 255, 255, 0.56);
       }
 
-      .status {
+      .links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 18px;
+        color: var(--muted);
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        font-size: 13px;
+      }
+
+      .hero {
+        min-height: 74vh;
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+        gap: 40px;
+        align-items: center;
+        padding: 58px 0 72px;
+      }
+
+      .eyebrow {
+        margin: 0 0 22px;
+        color: var(--accent);
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        font-size: 12px;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: 760px;
+        margin-bottom: 26px;
+        font-size: clamp(54px, 9vw, 118px);
+        line-height: 0.93;
+        letter-spacing: 0;
+        font-weight: 500;
+      }
+
+      .intro {
+        max-width: 620px;
+        color: var(--muted);
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        font-size: 18px;
+        line-height: 1.9;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 34px;
+      }
+
+      .button {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
-        margin-top: 36px;
-        padding-top: 20px;
-        border-top: 1px solid var(--line);
-        color: var(--accent);
-        font-size: 15px;
-        font-weight: 600;
+        min-height: 44px;
+        padding: 0 18px;
+        border: 1px solid var(--ink);
+        border-radius: 999px;
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        font-size: 14px;
       }
 
-      .dot {
-        width: 9px;
-        height: 9px;
+      .button.secondary {
+        border-color: var(--line);
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      .now-card {
+        align-self: stretch;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 430px;
+        padding: 30px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .date-line {
+        color: var(--soft);
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        font-size: 13px;
+      }
+
+      .large-date {
+        margin: 28px 0 18px;
+        font-size: 82px;
+        line-height: 0.9;
+        font-weight: 400;
+      }
+
+      .quiet-note {
+        color: var(--muted);
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        line-height: 1.8;
+      }
+
+      .section {
+        padding: 80px 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .section-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 22px;
+        margin-bottom: 34px;
+      }
+
+      h2 {
+        margin-bottom: 0;
+        font-size: clamp(34px, 5vw, 62px);
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: 0;
+      }
+
+      .section-kicker {
+        max-width: 420px;
+        margin: 0;
+        color: var(--muted);
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        line-height: 1.8;
+      }
+
+      .grid {
+        display: grid;
+        gap: 18px;
+      }
+
+      .two {
+        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      }
+
+      .three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.55);
+      }
+
+      .calendar {
+        padding: 20px;
+      }
+
+      .calendar-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+      }
+
+      .week,
+      .days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+      }
+
+      .week span {
+        color: var(--soft);
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .day {
+        aspect-ratio: 1;
+        display: grid;
+        place-items: center;
+        border: 1px solid transparent;
+        border-radius: 50%;
+        color: var(--muted);
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        font-size: 13px;
+      }
+
+      .day.is-today {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(61, 104, 95, 0.08);
+      }
+
+      .day.has-event {
+        color: var(--ink);
+        background: rgba(161, 99, 70, 0.1);
+      }
+
+      .list {
+        padding: 6px 20px 20px;
+      }
+
+      .event,
+      .update,
+      .travel-log,
+      .comment {
+        padding: 18px 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .event:first-child,
+      .update:first-child,
+      .travel-log:first-child,
+      .comment:first-child {
+        border-top: 0;
+      }
+
+      .meta {
+        display: block;
+        margin-bottom: 7px;
+        color: var(--soft);
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        font-size: 12px;
+      }
+
+      h3 {
+        margin-bottom: 8px;
+        font-size: 22px;
+        font-weight: 500;
+      }
+
+      .body-copy {
+        margin: 0;
+        color: var(--muted);
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        line-height: 1.8;
+      }
+
+      .timeline {
+        display: grid;
+        gap: 14px;
+      }
+
+      .update {
+        display: grid;
+        grid-template-columns: 92px minmax(0, 1fr);
+        gap: 18px;
+        padding: 22px;
+      }
+
+      .map-card {
+        min-height: 420px;
+        position: relative;
+        overflow: hidden;
+        background:
+          linear-gradient(90deg, rgba(23, 23, 23, 0.04) 1px, transparent 1px),
+          linear-gradient(0deg, rgba(23, 23, 23, 0.04) 1px, transparent 1px),
+          linear-gradient(135deg, rgba(61, 104, 95, 0.18), rgba(255, 255, 255, 0.45));
+        background-size: 54px 54px, 54px 54px, auto;
+      }
+
+      .map-line {
+        position: absolute;
+        inset: 20% 14% 22% 16%;
+        border-top: 1px solid rgba(61, 104, 95, 0.55);
+        border-right: 1px solid rgba(161, 99, 70, 0.52);
+        transform: skew(-18deg);
+      }
+
+      .pin {
+        position: absolute;
+        display: grid;
+        gap: 7px;
+        color: var(--ink);
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        font-size: 12px;
+      }
+
+      .pin::before {
+        content: "";
+        width: 13px;
+        height: 13px;
+        border: 2px solid #fff;
         border-radius: 50%;
         background: var(--accent);
+        box-shadow: 0 0 0 1px rgba(23, 23, 23, 0.14);
+      }
+
+      .pin.shanghai {
+        left: 68%;
+        top: 42%;
+      }
+
+      .pin.hangzhou {
+        left: 58%;
+        top: 58%;
+      }
+
+      .pin.chengdu {
+        left: 28%;
+        top: 54%;
+      }
+
+      .pin.beijing {
+        left: 47%;
+        top: 24%;
+      }
+
+      .travel-list {
+        padding: 20px 24px;
+      }
+
+      .counter {
+        padding: 26px;
+      }
+
+      .counter-value {
+        margin: 18px 0 10px;
+        font-size: clamp(34px, 5vw, 58px);
+        line-height: 1;
+        font-weight: 400;
+      }
+
+      .comment-box {
+        display: grid;
+        grid-template-columns: minmax(0, 0.78fr) minmax(260px, 0.22fr);
+        gap: 18px;
+      }
+
+      textarea,
+      input {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px;
+        color: var(--ink);
+        background: rgba(255, 255, 255, 0.66);
+        font: 14px/1.6 "Segoe UI", "Noto Sans SC", sans-serif;
+      }
+
+      textarea {
+        min-height: 154px;
+        resize: vertical;
+      }
+
+      .form {
+        display: grid;
+        gap: 12px;
+        padding: 22px;
+      }
+
+      .disabled-button {
+        justify-content: center;
+        width: 100%;
+        color: #fff;
+        border-color: var(--accent);
+        background: var(--accent);
+        cursor: not-allowed;
+        opacity: 0.8;
+      }
+
+      .footer {
+        padding: 42px 0 56px;
+        color: var(--soft);
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        font-size: 13px;
+      }
+
+      @media (max-width: 840px) {
+        .hero,
+        .two,
+        .three,
+        .comment-box {
+          grid-template-columns: 1fr;
+        }
+
+        .hero {
+          min-height: auto;
+          padding-top: 42px;
+        }
+
+        .now-card {
+          min-height: 300px;
+        }
+
+        .section-head {
+          display: grid;
+        }
+
+        .update {
+          grid-template-columns: 1fr;
+        }
+
+        .links {
+          display: none;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .page {
+          width: min(100% - 24px, 1180px);
+        }
+
+        h1 {
+          font-size: 52px;
+        }
+
+        .large-date {
+          font-size: 64px;
+        }
+
+        .section {
+          padding: 56px 0;
+        }
+
+        .calendar {
+          padding: 14px;
+        }
+
+        .week,
+        .days {
+          gap: 4px;
+        }
       }
     </style>
   </head>
   <body>
-    <main>
-      <div class="mark">C&G</div>
-      <h1>Chen & Gao</h1>
-      <p>Our little home on the web. The blog, photos, and stories will grow here soon. Today we light up www.chenandgao.com.</p>
-      <div class="status"><span class="dot"></span>GitHub Pages is ready</div>
-    </main>
+    <div class="page">
+      <nav class="nav" aria-label="主导航">
+        <a class="brand" href="#top" aria-label="回到首页">
+          <span class="seal">C&G</span>
+          <span>Chen & Gao</span>
+        </a>
+        <div class="links">
+          <a href="#calendar">日历</a>
+          <a href="#updates">动态</a>
+          <a href="#travel">旅行</a>
+          <a href="#days">重要日子</a>
+          <a href="#comments">评论</a>
+        </div>
+      </nav>
+
+      <header class="hero" id="top">
+        <div>
+          <p class="eyebrow">Private blog since 2026</p>
+          <h1>Chen & Gao</h1>
+          <p class="intro">这里记录我们的日常、纪念日、走过的城市和想留住的小事。页面先保持安静克制，像一本慢慢写下去的双人手账。</p>
+          <div class="hero-actions">
+            <a class="button" href="#updates">查看最近动态</a>
+            <a class="button secondary" href="#travel">打开旅行地图</a>
+          </div>
+        </div>
+        <aside class="now-card" aria-label="今日状态">
+          <div>
+            <span class="date-line" id="todayLine">Today</span>
+            <div class="large-date" id="dayNumber">--</div>
+          </div>
+          <p class="quiet-note">今天也在把一个小小的网站，慢慢变成我们自己的地方。</p>
+        </aside>
+      </header>
+
+      <section class="section" id="calendar">
+        <div class="section-head">
+          <h2>日历</h2>
+          <p class="section-kicker">先把重要安排放在这里。以后可以扩展成真正可编辑的纪念日和行程日历。</p>
+        </div>
+        <div class="grid two">
+          <div class="panel calendar">
+            <div class="calendar-title">
+              <strong id="calendarTitle">2026 年 6 月</strong>
+              <span class="meta">本月视图</span>
+            </div>
+            <div class="week" aria-hidden="true">
+              <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+            </div>
+            <div class="days" id="calendarDays" aria-label="月历"></div>
+          </div>
+          <div class="panel list">
+            <article class="event">
+              <span class="meta">06.20</span>
+              <h3>网站上线</h3>
+              <p class="body-copy">www.chenandgao.com 能够打开，属于这个博客的第一盏灯亮起来了。</p>
+            </article>
+            <article class="event">
+              <span class="meta">待补充</span>
+              <h3>下一次旅行</h3>
+              <p class="body-copy">这里可以记录计划、机票、酒店、想吃的店和回来后的照片。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="updates">
+        <div class="section-head">
+          <h2>动态</h2>
+          <p class="section-kicker">像朋友圈，但只属于我们。短句、照片、文章入口以后都可以放在这里。</p>
+        </div>
+        <div class="timeline">
+          <article class="panel update">
+            <span class="meta">2026.06.20</span>
+            <div>
+              <h3>博客开始建设</h3>
+              <p class="body-copy">先完成域名、GitHub Pages 和首页。设计会慢慢迭代，不急，但会越来越像我们。</p>
+            </div>
+          </article>
+          <article class="panel update">
+            <span class="meta">下一篇</span>
+            <div>
+              <h3>第一篇正式日志</h3>
+              <p class="body-copy">可以写一篇“为什么做这个网站”，作为这个博客真正的第一篇文章。</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="travel">
+        <div class="section-head">
+          <h2>旅游打卡</h2>
+          <p class="section-kicker">左边是抽象地图，右边是旅行日志。后续可以换成真实地图服务，或者用照片墙承载更多记忆。</p>
+        </div>
+        <div class="grid two">
+          <div class="panel map-card" aria-label="旅行地图示意">
+            <div class="map-line"></div>
+            <span class="pin beijing">北京</span>
+            <span class="pin shanghai">上海</span>
+            <span class="pin hangzhou">杭州</span>
+            <span class="pin chengdu">成都</span>
+          </div>
+          <div class="panel travel-list">
+            <article class="travel-log">
+              <span class="meta">上海 · 2026</span>
+              <h3>第一枚地图钉</h3>
+              <p class="body-copy">这里先放示例。之后每次旅行可以写成一条日志，附照片、路线和小结。</p>
+            </article>
+            <article class="travel-log">
+              <span class="meta">杭州 · 待补充</span>
+              <h3>西湖边的下午</h3>
+              <p class="body-copy">把城市、日期、照片和故事补进去，地图就会越来越有生命。</p>
+            </article>
+            <article class="travel-log">
+              <span class="meta">成都 · 待补充</span>
+              <h3>想去吃的清单</h3>
+              <p class="body-copy">旅行也可以从一个“想去”的念头开始记录。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="days">
+        <div class="section-head">
+          <h2>重要日子</h2>
+          <p class="section-kicker">这些数字会随着时间变化。日期先用示例，后续我们可以换成你们真实的纪念日。</p>
+        </div>
+        <div class="grid three">
+          <article class="panel counter">
+            <span class="meta">网站上线至今</span>
+            <div class="counter-value" data-since="2026-06-20">--</div>
+            <p class="body-copy">从域名亮起来的那天开始算。</p>
+          </article>
+          <article class="panel counter">
+            <span class="meta">相识纪念日</span>
+            <div class="counter-value" data-since="2020-01-01">--</div>
+            <p class="body-copy">这里先用占位日期，后续替换成真实日期。</p>
+          </article>
+          <article class="panel counter">
+            <span class="meta">下一次纪念日</span>
+            <div class="counter-value" data-until="2026-12-31">--</div>
+            <p class="body-copy">距离下一次特别的日子。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="comments">
+        <div class="section-head">
+          <h2>评论区</h2>
+          <p class="section-kicker">现在先展示界面。真正提交评论需要接入 Giscus、Utterances 或后端服务。</p>
+        </div>
+        <div class="comment-box">
+          <div class="panel form">
+            <input type="text" placeholder="你的名字" aria-label="你的名字">
+            <textarea placeholder="想留下些什么..." aria-label="评论内容"></textarea>
+            <button class="button disabled-button" type="button" disabled>评论功能待接入</button>
+          </div>
+          <div class="panel list">
+            <article class="comment">
+              <span class="meta">Chen & Gao</span>
+              <p class="body-copy">欢迎来到这里。评论区会在下一阶段接入真实服务。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <span>www.chenandgao.com · Built quietly, kept tenderly.</span>
+      </footer>
+    </div>
+
+    <script>
+      const today = new Date();
+      const monthFormatter = new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "long" });
+      const lineFormatter = new Intl.DateTimeFormat("zh-CN", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
+      document.getElementById("todayLine").textContent = lineFormatter.format(today);
+      document.getElementById("dayNumber").textContent = String(today.getDate()).padStart(2, "0");
+      document.getElementById("calendarTitle").textContent = monthFormatter.format(today);
+
+      function buildCalendar(date) {
+        const root = document.getElementById("calendarDays");
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const totalDays = new Date(year, month + 1, 0).getDate();
+        const mondayStartOffset = (firstDay.getDay() + 6) % 7;
+        const eventDays = new Set([20]);
+
+        root.innerHTML = "";
+
+        for (let i = 0; i < mondayStartOffset; i += 1) {
+          root.appendChild(document.createElement("span"));
+        }
+
+        for (let day = 1; day <= totalDays; day += 1) {
+          const item = document.createElement("span");
+          item.className = "day";
+          item.textContent = day;
+
+          if (day === date.getDate()) {
+            item.classList.add("is-today");
+          }
+
+          if (eventDays.has(day)) {
+            item.classList.add("has-event");
+          }
+
+          root.appendChild(item);
+        }
+      }
+
+      function diffDays(targetDate) {
+        const start = new Date(targetDate);
+        const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const startOnly = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+        return Math.round((todayOnly - startOnly) / 86400000);
+      }
+
+      function untilDays(targetDate) {
+        const target = new Date(targetDate);
+        const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const targetOnly = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+        return Math.max(0, Math.round((targetOnly - todayOnly) / 86400000));
+      }
+
+      document.querySelectorAll("[data-since]").forEach((node) => {
+        node.textContent = `${diffDays(node.dataset.since)} 天`;
+      });
+
+      document.querySelectorAll("[data-until]").forEach((node) => {
+        node.textContent = `${untilDays(node.dataset.until)} 天`;
+      });
+
+      buildCalendar(today);
+    </script>
   </body>
 </html>
