@@ -1,0 +1,8 @@
+# Local Codex/agent memory. Keep these off the public GitHub Pages repo.
+agent.md
+.agents/
+.codex/
+
+# Local operating-system clutter.
+Thumbs.db
+Desktop.ini
