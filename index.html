@@ -1041,10 +1041,10 @@
           <span>Chen & Gao</span>
         </a>
         <div class="nav-links">
-          <a href="#calendar">动态档案</a>
-          <a href="#travel">旅行</a>
-          <a href="#days">重要日子</a>
-          <a href="#comments">评论</a>
+          <a href="#days">纪念时刻</a>
+          <a href="#calendar">时光档案</a>
+          <a href="#travel">旅行足迹</a>
+          <a href="#comments">亲友留言</a>
         </div>
       </div>
     </nav>
@@ -1056,8 +1056,8 @@
           <h1>Chen & Gao</h1>
           <p class="hero-copy">一个慢慢长出来的专属博客。先把重要的日子、走过的地方、零碎的动态和未来的留言板放好，等真实照片和故事一点点补进来。</p>
           <div class="hero-actions">
-            <a class="button" href="#calendar">看动态档案</a>
-            <a class="button" href="#days">查看重要日子</a>
+            <a class="button" href="#calendar">看时光档案</a>
+            <a class="button" href="#days">查看纪念时刻</a>
           </div>
         </div>
 
@@ -1084,11 +1084,46 @@
     </header>
 
     <main class="wrap">
+      <section class="section reveal" id="days">
+        <div class="section-head">
+          <div>
+            <span class="section-code">01 · Milestones</span>
+            <h2>纪念时刻</h2>
+          </div>
+          <p class="section-kicker">数字每秒变化。天数做主视觉，时分秒作为辅助信息，避免之前那种拥挤和比例失衡。</p>
+        </div>
+
+        <div class="milestones">
+          <article class="surface milestone">
+            <span class="meta">Since 2026.06.20</span>
+            <h3>网站上线至今</h3>
+            <p class="body-copy">起始日期：2026.06.20 00:00:00</p>
+            <div class="counter" data-since="2026-06-20T00:00:00"></div>
+            <p class="body-copy">从域名亮起来的那天开始算。</p>
+          </article>
+          <article class="surface milestone">
+            <span class="meta">Since 2020.01.01</span>
+            <h3>相识纪念日</h3>
+            <p class="body-copy">起始日期：2020.01.01 00:00:00</p>
+            <div class="counter" data-since="2020-01-01T00:00:00"></div>
+            <p class="body-copy">这里先用占位日期，后续替换成真实日子。</p>
+          </article>
+          <article class="surface milestone">
+            <span class="meta">Until 2026.12.31</span>
+            <h3>下一次纪念日</h3>
+            <p class="body-copy">目标日期：2026.12.31 00:00:00</p>
+            <div class="counter" data-until="2026-12-31T00:00:00"></div>
+            <p class="body-copy">距离下一次特别的日子。</p>
+          </article>
+        </div>
+      </section>
+
+
       <section class="section reveal" id="calendar">
         <div class="section-head">
           <div>
-            <span class="section-code">01 · Archive</span>
-            <h2>动态档案</h2>
+            <span class="section-code">02 · Timeline</span>
+            <h2>时光档案</h2>
           </div>
           <p class="section-kicker">动态默认以日历方式展示，也可以切换成列表。点击年月可以快速跳转，点击日期查看当天记录。</p>
         </div>
@@ -1143,8 +1178,8 @@
       <section class="section reveal" id="travel">
         <div class="section-head">
           <div>
-            <span class="section-code">03 · Travel</span>
-            <h2>旅行打卡</h2>
+            <span class="section-code">03 · Footprints</span>
+            <h2>旅行足迹</h2>
           </div>
           <p class="section-kicker">先用轻量路线图模拟 Leaflet 的地图体验。点击地点会联动右侧日志，点击照片位会打开大图预览。</p>
         </div>
@@ -1187,45 +1222,11 @@
         </div>
       </section>
 
-      <section class="section reveal" id="days">
-        <div class="section-head">
-          <div>
-            <span class="section-code">04 · Milestones</span>
-            <h2>重要日子</h2>
-          </div>
-          <p class="section-kicker">数字每秒变化。天数做主视觉，时分秒作为辅助信息，避免之前那种拥挤和比例失衡。</p>
-        </div>
-
-        <div class="milestones">
-          <article class="surface milestone">
-            <span class="meta">Since 2026.06.20</span>
-            <h3>网站上线至今</h3>
-            <p class="body-copy">起始日期：2026.06.20 00:00:00</p>
-            <div class="counter" data-since="2026-06-20T00:00:00"></div>
-            <p class="body-copy">从域名亮起来的那天开始算。</p>
-          </article>
-          <article class="surface milestone">
-            <span class="meta">Since 2020.01.01</span>
-            <h3>相识纪念日</h3>
-            <p class="body-copy">起始日期：2020.01.01 00:00:00</p>
-            <div class="counter" data-since="2020-01-01T00:00:00"></div>
-            <p class="body-copy">这里先用占位日期，后续替换成真实日子。</p>
-          </article>
-          <article class="surface milestone">
-            <span class="meta">Until 2026.12.31</span>
-            <h3>下一次纪念日</h3>
-            <p class="body-copy">目标日期：2026.12.31 00:00:00</p>
-            <div class="counter" data-until="2026-12-31T00:00:00"></div>
-            <p class="body-copy">距离下一次特别的日子。</p>
-          </article>
-        </div>
-      </section>
-
       <section class="section reveal" id="comments">
         <div class="section-head">
           <div>
-            <span class="section-code">05 · Guestbook</span>
-            <h2>评论区</h2>
+            <span class="section-code">04 · Guestbook</span>
+            <h2>亲友留言</h2>
           </div>
           <p class="section-kicker">现在先保留 Giscus-ready 的评论位。仓库开启 Discussions 后，可以把这里接成真正留言板。</p>
         </div>
@@ -1268,14 +1269,14 @@
 
       const featuredEvents = [
         {
-          tag: "重要日子",
+          tag: "纪念时刻",
           title: "网站上线",
           text: "www.chenandgao.com 已经点亮，属于 Chen & Gao 的小小空间正式开始。",
           href: "#days",
           background: "linear-gradient(135deg, #657568 0%, #b76e55 100%)"
         },
         {
-          tag: "旅行打卡",
+          tag: "旅行足迹",
           title: "第一枚地图钉",
           text: "把走过的城市慢慢连起来，旅行日志会成为这里最有温度的路线。",
           href: "#travel",
@@ -1289,15 +1290,15 @@
           background: "linear-gradient(135deg, #9ba298 0%, #657568 100%)"
         },
         {
-          tag: "日历",
-          title: "重要安排归档",
+          tag: "时光档案",
+          title: "时光归档",
           text: "每个被点亮的日期，都可以留下当天发生的事。",
           href: "#calendar",
           background: "linear-gradient(135deg, #d8dee5 0%, #617083 100%)"
         },
         {
-          tag: "评论区",
-          title: "留言入口待接入",
+          tag: "亲友留言",
+          title: "亲友留言待接入",
           text: "评论功能会在下一阶段接入真实服务，让朋友也能留下祝福。",
           href: "#comments",
           background: "linear-gradient(135deg, #ead2c7 0%, #657568 100%)"
