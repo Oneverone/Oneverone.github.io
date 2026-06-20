@@ -262,14 +262,24 @@
       }
 
       .day {
+        appearance: none;
         aspect-ratio: 1;
         display: grid;
         place-items: center;
         border: 1px solid transparent;
         border-radius: 50%;
         color: var(--muted);
+        background: transparent;
+        cursor: pointer;
         font-family: "Segoe UI", "Noto Sans SC", sans-serif;
         font-size: 13px;
+      }
+
+      .day:hover,
+      .day.is-selected {
+        border-color: var(--ink);
+        color: var(--ink);
+        background: rgba(255, 255, 255, 0.68);
       }
 
       .day.is-today {
@@ -285,6 +295,19 @@
 
       .list {
         padding: 6px 20px 20px;
+      }
+
+      .calendar-detail {
+        display: grid;
+        min-height: 100%;
+        padding: 24px;
+      }
+
+      .calendar-empty {
+        align-self: center;
+        color: var(--muted);
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        line-height: 1.8;
       }
 
       .event,
@@ -403,9 +426,21 @@
 
       .counter-value {
         margin: 18px 0 10px;
-        font-size: clamp(34px, 5vw, 58px);
+        font-size: clamp(28px, 4vw, 50px);
         line-height: 1;
         font-weight: 400;
+      }
+
+      .counter-date {
+        margin: 0;
+        color: var(--soft);
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        font-size: 13px;
+      }
+
+      .counter-value span {
+        display: inline-block;
+        min-width: 2ch;
       }
 
       .comment-box {
@@ -562,17 +597,8 @@
             </div>
             <div class="days" id="calendarDays" aria-label="月历"></div>
           </div>
-          <div class="panel list">
-            <article class="event">
-              <span class="meta">06.20</span>
-              <h3>网站上线</h3>
-              <p class="body-copy">www.chenandgao.com 能够打开，属于这个博客的第一盏灯亮起来了。</p>
-            </article>
-            <article class="event">
-              <span class="meta">待补充</span>
-              <h3>下一次旅行</h3>
-              <p class="body-copy">这里可以记录计划、机票、酒店、想吃的店和回来后的照片。</p>
-            </article>
+          <div class="panel calendar-detail" id="calendarDetail" aria-live="polite">
+            <p class="calendar-empty">点击左侧任意日期，这里会显示当天事件。</p>
           </div>
         </div>
       </section>
@@ -641,17 +667,20 @@
         <div class="grid three">
           <article class="panel counter">
             <span class="meta">网站上线至今</span>
-            <div class="counter-value" data-since="2026-06-20">--</div>
+            <p class="counter-date">起始日期：2026.06.20 00:00:00</p>
+            <div class="counter-value" data-since="2026-06-20T00:00:00">--</div>
             <p class="body-copy">从域名亮起来的那天开始算。</p>
           </article>
           <article class="panel counter">
             <span class="meta">相识纪念日</span>
-            <div class="counter-value" data-since="2020-01-01">--</div>
+            <p class="counter-date">起始日期：2020.01.01 00:00:00</p>
+            <div class="counter-value" data-since="2020-01-01T00:00:00">--</div>
             <p class="body-copy">这里先用占位日期，后续替换成真实日期。</p>
           </article>
           <article class="panel counter">
             <span class="meta">下一次纪念日</span>
-            <div class="counter-value" data-until="2026-12-31">--</div>
+            <p class="counter-date">目标日期：2026.12.31 00:00:00</p>
+            <div class="counter-value" data-until="2026-12-31T00:00:00">--</div>
             <p class="body-copy">距离下一次特别的日子。</p>
           </article>
         </div>
@@ -686,10 +715,59 @@
       const today = new Date();
       const monthFormatter = new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "long" });
       const lineFormatter = new Intl.DateTimeFormat("zh-CN", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+      const eventDateFormatter = new Intl.DateTimeFormat("zh-CN", { month: "2-digit", day: "2-digit", weekday: "long" });
+
+      const calendarEvents = {
+        "2026-06-20": [
+          {
+            title: "网站上线",
+            text: "www.chenandgao.com 能够打开，属于这个博客的第一盏灯亮起来了。"
+          }
+        ],
+        "2026-06-21": [
+          {
+            title: "整理首页想法",
+            text: "把日历、动态、旅行和重要日子这些模块先放进同一个安静的首页。"
+          }
+        ]
+      };
 
       document.getElementById("todayLine").textContent = lineFormatter.format(today);
       document.getElementById("dayNumber").textContent = String(today.getDate()).padStart(2, "0");
       document.getElementById("calendarTitle").textContent = monthFormatter.format(today);
+
+      function dateKey(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function renderCalendarDetail(selectedDate) {
+        const detail = document.getElementById("calendarDetail");
+        const key = dateKey(selectedDate);
+        const events = calendarEvents[key] || [];
+        const formattedDate = eventDateFormatter.format(selectedDate);
+
+        if (events.length === 0) {
+          detail.innerHTML = `
+            <div class="calendar-empty">
+              <span class="meta">${formattedDate}</span>
+              <h3>这一天还没有记录</h3>
+              <p class="body-copy">以后可以把约会、旅行、纪念日或一件小事写到这里。</p>
+            </div>
+          `;
+          return;
+        }
+
+        detail.innerHTML = events.map((event) => `
+          <article class="event">
+            <span class="meta">${formattedDate}</span>
+            <h3>${event.title}</h3>
+            <p class="body-copy">${event.text}</p>
+          </article>
+        `).join("");
+      }
 
       function buildCalendar(date) {
         const root = document.getElementById("calendarDays");
@@ -698,7 +776,6 @@
         const firstDay = new Date(year, month, 1);
         const totalDays = new Date(year, month + 1, 0).getDate();
         const mondayStartOffset = (firstDay.getDay() + 6) % 7;
-        const eventDays = new Set([20]);
 
         root.innerHTML = "";
 
@@ -707,45 +784,62 @@
         }
 
         for (let day = 1; day <= totalDays; day += 1) {
-          const item = document.createElement("span");
+          const item = document.createElement("button");
+          const current = new Date(year, month, day);
           item.className = "day";
+          item.type = "button";
           item.textContent = day;
+          item.setAttribute("aria-label", `查看 ${month + 1} 月 ${day} 日事件`);
 
           if (day === date.getDate()) {
             item.classList.add("is-today");
           }
 
-          if (eventDays.has(day)) {
+          if (calendarEvents[dateKey(current)]) {
             item.classList.add("has-event");
           }
+
+          item.addEventListener("click", () => {
+            root.querySelectorAll(".day").forEach((node) => node.classList.remove("is-selected"));
+            item.classList.add("is-selected");
+            renderCalendarDetail(current);
+          });
 
           root.appendChild(item);
         }
       }
 
-      function diffDays(targetDate) {
-        const start = new Date(targetDate);
-        const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const startOnly = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-        return Math.round((todayOnly - startOnly) / 86400000);
+      function splitDuration(totalSeconds) {
+        const seconds = Math.max(0, Math.floor(totalSeconds));
+        const days = Math.floor(seconds / 86400);
+        const hours = Math.floor((seconds % 86400) / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const restSeconds = seconds % 60;
+        return { days, hours, minutes, seconds: restSeconds };
       }
 
-      function untilDays(targetDate) {
-        const target = new Date(targetDate);
-        const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const targetOnly = new Date(target.getFullYear(), target.getMonth(), target.getDate());
-        return Math.max(0, Math.round((targetOnly - todayOnly) / 86400000));
+      function formatDuration(duration) {
+        return `<span>${duration.days}</span> 天 <span>${String(duration.hours).padStart(2, "0")}</span>:<span>${String(duration.minutes).padStart(2, "0")}</span>:<span>${String(duration.seconds).padStart(2, "0")}</span>`;
       }
 
-      document.querySelectorAll("[data-since]").forEach((node) => {
-        node.textContent = `${diffDays(node.dataset.since)} 天`;
-      });
+      function updateCounters() {
+        const now = new Date();
 
-      document.querySelectorAll("[data-until]").forEach((node) => {
-        node.textContent = `${untilDays(node.dataset.until)} 天`;
-      });
+        document.querySelectorAll("[data-since]").forEach((node) => {
+          const start = new Date(node.dataset.since);
+          node.innerHTML = formatDuration(splitDuration((now - start) / 1000));
+        });
+
+        document.querySelectorAll("[data-until]").forEach((node) => {
+          const target = new Date(node.dataset.until);
+          node.innerHTML = formatDuration(splitDuration((target - now) / 1000));
+        });
+      }
 
       buildCalendar(today);
+      renderCalendarDetail(today);
+      updateCounters();
+      setInterval(updateCounters, 1000);
     </script>
   </body>
 </html>
