@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Chen & Gao</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="./assets/vendor/leaflet/leaflet.css">
     <meta name="description" content="Chen & Gao 的专属博客。">
     <style>
       :root {
@@ -1175,9 +1175,11 @@
       .date-value {
         font-family: var(--serif);
         color: var(--ink);
-        font-size: clamp(38px, 5vw, 76px);
-        line-height: 0.88;
+        font-size: clamp(22px, 2.4vw, 32px);
+        line-height: 1.05;
         font-weight: 900;
+        letter-spacing: 0.01em;
+        font-variant-numeric: tabular-nums;
       }
 
       .milestone-card-body {
@@ -1759,7 +1761,9 @@
       </div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="./assets/vendor/leaflet/leaflet.js"></script>
+    <script src="./assets/maps/world-countries.data.js"></script>
+    <script src="./assets/maps/china-admin.data.js"></script>
     <script>
       const today = new Date();
       let visibleMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -2163,52 +2167,84 @@
         const tabs = document.querySelectorAll("[data-map-tab]");
         const mapNodes = document.querySelectorAll(".leaflet-map");
 
-        if (!window.L) {
-          scaleNode.textContent = "地图加载失败";
+        if (!window.L || !window.__WORLD_COUNTRIES__ || !window.__CHINA_ADMIN__) {
+          scaleNode.textContent = "地图数据未加载";
           return;
         }
 
-        const tileLayer = () => L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          maxZoom: 18,
-          attribution: "&copy; OpenStreetMap"
-        });
+        const baseZoom = { world: 1, china: 1 };
 
         const maps = {
           world: L.map("worldMap", {
             zoomControl: false,
             scrollWheelZoom: true,
-            worldCopyJump: true
-          }).setView([28, 105], 2),
+            worldCopyJump: true,
+            minZoom: 1,
+            maxZoom: 6,
+            preferCanvas: true
+          }).setView([18, 10], 1),
           china: L.map("chinaMap", {
             zoomControl: false,
-            scrollWheelZoom: true
+            scrollWheelZoom: true,
+            minZoom: 3,
+            maxZoom: 8,
+            preferCanvas: true
           }).setView([35.4, 104.2], 4)
         };
 
-        tileLayer().addTo(maps.world);
-        tileLayer().addTo(maps.china);
+        const worldStyle = {
+          color: "rgba(97, 112, 131, 0.88)",
+          weight: 0.9,
+          opacity: 1,
+          fillOpacity: 0,
+          lineJoin: "round"
+        };
 
-        const markerIcon = (color) => L.divIcon({
-          className: "travel-marker",
-          iconSize: [24, 24],
-          iconAnchor: [12, 22],
-          popupAnchor: [0, -18],
-          html: '<span class="travel-marker-core" style="--marker-color:' + color + ';"></span>'
-        });
+        const chinaStyle = {
+          color: "rgba(101, 117, 104, 0.96)",
+          weight: 1.15,
+          opacity: 1,
+          fillOpacity: 0,
+          lineJoin: "round"
+        };
 
-        const popupHtml = (place) => [
-          '<div class="travel-popup">',
-          '<span class="meta">' + place.area + '</span>',
-          '<h3>' + place.title + '</h3>',
-          '<div class="travel-popup-meta">',
-          '<span>时间：' + place.date + '</span>',
-          '<span>评分：' + place.score + '</span>',
-          '</div>',
-          '<p>' + place.note + '</p>',
-          '</div>'
-        ].join("");
+        const worldLayer = L.geoJSON(window.__WORLD_COUNTRIES__, {
+          style: function () {
+            return worldStyle;
+          }
+        }).addTo(maps.world);
 
-        Object.values(travelPlaces).forEach((place) => {
+        const chinaLayer = L.geoJSON(window.__CHINA_ADMIN__, {
+          style: function () {
+            return chinaStyle;
+          }
+        }).addTo(maps.china);
+
+        const markerIcon = function (color) {
+          return L.divIcon({
+            className: "travel-marker",
+            iconSize: [24, 24],
+            iconAnchor: [12, 22],
+            popupAnchor: [0, -18],
+            html: '<span class="travel-marker-core" style="--marker-color:' + color + ';"></span>'
+          });
+        };
+
+        const popupHtml = function (place) {
+          return [
+            '<div class="travel-popup">',
+            '<span class="meta">' + place.area + '</span>',
+            '<h3>' + place.title + '</h3>',
+            '<div class="travel-popup-meta">',
+            '<span>时间：' + place.date + '</span>',
+            '<span>评分：' + place.score + '</span>',
+            '</div>',
+            '<p>' + place.note + '</p>',
+            '</div>'
+          ].join("");
+        };
+
+        Object.values(travelPlaces).forEach(function (place) {
           const targetMap = maps[place.map];
           if (!targetMap) return;
           L.marker(place.coords, { icon: markerIcon(place.color) })
@@ -2216,35 +2252,40 @@
             .bindPopup(popupHtml(place));
         });
 
-        const updateScale = (mapName) => {
+        const updateScale = function (mapName) {
           const zoom = maps[mapName].getZoom();
-          scaleNode.textContent = "缩放 " + zoom + " 级";
+          const factor = Math.pow(2, zoom - baseZoom[mapName]);
+          scaleNode.textContent = "缩放 " + (Math.round(factor * 10) / 10) + "x";
         };
 
-        Object.entries(maps).forEach(([name, map]) => {
-          map.on("zoomend", () => updateScale(name));
-        });
-
-        const setMap = (mapName) => {
-          tabs.forEach((tab) => {
+        const syncMap = function (mapName) {
+          tabs.forEach(function (tab) {
             const isActive = tab.dataset.mapTab === mapName;
             tab.classList.toggle("is-active", isActive);
             tab.setAttribute("aria-selected", String(isActive));
           });
-          mapNodes.forEach((node) => {
+          mapNodes.forEach(function (node) {
             node.classList.toggle("is-active", node.dataset.map === mapName);
           });
-          window.setTimeout(() => {
+          window.setTimeout(function () {
             maps[mapName].invalidateSize();
             updateScale(mapName);
           }, 80);
         };
 
-        tabs.forEach((tab) => {
-          tab.addEventListener("click", () => setMap(tab.dataset.mapTab));
+        Object.entries(maps).forEach(function ([name, map]) {
+          map.on("zoomend", function () {
+            updateScale(name);
+          });
         });
 
-        setMap("world");
+        tabs.forEach(function (tab) {
+          tab.addEventListener("click", function () {
+            syncMap(tab.dataset.mapTab);
+          });
+        });
+
+        syncMap("world");
       }
 
       function setupLightbox() {
