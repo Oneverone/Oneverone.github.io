@@ -2,6 +2,8 @@
 agent.md
 .agents/
 .codex/
+knowledge/
+skills/
 
 # Local operating-system clutter.
 Thumbs.db
