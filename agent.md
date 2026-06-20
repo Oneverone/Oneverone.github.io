@@ -50,6 +50,14 @@ Current local minimum site files:
 - Prioritize a long-term automatic upload workflow over repeated manual GitHub web uploads.
 - Preferred long-term workflow: local Git commits and pushes to GitHub, with GitHub Pages publishing from the repository.
 
+## Current Git Workflow Status
+
+- Git for Windows is installed at `C:\Program Files\Git\cmd\git.exe`.
+- Local repository initialized in `D:\Blog_chenandgao`.
+- Remote repository is `https://github.com/Oneverone/Oneverone.github.io.git`.
+- Main branch is `main`.
+- First push to GitHub completed successfully.
+
 ## Future Blog Direction
 
 After the chain is verified, consider building a fuller blog with:
