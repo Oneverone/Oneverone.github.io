@@ -784,13 +784,15 @@
 
       .milestones {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 18px;
       }
 
       .milestone {
+        display: grid;
+        gap: 18px;
         padding: 24px;
-        min-height: 330px;
+        min-height: 300px;
         transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
       }
 
@@ -800,11 +802,42 @@
         box-shadow: var(--shadow-hover);
       }
 
+      .milestone-date {
+        display: grid;
+        gap: 6px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, rgba(255, 253, 247, 0.92), rgba(217, 225, 214, 0.4)),
+          var(--surface-solid);
+      }
+
+      .date-year {
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .date-day {
+        font-family: var(--serif);
+        font-size: clamp(42px, 7vw, 82px);
+        line-height: 0.92;
+        font-weight: 800;
+        letter-spacing: 0;
+      }
+
+      .date-full {
+        color: var(--clay);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
       .counter {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
-        margin: 22px 0;
+        margin: 0;
       }
 
       .counter-part {
@@ -816,8 +849,8 @@
 
       .counter-part.is-primary {
         grid-column: 1 / -1;
-        color: #fff;
-        background: var(--ink);
+        color: var(--ink);
+        background: rgba(217, 225, 214, 0.5);
       }
 
       .counter-number {
@@ -1090,30 +1123,75 @@
             <span class="section-code">01 · Milestones</span>
             <h2>纪念时刻</h2>
           </div>
-          <p class="section-kicker">数字每秒变化。天数做主视觉，时分秒作为辅助信息，避免之前那种拥挤和比例失衡。</p>
+          <p class="section-kicker">这里记录已经发生的重要日子。日期本身是主角，下面的时长只作为“距今多久”的辅助信息。</p>
         </div>
 
         <div class="milestones">
           <article class="surface milestone">
-            <span class="meta">Since 2026.06.20</span>
-            <h3>网站上线至今</h3>
-            <p class="body-copy">起始日期：2026.06.20 00:00:00</p>
-            <div class="counter" data-since="2026-06-20T00:00:00"></div>
-            <p class="body-copy">从域名亮起来的那天开始算。</p>
+            <span class="meta">First Met</span>
+            <h3>相识日</h3>
+            <div class="milestone-date">
+              <span class="date-year">2016</span>
+              <span class="date-day">09.01</span>
+              <span class="date-full">2016.09.01</span>
+            </div>
+            <div class="counter" data-since="2016-09-01T00:00:00"></div>
+            <p class="body-copy">从第一次相识开始算。</p>
           </article>
           <article class="surface milestone">
-            <span class="meta">Since 2020.01.01</span>
-            <h3>相识纪念日</h3>
-            <p class="body-copy">起始日期：2020.01.01 00:00:00</p>
-            <div class="counter" data-since="2020-01-01T00:00:00"></div>
-            <p class="body-copy">这里先用占位日期，后续替换成真实日子。</p>
+            <span class="meta">Together</span>
+            <h3>恋爱日</h3>
+            <div class="milestone-date">
+              <span class="date-year">2019</span>
+              <span class="date-day">02.02</span>
+              <span class="date-full">2019.02.02</span>
+            </div>
+            <div class="counter" data-since="2019-02-02T00:00:00"></div>
+            <p class="body-copy">从正式在一起开始算。</p>
           </article>
           <article class="surface milestone">
-            <span class="meta">Until 2026.12.31</span>
-            <h3>下一次纪念日</h3>
-            <p class="body-copy">目标日期：2026.12.31 00:00:00</p>
-            <div class="counter" data-until="2026-12-31T00:00:00"></div>
-            <p class="body-copy">距离下一次特别的日子。</p>
+            <span class="meta">Marriage License</span>
+            <h3>领证日</h3>
+            <div class="milestone-date">
+              <span class="date-year">2024</span>
+              <span class="date-day">05.24</span>
+              <span class="date-full">2024.05.24</span>
+            </div>
+            <div class="counter" data-since="2024-05-24T00:00:00"></div>
+            <p class="body-copy">从成为法律意义上的一家人开始算。</p>
+          </article>
+          <article class="surface milestone">
+            <span class="meta">Wedding</span>
+            <h3>婚礼日</h3>
+            <div class="milestone-date">
+              <span class="date-year">2026</span>
+              <span class="date-day">03.31</span>
+              <span class="date-full">2026.03.31</span>
+            </div>
+            <div class="counter" data-since="2026-03-31T00:00:00"></div>
+            <p class="body-copy">从婚礼那天开始算。</p>
+          </article>
+          <article class="surface milestone">
+            <span class="meta">Birthday · Gao</span>
+            <h3>小高生日</h3>
+            <div class="milestone-date">
+              <span class="date-year">1998</span>
+              <span class="date-day">01.20</span>
+              <span class="date-full">1998.01.20</span>
+            </div>
+            <div class="counter" data-since="1998-01-20T00:00:00"></div>
+            <p class="body-copy">女方生日。</p>
+          </article>
+          <article class="surface milestone">
+            <span class="meta">Birthday · Chen</span>
+            <h3>小陈生日</h3>
+            <div class="milestone-date">
+              <span class="date-year">1999</span>
+              <span class="date-day">03.01</span>
+              <span class="date-full">1999.03.01</span>
+            </div>
+            <div class="counter" data-since="1999-03-01T00:00:00"></div>
+            <p class="body-copy">男方生日。</p>
           </article>
         </div>
       </section>
@@ -1595,13 +1673,6 @@
         document.querySelectorAll("[data-since]").forEach((node) => {
           const start = new Date(node.dataset.since);
           node.innerHTML = formatDuration(splitDuration((now - start) / 1000));
-          node.classList.toggle("is-ticking");
-          window.setTimeout(() => node.classList.remove("is-ticking"), 170);
-        });
-
-        document.querySelectorAll("[data-until]").forEach((node) => {
-          const target = new Date(node.dataset.until);
-          node.innerHTML = formatDuration(splitDuration((target - now) / 1000));
           node.classList.toggle("is-ticking");
           window.setTimeout(() => node.classList.remove("is-ticking"), 170);
         });
