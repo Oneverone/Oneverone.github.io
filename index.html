@@ -11,11 +11,11 @@
         --ink: #18100d;
         --muted: #6d574d;
         --soft: #a58a7d;
-        --paper: #fff0dc;
-        --paper-deep: #f1c99f;
+        --paper: #fff7ed;
+        --paper-deep: #f8e6d1;
         --night: #251816;
-        --surface: rgba(255, 246, 228, 0.72);
-        --surface-strong: rgba(255, 249, 238, 0.92);
+        --surface: rgba(255, 251, 244, 0.76);
+        --surface-strong: rgba(255, 253, 248, 0.94);
         --line: rgba(90, 42, 28, 0.18);
         --line-strong: rgba(90, 42, 28, 0.34);
         --accent: #d34f32;
@@ -42,10 +42,10 @@
         font-family: Georgia, "Times New Roman", "Noto Serif SC", "Songti SC", serif;
         color: var(--ink);
         background:
-          radial-gradient(circle at 8% 12%, rgba(211, 79, 50, 0.38), transparent 22rem),
-          radial-gradient(circle at 88% 4%, rgba(34, 120, 111, 0.32), transparent 26rem),
-          radial-gradient(circle at 48% 38%, rgba(229, 169, 63, 0.18), transparent 28rem),
-          linear-gradient(180deg, #fff6e7 0%, var(--paper) 32%, #f8dcc0 68%, #f4c18f 100%);
+          radial-gradient(circle at 8% 12%, rgba(211, 79, 50, 0.18), transparent 23rem),
+          radial-gradient(circle at 88% 4%, rgba(34, 120, 111, 0.16), transparent 28rem),
+          radial-gradient(circle at 48% 38%, rgba(229, 169, 63, 0.12), transparent 30rem),
+          linear-gradient(180deg, #fffaf2 0%, var(--paper) 38%, #fbead8 76%, var(--paper-deep) 100%);
       }
 
       body::before {
@@ -54,7 +54,7 @@
         inset: 0;
         z-index: -1;
         pointer-events: none;
-        opacity: 0.42;
+        opacity: 0.24;
         background-image:
           linear-gradient(rgba(90, 42, 28, 0.052) 1px, transparent 1px),
           linear-gradient(90deg, rgba(90, 42, 28, 0.04) 1px, transparent 1px),
@@ -703,10 +703,13 @@
       .counter {
         position: relative;
         overflow: hidden;
+        display: grid;
+        gap: 20px;
+        min-height: 340px;
         padding: 30px;
         background:
-          radial-gradient(circle at 90% 0%, rgba(229, 169, 63, 0.34), transparent 9rem),
-          linear-gradient(180deg, rgba(255, 249, 238, 0.9), rgba(255, 229, 191, 0.62));
+          radial-gradient(circle at 92% 6%, rgba(229, 169, 63, 0.22), transparent 10rem),
+          linear-gradient(180deg, rgba(255, 253, 248, 0.96), rgba(255, 244, 228, 0.84));
       }
 
       .counter::after {
@@ -720,25 +723,85 @@
         transform: rotate(18deg);
       }
 
-      .counter-value {
-        margin: 18px 0 10px;
-        font-size: clamp(28px, 4vw, 48px);
-        line-height: 1;
+      .counter-head {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        gap: 10px;
+      }
+
+      .counter-label {
+        color: var(--accent);
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        font-size: 13px;
         font-weight: 800;
+      }
+
+      .counter-title {
+        margin: 0;
         color: var(--night);
-        word-break: keep-all;
+        font-size: clamp(24px, 3vw, 34px);
+        line-height: 1.05;
+        font-weight: 800;
+      }
+
+      .counter-value {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 1.18fr 0.9fr 0.9fr 0.9fr;
+        gap: 10px;
+        margin: 0;
+        color: var(--night);
       }
 
       .counter-date {
         margin: 0;
-        color: var(--soft);
+        color: #7e6358;
         font-family: "Segoe UI", "Noto Sans SC", sans-serif;
         font-size: 13px;
       }
 
-      .counter-value span {
-        display: inline-block;
-        min-width: 2ch;
+      .counter-part {
+        display: grid;
+        gap: 8px;
+        align-content: end;
+        min-width: 0;
+        padding: 16px 12px;
+        border: 1px solid rgba(90, 42, 28, 0.12);
+        background: rgba(255, 255, 255, 0.58);
+      }
+
+      .counter-part.is-primary {
+        background: var(--night);
+        color: #fff8ed;
+      }
+
+      .counter-number {
+        display: block;
+        font-family: Georgia, "Times New Roman", "Noto Serif SC", "Songti SC", serif;
+        font-size: clamp(26px, 4vw, 56px);
+        line-height: 0.9;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .counter-unit {
+        color: currentColor;
+        opacity: 0.72;
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .counter-note {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        padding-top: 4px;
+        color: #5f4035;
+        font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+        line-height: 1.8;
       }
 
       .comment-box .list {
@@ -870,8 +933,16 @@
           gap: 4px;
         }
 
+        .counter {
+          min-height: auto;
+        }
+
         .counter-value {
-          font-size: 30px;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .counter-number {
+          font-size: 34px;
         }
       }
     </style>
@@ -1011,22 +1082,31 @@
         </div>
         <div class="grid three">
           <article class="panel counter">
-            <span class="meta">网站上线至今</span>
-            <p class="counter-date">起始日期：2026.06.20 00:00:00</p>
+            <div class="counter-head">
+              <span class="counter-label">Since 2026.06.20</span>
+              <h3 class="counter-title">网站上线至今</h3>
+              <p class="counter-date">起始日期：2026.06.20 00:00:00</p>
+            </div>
             <div class="counter-value" data-since="2026-06-20T00:00:00">--</div>
-            <p class="body-copy">从域名亮起来的那天开始算。</p>
+            <p class="counter-note">从域名亮起来的那天开始算。</p>
           </article>
           <article class="panel counter">
-            <span class="meta">相识纪念日</span>
-            <p class="counter-date">起始日期：2020.01.01 00:00:00</p>
+            <div class="counter-head">
+              <span class="counter-label">Since 2020.01.01</span>
+              <h3 class="counter-title">相识纪念日</h3>
+              <p class="counter-date">起始日期：2020.01.01 00:00:00</p>
+            </div>
             <div class="counter-value" data-since="2020-01-01T00:00:00">--</div>
-            <p class="body-copy">这里先用占位日期，后续替换成真实日期。</p>
+            <p class="counter-note">这里先用占位日期，后续替换成真实日期。</p>
           </article>
           <article class="panel counter">
-            <span class="meta">下一次纪念日</span>
-            <p class="counter-date">目标日期：2026.12.31 00:00:00</p>
+            <div class="counter-head">
+              <span class="counter-label">Until 2026.12.31</span>
+              <h3 class="counter-title">下一次纪念日</h3>
+              <p class="counter-date">目标日期：2026.12.31 00:00:00</p>
+            </div>
             <div class="counter-value" data-until="2026-12-31T00:00:00">--</div>
-            <p class="body-copy">距离下一次特别的日子。</p>
+            <p class="counter-note">距离下一次特别的日子。</p>
           </article>
         </div>
       </section>
@@ -1264,7 +1344,12 @@
       }
 
       function formatDuration(duration) {
-        return `<span>${duration.days}</span> 天 <span>${String(duration.hours).padStart(2, "0")}</span>:<span>${String(duration.minutes).padStart(2, "0")}</span>:<span>${String(duration.seconds).padStart(2, "0")}</span>`;
+        return `
+          <span class="counter-part is-primary"><span class="counter-number">${duration.days}</span><span class="counter-unit">天</span></span>
+          <span class="counter-part"><span class="counter-number">${String(duration.hours).padStart(2, "0")}</span><span class="counter-unit">时</span></span>
+          <span class="counter-part"><span class="counter-number">${String(duration.minutes).padStart(2, "0")}</span><span class="counter-unit">分</span></span>
+          <span class="counter-part"><span class="counter-number">${String(duration.seconds).padStart(2, "0")}</span><span class="counter-unit">秒</span></span>
+        `;
       }
 
       function updateCounters() {
