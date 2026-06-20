@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Chen & Gao</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <meta name="description" content="Chen & Gao 的专属博客。">
     <style>
       :root {
@@ -441,11 +442,16 @@
       }
 
       .archive-toolbar {
-        display: flex;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
         align-items: center;
-        justify-content: space-between;
-        gap: 14px;
-        margin-bottom: 18px;
+        margin-bottom: 22px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: linear-gradient(135deg, rgba(255, 253, 247, 0.9), rgba(247, 243, 234, 0.72));
+        box-shadow: 0 14px 36px rgba(60, 52, 42, 0.08);
       }
 
       .view-tabs,
@@ -453,20 +459,25 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 6px;
+      }
+
+      .view-tabs {
+        width: fit-content;
+        padding: 5px;
         border: 1px solid var(--line);
-        border-radius: 999px;
-        background: rgba(255, 253, 247, 0.72);
+        border-radius: var(--radius);
+        background: rgba(255, 253, 247, 0.82);
       }
 
       .view-tab {
-        min-height: 34px;
-        padding: 0 13px;
+        min-height: 38px;
+        padding: 0 16px;
         border: 0;
-        border-radius: 999px;
+        border-radius: calc(var(--radius) - 2px);
         color: var(--muted);
         background: transparent;
         font-size: 13px;
+        font-weight: 800;
         transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
       }
 
@@ -478,20 +489,44 @@
       }
 
       .date-jump {
+        justify-content: flex-end;
+        padding: 5px;
+        border: 1px solid var(--line);
         border-radius: var(--radius);
+        background: rgba(255, 253, 247, 0.82);
+      }
+
+      .date-jump-label {
+        padding: 0 8px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 850;
       }
 
       .month-select,
       .year-input {
-        min-height: 34px;
-        border: 0;
+        min-height: 38px;
+        border: 1px solid transparent;
+        border-radius: calc(var(--radius) - 2px);
         color: var(--ink);
-        background: transparent;
+        background: rgba(247, 243, 234, 0.78);
         font-size: 13px;
+        font-weight: 800;
+      }
+
+      .month-select {
+        padding: 0 12px;
       }
 
       .year-input {
-        width: 76px;
+        width: 92px;
+        padding: 0 10px;
+      }
+
+      .month-select:focus-visible,
+      .year-input:focus-visible {
+        outline: 2px solid rgba(183, 110, 85, 0.38);
+        outline-offset: 2px;
       }
 
       .archive-view {
@@ -500,6 +535,97 @@
 
       .archive-view.is-active {
         display: block;
+      }
+
+
+      .calendar-panel {
+        padding: 0;
+        overflow: hidden;
+        background: linear-gradient(180deg, rgba(255, 253, 247, 0.96), rgba(247, 243, 234, 0.82));
+      }
+
+      .calendar-top {
+        margin: 0;
+        padding: 22px 24px 18px;
+        border-bottom: 1px solid var(--line);
+        background:
+          radial-gradient(circle at 88% 18%, rgba(199, 163, 86, 0.14), transparent 8rem),
+          rgba(255, 253, 247, 0.78);
+      }
+
+      .calendar-title {
+        font-family: var(--serif);
+        font-size: clamp(28px, 4vw, 46px);
+        font-weight: 900;
+      }
+
+      .weekdays {
+        padding: 18px 18px 8px;
+      }
+
+      .weekdays span {
+        color: var(--clay);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .days {
+        padding: 0 18px 18px;
+      }
+
+      .day {
+        position: relative;
+        min-height: 76px;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 12px;
+        border: 1px solid rgba(32, 35, 31, 0.08);
+        border-radius: var(--radius);
+        background: rgba(255, 253, 247, 0.56);
+        font-family: var(--serif);
+        font-size: 19px;
+        font-weight: 900;
+        transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      }
+
+      .day:hover {
+        transform: translateY(-2px);
+        background: var(--surface-solid);
+        box-shadow: 0 10px 24px rgba(60, 52, 42, 0.08);
+      }
+
+      .day.is-today {
+        border-color: rgba(101, 117, 104, 0.34);
+        background: rgba(217, 225, 214, 0.38);
+      }
+
+      .day.is-selected {
+        color: var(--surface-solid);
+        border-color: var(--clay);
+        background: linear-gradient(135deg, var(--clay), #8f5748);
+        box-shadow: 0 14px 30px rgba(183, 110, 85, 0.22);
+      }
+
+      .day.has-event::after {
+        content: "";
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--gold);
+      }
+
+      .day.is-selected.has-event::after {
+        background: var(--surface-solid);
+      }
+
+      .calendar-detail {
+        padding: 24px;
+        background:
+          linear-gradient(180deg, rgba(255, 253, 247, 0.94), rgba(247, 243, 234, 0.78)),
+          var(--surface);
       }
 
       .surface {
@@ -668,9 +794,106 @@
         white-space: nowrap;
       }
 
+      .calendar-panel {
+        padding: 0;
+        overflow: hidden;
+        background: linear-gradient(180deg, rgba(255, 253, 247, 0.96), rgba(247, 243, 234, 0.82));
+      }
+
+      .calendar-top {
+        margin: 0;
+        padding: 22px 24px 18px;
+        border-bottom: 1px solid var(--line);
+        background:
+          radial-gradient(circle at 88% 18%, rgba(199, 163, 86, 0.14), transparent 8rem),
+          rgba(255, 253, 247, 0.78);
+      }
+
+      .calendar-title {
+        font-family: var(--serif);
+        font-size: clamp(28px, 4vw, 46px);
+        font-weight: 900;
+      }
+
+      .weekdays {
+        margin: 0;
+        padding: 18px 18px 8px;
+      }
+
+      .weekdays span {
+        color: var(--clay);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .days {
+        padding: 0 18px 18px;
+      }
+
+      .day {
+        position: relative;
+        min-height: 76px;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 12px;
+        border: 1px solid rgba(32, 35, 31, 0.08);
+        border-radius: var(--radius);
+        color: var(--ink);
+        background: rgba(255, 253, 247, 0.56);
+        font-family: var(--serif);
+        font-size: 19px;
+        font-weight: 900;
+        transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      }
+
+      .day:hover {
+        transform: translateY(-2px);
+        border-color: rgba(183, 110, 85, 0.24);
+        background: var(--surface-solid);
+        box-shadow: 0 10px 24px rgba(60, 52, 42, 0.08);
+      }
+
+      .day.is-today {
+        color: var(--ink);
+        border-color: rgba(101, 117, 104, 0.34);
+        background: rgba(217, 225, 214, 0.38);
+      }
+
+      .day.has-event {
+        background: rgba(255, 253, 247, 0.76);
+      }
+
+      .day.has-event::after {
+        content: "";
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--gold);
+      }
+
+      .day.is-selected {
+        color: var(--surface-solid);
+        border-color: var(--clay);
+        background: linear-gradient(135deg, var(--clay), #8f5748);
+        box-shadow: 0 14px 30px rgba(183, 110, 85, 0.22);
+      }
+
+      .day.is-selected.has-event::after {
+        background: var(--surface-solid);
+      }
+
+      .calendar-detail {
+        padding: 24px;
+        background:
+          linear-gradient(180deg, rgba(255, 253, 247, 0.94), rgba(247, 243, 234, 0.78)),
+          var(--surface);
+      }
+
       .travel-dashboard {
         display: grid;
-        grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
         gap: 18px;
       }
 
@@ -686,8 +909,7 @@
         margin-bottom: 14px;
       }
 
-      .map-tabs,
-      .zoom-controls {
+      .map-tabs {
         display: inline-flex;
         gap: 8px;
         padding: 6px;
@@ -696,9 +918,9 @@
         background: rgba(255, 253, 247, 0.72);
       }
 
-      .map-tab,
-      .zoom-button {
+      .map-tab {
         min-height: 34px;
+        padding: 0 13px;
         border: 0;
         border-radius: 999px;
         color: var(--muted);
@@ -708,99 +930,55 @@
         transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
       }
 
-      .map-tab {
-        padding: 0 13px;
-      }
-
-      .zoom-button {
-        width: 34px;
-      }
-
       .map-tab:hover,
-      .map-tab.is-active,
-      .zoom-button:hover {
+      .map-tab.is-active {
         color: var(--ink);
         background: var(--surface-solid);
         box-shadow: 0 8px 22px rgba(60, 52, 42, 0.08);
       }
 
+      .map-hint {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+      }
+
       .map-stage {
         position: relative;
-        min-height: 500px;
+        min-height: 560px;
         overflow: hidden;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background:
-          linear-gradient(90deg, rgba(32, 35, 31, 0.04) 1px, transparent 1px),
-          linear-gradient(rgba(32, 35, 31, 0.04) 1px, transparent 1px),
-          radial-gradient(circle at 24% 68%, rgba(183, 110, 85, 0.14), transparent 9rem),
-          radial-gradient(circle at 78% 26%, rgba(97, 112, 131, 0.13), transparent 10rem),
-          #fbf8f1;
-        background-size: 52px 52px, 52px 52px, auto, auto, auto;
+        background: #e9efe5;
       }
 
-      .map-canvas {
+      .leaflet-map {
         position: absolute;
         inset: 0;
         display: none;
-        transform-origin: center;
-        transform: scale(var(--map-scale));
-        transition: transform 200ms ease;
+        z-index: 1;
       }
 
-      .map-canvas.is-active {
+      .leaflet-map.is-active {
         display: block;
       }
 
-      .map-art {
+      .leaflet-marker-icon.travel-marker {
+        border: 0;
+        background: transparent;
+      }
+
+      .travel-marker-core {
         position: absolute;
-        inset: 34px;
-      }
-
-      .map-art svg {
-        width: 100%;
-        height: 100%;
-      }
-
-      .land {
-        fill: rgba(101, 117, 104, 0.18);
-        stroke: rgba(32, 35, 31, 0.2);
-        stroke-width: 1.5;
-      }
-
-      .map-region {
-        fill: rgba(183, 110, 85, 0.32);
-        stroke: rgba(183, 110, 85, 0.72);
-        stroke-width: 2;
-        cursor: pointer;
-        transition: fill 160ms ease, transform 160ms ease;
-      }
-
-      .map-region:hover,
-      .map-region.is-active {
-        fill: rgba(183, 110, 85, 0.56);
-      }
-
-      .map-region:focus-visible {
-        outline: none;
-        stroke: var(--ink);
-        stroke-width: 3;
-      }
-
-      .map-pin {
-        position: absolute;
-        width: 22px;
-        height: 22px;
-        padding: 0;
+        inset: 0;
         border: 3px solid var(--surface-solid);
         border-radius: 50% 50% 50% 0;
-        background: var(--pin-color, var(--clay));
-        box-shadow: 0 10px 24px rgba(60, 52, 42, 0.22);
-        transform: translate(-50%, -50%) rotate(-45deg);
-        transition: transform 180ms ease, box-shadow 180ms ease;
+        background: var(--marker-color, var(--clay));
+        box-shadow: 0 10px 22px rgba(60, 52, 42, 0.22);
+        transform: rotate(-45deg);
       }
 
-      .map-pin::after {
+      .travel-marker-core::after {
         content: "";
         position: absolute;
         inset: 4px;
@@ -808,54 +986,60 @@
         background: var(--surface-solid);
       }
 
-      .map-pin:hover,
-      .map-pin.is-active {
-        transform: translate(-50%, -62%) rotate(-45deg) scale(1.08);
-        box-shadow: 0 16px 34px rgba(60, 52, 42, 0.28);
-      }
-
-      .map-label {
+      .map-scale {
         position: absolute;
-        color: var(--muted);
+        right: 14px;
+        bottom: 14px;
+        z-index: 500;
+        min-width: 96px;
+        padding: 8px 10px;
+        border: 1px solid rgba(32, 35, 31, 0.16);
+        border-radius: var(--radius);
+        color: var(--ink);
+        background: rgba(255, 253, 247, 0.88);
+        box-shadow: 0 10px 28px rgba(60, 52, 42, 0.12);
         font-size: 12px;
-        font-weight: 800;
-        pointer-events: none;
+        font-weight: 850;
+        text-align: center;
       }
 
-      .pin-world-china { left: 72%; top: 47%; --pin-color: var(--clay); }
-      .label-world-china { left: 74%; top: 43%; }
-      .pin-beijing { left: 57%; top: 32%; --pin-color: var(--blue); }
-      .label-beijing { left: 60%; top: 28%; }
-      .pin-shanghai { left: 65%; top: 58%; --pin-color: var(--clay); }
-      .label-shanghai { left: 68%; top: 56%; }
-      .pin-hangzhou { left: 61%; top: 64%; --pin-color: var(--gold); }
-      .label-hangzhou { left: 64%; top: 67%; }
-
-      .travel-side {
-        display: grid;
-        gap: 14px;
+      .leaflet-popup-content-wrapper {
+        border-radius: var(--radius);
+        box-shadow: 0 18px 48px rgba(60, 52, 42, 0.18);
       }
 
-      .travel-detail,
-      .explore-stats {
-        padding: 22px;
+      .travel-popup {
+        min-width: 190px;
       }
 
-      .detail-meta {
+      .travel-popup h3 {
+        margin: 4px 0 10px;
+        font-size: 24px;
+      }
+
+      .travel-popup p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .travel-popup-meta {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
-        margin: 14px 0;
+        gap: 6px;
       }
 
-      .detail-chip {
-        padding: 7px 10px;
-        border: 1px solid var(--line);
+      .travel-popup-meta span {
+        padding: 5px 7px;
         border-radius: 999px;
+        background: rgba(247, 243, 234, 0.9);
         color: var(--muted);
-        background: rgba(255, 253, 247, 0.7);
         font-size: 12px;
         font-weight: 750;
+      }
+
+      .explore-stats {
+        padding: 22px;
       }
 
       .stats-grid {
@@ -1446,7 +1630,7 @@
             <button class="view-tab is-active" type="button" data-archive-view="calendar" aria-pressed="true">日历</button>
             <button class="view-tab" type="button" data-archive-view="list" aria-pressed="false">列表</button>
           </div>
-          <div class="date-jump" aria-label="快速切换年月">
+          <div class="date-jump" aria-label="快速切换年月"><span class="date-jump-label">跳转</span>
             <button class="icon-button" id="prevMonth" type="button" aria-label="上个月">‹</button>
             <input class="year-input" id="yearInput" type="number" min="2000" max="2099" aria-label="年份">
             <select class="month-select" id="monthSelect" aria-label="月份">
@@ -1494,7 +1678,7 @@
             <span class="section-code">03 · Footprints</span>
             <h2>旅行足迹</h2>
           </div>
-          <p class="section-kicker">这里会同时记录世界地图和中国地图。切换地图、放大缩小、点击图钉或高亮区域，就能看到对应旅行的时间、评分和小记。</p>
+          <p class="section-kicker">这里使用标准地图展示已经旅行过的地点。用鼠标滚轮放大缩小，点击图钉会直接弹出旅行详情。</p>
         </div>
 
         <div class="travel-dashboard">
@@ -1504,67 +1688,32 @@
                 <button class="map-tab is-active" type="button" data-map-tab="world" role="tab" aria-selected="true">世界地图</button>
                 <button class="map-tab" type="button" data-map-tab="china" role="tab" aria-selected="false">中国地图</button>
               </div>
-              <div class="zoom-controls" aria-label="地图缩放">
-                <button class="zoom-button" type="button" data-zoom="out" aria-label="缩小地图">−</button>
-                <button class="zoom-button" type="button" data-zoom="reset" aria-label="重置缩放">1:1</button>
-                <button class="zoom-button" type="button" data-zoom="in" aria-label="放大地图">+</button>
-              </div>
+              <span class="map-hint">滚轮缩放 · 点击图钉查看详情</span>
             </div>
 
             <div class="map-stage">
-              <div class="map-canvas is-active" data-map="world" style="--map-scale: 1;">
-                <div class="map-art">
-                  <svg viewBox="0 0 900 480" focusable="false">
-                    <path class="land" d="M76 166 C130 82 236 80 294 126 C338 160 296 222 230 234 C172 246 129 220 92 196 Z"></path>
-                    <path class="land" d="M330 124 C374 78 458 90 490 137 C518 179 478 219 416 217 C366 215 320 177 330 124 Z"></path>
-                    <path class="land" d="M542 116 C615 48 734 74 795 150 C848 216 789 288 690 276 C594 265 494 208 542 116 Z"></path>
-                    <path class="land" d="M572 310 C630 282 715 298 748 352 C778 399 729 438 650 431 C586 426 533 375 572 310 Z"></path>
-                    <path class="map-region is-active" data-place="china" role="button" tabindex="0" d="M626 196 C655 172 707 177 732 205 C754 231 731 260 683 260 C642 260 604 230 626 196 Z"></path>
-                  </svg>
-                </div>
-                <button class="map-pin pin-world-china is-active" type="button" data-place="china" aria-label="中国旅行详情"></button>
-                <span class="map-label label-world-china">中国</span>
-              </div>
-
-              <div class="map-canvas" data-map="china" style="--map-scale: 1;">
-                <div class="map-art">
-                  <svg viewBox="0 0 640 520" focusable="false">
-                    <path class="land" d="M298 60 C374 78 440 124 475 191 C514 266 487 345 418 401 C354 453 260 448 198 392 C133 333 113 245 151 164 C181 101 229 48 298 60 Z"></path>
-                    <path class="land" d="M148 236 C107 248 82 283 89 319 C97 361 142 381 185 362 C223 345 235 292 207 259 C192 242 171 231 148 236 Z"></path>
-                    <path class="map-region" data-place="beijing" role="button" tabindex="0" d="M360 128 C383 118 416 128 429 151 C443 176 423 202 391 201 C359 199 338 178 346 151 Z"></path>
-                    <path class="map-region" data-place="shanghai" role="button" tabindex="0" d="M424 284 C449 273 479 286 487 310 C496 337 471 359 441 351 C414 344 400 314 414 294 Z"></path>
-                    <path class="map-region" data-place="hangzhou" role="button" tabindex="0" d="M388 316 C415 302 447 315 456 340 C466 369 441 393 408 385 C378 378 363 346 378 327 Z"></path>
-                  </svg>
-                </div>
-                <button class="map-pin pin-beijing" type="button" data-place="beijing" aria-label="北京旅行详情"></button>
-                <span class="map-label label-beijing">北京</span>
-                <button class="map-pin pin-shanghai" type="button" data-place="shanghai" aria-label="上海旅行详情"></button>
-                <span class="map-label label-shanghai">上海</span>
-                <button class="map-pin pin-hangzhou" type="button" data-place="hangzhou" aria-label="杭州旅行详情"></button>
-                <span class="map-label label-hangzhou">杭州</span>
-              </div>
+              <div class="leaflet-map is-active" id="worldMap" data-map="world"></div>
+              <div class="leaflet-map" id="chinaMap" data-map="china"></div>
+              <div class="map-scale" id="mapScale">缩放 1x</div>
             </div>
           </div>
 
-          <div class="travel-side">
-            <article class="surface travel-detail" id="travelDetail" aria-live="polite"></article>
-            <div class="surface explore-stats">
+          <div class="surface explore-stats">
+            <div>
+              <span class="meta">Explore Score</span>
+              <h3>探索进度</h3>
+              <p class="body-copy">先用已记录地点做基础统计，后续每增加一个真实目的地，进度会一起更新。</p>
+            </div>
+            <div class="stats-grid">
               <div>
-                <span class="meta">Explore Score</span>
-                <h3>探索进度</h3>
-                <p class="body-copy">先用已记录地点做基础统计，后续每增加一个真实目的地，进度会一起更新。</p>
+                <div class="stat-topline"><span>世界探索</span><strong id="worldPercent">0%</strong></div>
+                <div class="stat-bar" aria-hidden="true"><span class="stat-fill" id="worldFill" style="--value: 0%;"></span></div>
+                <p class="body-copy">按国家 / 地区粗略统计</p>
               </div>
-              <div class="stats-grid">
-                <div>
-                  <div class="stat-topline"><span>世界探索</span><strong id="worldPercent">0%</strong></div>
-                  <div class="stat-bar" aria-hidden="true"><span class="stat-fill" id="worldFill" style="--value: 0%;"></span></div>
-                  <p class="body-copy">按国家 / 地区粗略统计</p>
-                </div>
-                <div>
-                  <div class="stat-topline"><span>中国探索</span><strong id="chinaPercent">0%</strong></div>
-                  <div class="stat-bar" aria-hidden="true"><span class="stat-fill" id="chinaFill" style="--value: 0%;"></span></div>
-                  <p class="body-copy">按省级行政区粗略统计</p>
-                </div>
+              <div>
+                <div class="stat-topline"><span>中国探索</span><strong id="chinaPercent">0%</strong></div>
+                <div class="stat-bar" aria-hidden="true"><span class="stat-fill" id="chinaFill" style="--value: 0%;"></span></div>
+                <p class="body-copy">按省级行政区粗略统计</p>
               </div>
             </div>
           </div>
@@ -1610,6 +1759,7 @@
       </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
       const today = new Date();
       let visibleMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -1849,7 +1999,7 @@
           item.className = "day";
           item.type = "button";
           item.textContent = day;
-          item.setAttribute("aria-label", `查看 ${month + 1} 月 ${day} 日事件`);
+          item.setAttribute("aria-label", "查看 " + (month + 1) + " 月 " + day + " 日事件");
 
           if (dateKey(current) === dateKey(today)) item.classList.add("is-today");
           if (dateKey(current) === dateKey(selectedDate)) item.classList.add("is-selected");
@@ -1921,22 +2071,19 @@
       }
 
       function splitDuration(totalSeconds) {
-        const seconds = Math.max(0, Math.floor(totalSeconds));
-        return {
-          days: Math.floor(seconds / 86400),
-          hours: Math.floor((seconds % 86400) / 3600),
-          minutes: Math.floor((seconds % 3600) / 60),
-          seconds: seconds % 60
-        };
+        const days = Math.max(0, Math.floor(totalSeconds / 86400));
+        const years = Math.floor(days / 365);
+        const months = Math.floor((days % 365) / 30);
+        const restDays = days - (years * 365) - (months * 30);
+        return { years, months, days: restDays };
       }
 
       function formatDuration(duration) {
-        return `
-          <span class="counter-part is-primary"><span class="counter-number">${duration.days}</span><span class="counter-unit">天</span></span>
-          <span class="counter-part"><span class="counter-number">${String(duration.hours).padStart(2, "0")}</span><span class="counter-unit">时</span></span>
-          <span class="counter-part"><span class="counter-number">${String(duration.minutes).padStart(2, "0")}</span><span class="counter-unit">分</span></span>
-          <span class="counter-part"><span class="counter-number">${String(duration.seconds).padStart(2, "0")}</span><span class="counter-unit">秒</span></span>
-        `;
+        return [
+          '<span class="counter-part is-primary"><span class="counter-number">' + duration.years + '</span><span class="counter-unit">年</span></span>',
+          '<span class="counter-part"><span class="counter-number">' + duration.months + '</span><span class="counter-unit">月</span></span>',
+          '<span class="counter-part"><span class="counter-number">' + duration.days + '</span><span class="counter-unit">日</span></span>'
+        ].join("");
       }
 
       function updateCounters() {
@@ -1944,8 +2091,6 @@
         document.querySelectorAll("[data-since]").forEach((node) => {
           const start = new Date(node.dataset.since);
           node.innerHTML = formatDuration(splitDuration((now - start) / 1000));
-          node.classList.toggle("is-ticking");
-          window.setTimeout(() => node.classList.remove("is-ticking"), 170);
         });
       }
 
@@ -1956,7 +2101,9 @@
           area: "国家 / 地区",
           date: "当前已点亮",
           score: "待评分",
-          note: "世界地图中先点亮中国，具体城市会放在中国地图里继续展开。"
+          note: "世界地图中先点亮中国，具体城市见中国地图。",
+          coords: [35.8617, 104.1954],
+          color: "#b76e55"
         },
         shanghai: {
           map: "china",
@@ -1964,7 +2111,9 @@
           area: "城市",
           date: "示例记录",
           score: "待评分",
-          note: "第一枚城市图钉。后续可以替换成真实旅行时间、照片和评分。"
+          note: "第一枚城市图钉。后续可以替换成真实旅行时间、照片和评分。",
+          coords: [31.2304, 121.4737],
+          color: "#b76e55"
         },
         hangzhou: {
           map: "china",
@@ -1972,7 +2121,9 @@
           area: "城市",
           date: "示例记录",
           score: "待评分",
-          note: "适合记录周末短途、散步路线、天气和当时的心情。"
+          note: "适合记录周末短途、散步路线、天气和当时的心情。",
+          coords: [30.2741, 120.1551],
+          color: "#c7a356"
         },
         beijing: {
           map: "china",
@@ -1980,7 +2131,9 @@
           area: "城市",
           date: "示例记录",
           score: "待评分",
-          note: "远一点的目的地可以写成更完整的旅行日志。"
+          note: "远一点的目的地可以写成更完整的旅行日志。",
+          coords: [39.9042, 116.4074],
+          color: "#617083"
         }
       };
 
@@ -2005,77 +2158,92 @@
       }
 
       function setupTravelMap() {
+        renderTravelStats();
+        const scaleNode = document.getElementById("mapScale");
         const tabs = document.querySelectorAll("[data-map-tab]");
-        const canvases = document.querySelectorAll("[data-map]");
-        const zoomButtons = document.querySelectorAll("[data-zoom]");
-        const detail = document.getElementById("travelDetail");
-        const zoomState = { world: 1, china: 1 };
-        let activeMap = "world";
+        const mapNodes = document.querySelectorAll(".leaflet-map");
 
-        const renderDetail = (placeKey) => {
-          const place = travelPlaces[placeKey];
-          if (!place || !detail) return;
-          detail.innerHTML = [
-            '<span class="meta">' + place.area + '</span>',
-            '<h3>' + place.title + '</h3>',
-            '<div class="detail-meta">',
-            '<span class="detail-chip">时间：' + place.date + '</span>',
-            '<span class="detail-chip">评分：' + place.score + '</span>',
-            '</div>',
-            '<p class="body-copy">' + place.note + '</p>'
-          ].join("");
+        if (!window.L) {
+          scaleNode.textContent = "地图加载失败";
+          return;
+        }
+
+        const tileLayer = () => L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 18,
+          attribution: "&copy; OpenStreetMap"
+        });
+
+        const maps = {
+          world: L.map("worldMap", {
+            zoomControl: false,
+            scrollWheelZoom: true,
+            worldCopyJump: true
+          }).setView([28, 105], 2),
+          china: L.map("chinaMap", {
+            zoomControl: false,
+            scrollWheelZoom: true
+          }).setView([35.4, 104.2], 4)
         };
 
+        tileLayer().addTo(maps.world);
+        tileLayer().addTo(maps.china);
+
+        const markerIcon = (color) => L.divIcon({
+          className: "travel-marker",
+          iconSize: [24, 24],
+          iconAnchor: [12, 22],
+          popupAnchor: [0, -18],
+          html: '<span class="travel-marker-core" style="--marker-color:' + color + ';"></span>'
+        });
+
+        const popupHtml = (place) => [
+          '<div class="travel-popup">',
+          '<span class="meta">' + place.area + '</span>',
+          '<h3>' + place.title + '</h3>',
+          '<div class="travel-popup-meta">',
+          '<span>时间：' + place.date + '</span>',
+          '<span>评分：' + place.score + '</span>',
+          '</div>',
+          '<p>' + place.note + '</p>',
+          '</div>'
+        ].join("");
+
+        Object.values(travelPlaces).forEach((place) => {
+          const targetMap = maps[place.map];
+          if (!targetMap) return;
+          L.marker(place.coords, { icon: markerIcon(place.color) })
+            .addTo(targetMap)
+            .bindPopup(popupHtml(place));
+        });
+
+        const updateScale = (mapName) => {
+          const zoom = maps[mapName].getZoom();
+          scaleNode.textContent = "缩放 " + zoom + " 级";
+        };
+
+        Object.entries(maps).forEach(([name, map]) => {
+          map.on("zoomend", () => updateScale(name));
+        });
+
         const setMap = (mapName) => {
-          activeMap = mapName;
           tabs.forEach((tab) => {
             const isActive = tab.dataset.mapTab === mapName;
             tab.classList.toggle("is-active", isActive);
             tab.setAttribute("aria-selected", String(isActive));
           });
-          canvases.forEach((canvas) => {
-            canvas.classList.toggle("is-active", canvas.dataset.map === mapName);
-            canvas.style.setProperty("--map-scale", zoomState[mapName]);
+          mapNodes.forEach((node) => {
+            node.classList.toggle("is-active", node.dataset.map === mapName);
           });
-          activatePlace(mapName === "world" ? "china" : "shanghai");
+          window.setTimeout(() => {
+            maps[mapName].invalidateSize();
+            updateScale(mapName);
+          }, 80);
         };
-
-        function activatePlace(placeKey) {
-          const place = travelPlaces[placeKey];
-          if (!place) return;
-          if (place.map !== activeMap) {
-            activeMap = place.map;
-          }
-          document.querySelectorAll("[data-place]").forEach((node) => {
-            node.classList.toggle("is-active", node.dataset.place === placeKey);
-          });
-          renderDetail(placeKey);
-        }
-
-        document.querySelectorAll("[data-place]").forEach((node) => {
-          node.addEventListener("click", () => activatePlace(node.dataset.place));
-          node.addEventListener("keydown", (event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              activatePlace(node.dataset.place);
-            }
-          });
-        });
 
         tabs.forEach((tab) => {
           tab.addEventListener("click", () => setMap(tab.dataset.mapTab));
         });
 
-        zoomButtons.forEach((button) => {
-          button.addEventListener("click", () => {
-            if (button.dataset.zoom === "in") zoomState[activeMap] = Math.min(2.2, zoomState[activeMap] + 0.2);
-            if (button.dataset.zoom === "out") zoomState[activeMap] = Math.max(1, zoomState[activeMap] - 0.2);
-            if (button.dataset.zoom === "reset") zoomState[activeMap] = 1;
-            document.querySelector('[data-map="' + activeMap + '"]')?.style.setProperty("--map-scale", zoomState[activeMap]);
-          });
-        });
-
-        renderTravelStats();
         setMap("world");
       }
 
