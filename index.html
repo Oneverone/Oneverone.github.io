@@ -886,201 +886,135 @@
         background: linear-gradient(90deg, var(--sage), var(--clay));
       }
 
-      .milestone-ledger {
+      .milestone-grid {
         display: grid;
-        grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.1fr);
-        gap: 34px;
-        align-items: start;
-      }
-
-      .milestone-hero {
-        position: sticky;
-        top: 108px;
-        min-height: 560px;
-        padding: clamp(28px, 4vw, 52px);
-        overflow: hidden;
-        border-radius: 48% 48% 10px 10px / 24% 24% 10px 10px;
-        background:
-          radial-gradient(circle at 54% 18%, rgba(199, 163, 86, 0.22), transparent 10rem),
-          radial-gradient(circle at 22% 76%, rgba(183, 110, 85, 0.18), transparent 12rem),
-          linear-gradient(150deg, rgba(255, 253, 247, 0.98), rgba(247, 243, 234, 0.84));
-        box-shadow: 0 28px 80px rgba(60, 52, 42, 0.13);
-      }
-
-      .milestone-hero::before {
-        content: "";
-        position: absolute;
-        inset: 20px;
-        border: 1px solid rgba(32, 35, 31, 0.12);
-        border-radius: inherit;
-        pointer-events: none;
-      }
-
-      .milestone-hero::after {
-        content: "";
-        position: absolute;
-        right: -74px;
-        bottom: -76px;
-        width: 240px;
-        height: 240px;
-        border: 1px solid rgba(183, 110, 85, 0.26);
-        border-radius: 50%;
-      }
-
-      .milestone-hero-inner {
-        position: relative;
-        z-index: 1;
-        display: grid;
-        min-height: 100%;
-        align-content: space-between;
-        gap: 34px;
-      }
-
-      .hero-date-label {
-        color: var(--clay);
-        font-size: 12px;
-        font-weight: 850;
-        text-transform: uppercase;
-      }
-
-      .hero-date {
-        display: grid;
-        gap: 10px;
-      }
-
-      .hero-date-year {
-        color: var(--muted);
-        font-size: clamp(20px, 3vw, 34px);
-        font-weight: 850;
-      }
-
-      .hero-date-day {
-        font-family: var(--serif);
-        font-size: clamp(82px, 13vw, 170px);
-        line-height: 0.82;
-        font-weight: 900;
-      }
-
-      .hero-date-full {
-        color: var(--ink);
-        font-size: clamp(18px, 2.5vw, 28px);
-        font-weight: 850;
-      }
-
-      .milestone-hero h3 {
-        max-width: 8em;
-        margin: 0;
-        font-size: clamp(34px, 5vw, 64px);
-        line-height: 1;
-      }
-
-      .milestone-hero-copy {
-        max-width: 34ch;
-        color: var(--muted);
-        font-size: 16px;
-        line-height: 1.9;
-      }
-
-      .milestone-timeline {
-        position: relative;
-        display: grid;
-        gap: 0;
-        padding: 6px 0;
-      }
-
-      .milestone-timeline::before {
-        content: "";
-        position: absolute;
-        top: 10px;
-        bottom: 10px;
-        left: 18px;
-        width: 1px;
-        background: linear-gradient(rgba(32, 35, 31, 0), rgba(32, 35, 31, 0.22), rgba(32, 35, 31, 0));
-      }
-
-      .milestone-row {
-        position: relative;
-        display: grid;
-        grid-template-columns: 56px minmax(130px, 0.45fr) minmax(0, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 18px;
-        align-items: baseline;
-        padding: 24px 0 26px;
-        border-bottom: 1px solid rgba(32, 35, 31, 0.11);
       }
 
-      .milestone-row:last-child {
-        border-bottom: 0;
+      .milestone-card {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        gap: 18px;
+        min-height: 360px;
+        padding: 24px;
+        overflow: hidden;
+        border: 1px solid rgba(32, 35, 31, 0.12);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(160deg, rgba(255, 253, 247, 0.98), rgba(247, 243, 234, 0.86)),
+          var(--surface-solid);
+        box-shadow: 0 16px 44px rgba(60, 52, 42, 0.09);
+        transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
       }
 
-      .milestone-dot {
+      .milestone-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: var(--accent, var(--clay));
+      }
+
+      .milestone-card::after {
+        content: "";
+        position: absolute;
+        right: -58px;
+        bottom: -72px;
+        width: 180px;
+        height: 180px;
+        border: 1px solid color-mix(in srgb, var(--accent, var(--clay)) 34%, transparent);
+        border-radius: 50%;
+      }
+
+      .milestone-card:hover {
+        transform: translateY(-5px);
+        border-color: color-mix(in srgb, var(--accent, var(--clay)) 42%, transparent);
+        box-shadow: var(--shadow-hover);
+      }
+
+      .milestone-card > * {
         position: relative;
         z-index: 1;
-        width: 37px;
-        height: 37px;
-        border: 1px solid rgba(183, 110, 85, 0.42);
-        border-radius: 50%;
-        background:
-          radial-gradient(circle, var(--clay) 0 5px, transparent 6px),
-          var(--paper);
-        box-shadow: 0 0 0 8px var(--paper);
       }
 
-      .milestone-date {
-        display: grid;
-        gap: 5px;
-      }
-
-      .date-full {
-        font-family: var(--serif);
-        color: var(--ink);
-        font-size: clamp(28px, 4vw, 56px);
-        line-height: 0.9;
-        font-weight: 900;
-      }
-
-      .date-year {
-        color: var(--muted);
-        font-size: 13px;
-        font-weight: 850;
-      }
-
-      .milestone-content {
-        display: grid;
-        gap: 10px;
-      }
-
-      .milestone-title {
+      .milestone-card-head {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
-        gap: 14px;
+        gap: 16px;
       }
 
-      .milestone-title h3 {
-        margin: 0;
-        font-size: clamp(24px, 3vw, 38px);
-      }
-
-      .milestone-tag {
-        color: var(--clay);
+      .milestone-label {
+        color: var(--accent, var(--clay));
         font-size: 12px;
         font-weight: 850;
         text-transform: uppercase;
-        white-space: nowrap;
+      }
+
+      .milestone-card h3 {
+        margin: 8px 0 0;
+        font-size: clamp(30px, 4vw, 52px);
+        line-height: 1.04;
+      }
+
+      .milestone-order {
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 40px;
+        height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        color: var(--muted);
+        font-family: var(--serif);
+        font-weight: 900;
+      }
+
+      .milestone-date-block {
+        display: grid;
+        gap: 8px;
+        padding: 18px 0 20px;
+        border-top: 1px solid rgba(32, 35, 31, 0.1);
+        border-bottom: 1px solid rgba(32, 35, 31, 0.1);
+      }
+
+      .date-caption {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      .date-value {
+        font-family: var(--serif);
+        color: var(--ink);
+        font-size: clamp(38px, 5vw, 76px);
+        line-height: 0.88;
+        font-weight: 900;
+      }
+
+      .milestone-card-body {
+        display: grid;
+        align-content: start;
+        gap: 14px;
       }
 
       .counter {
         display: flex;
         flex-wrap: wrap;
         align-items: baseline;
-        gap: 8px 14px;
-        margin: 2px 0;
+        gap: 7px 12px;
+        margin: 0;
         color: var(--muted);
       }
 
       .counter::before {
-        content: "已经过去";
-        color: var(--clay);
+        content: "已过去";
+        flex-basis: 100%;
+        color: var(--accent, var(--clay));
         font-size: 12px;
         font-weight: 850;
       }
@@ -1096,7 +1030,7 @@
         min-width: 2ch;
         font-family: var(--serif);
         color: var(--ink);
-        font-size: clamp(22px, 3vw, 38px);
+        font-size: clamp(22px, 3vw, 34px);
         line-height: 1;
         font-weight: 900;
         transition: transform 180ms ease;
@@ -1104,7 +1038,7 @@
 
       .counter-part.is-primary .counter-number {
         min-width: auto;
-        font-size: clamp(34px, 5vw, 70px);
+        font-size: clamp(42px, 6vw, 84px);
       }
 
       .counter.is-ticking .counter-number {
@@ -1248,15 +1182,12 @@
           min-height: 460px;
         }
 
-        .bento,
-        .milestone-ledger {
+        .bento {
           grid-template-columns: 1fr;
         }
 
-        .milestone-hero {
-          position: relative;
-          top: auto;
-          min-height: auto;
+        .milestone-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .story-card.is-large {
@@ -1298,26 +1229,12 @@
           min-height: 380px;
         }
 
-        .milestone-row {
-          grid-template-columns: 34px 1fr;
-          gap: 14px;
+        .milestone-grid {
+          grid-template-columns: 1fr;
         }
 
-        .milestone-date {
-          grid-column: 2;
-        }
-
-        .milestone-content {
-          grid-column: 2;
-        }
-
-        .milestone-title {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
-        .counter {
-          gap: 6px 10px;
+        .milestone-card {
+          min-height: 0;
         }
 
         .weekdays,
@@ -1401,127 +1318,119 @@
             <span class="section-code">01 · Milestones</span>
             <h2>纪念时刻</h2>
           </div>
-          <p class="section-kicker">这里记录已经发生的重要日子。日期本身是主角，下面的时长只作为“距今多久”的辅助信息。</p>
+          <p class="section-kicker">每个重要日子独立成卡。先看它是什么日子和起始日期，再看它已经陪我们走过多久。</p>
         </div>
 
-        <div class="milestone-ledger">
-          <aside class="milestone-hero" aria-label="重点纪念日">
-            <div class="milestone-hero-inner">
+        <div class="milestone-grid">
+          <article class="milestone-card" style="--accent: var(--sage);">
+            <div class="milestone-card-head">
               <div>
-                <span class="hero-date-label">Primary Memory</span>
-                <div class="hero-date">
-                  <span class="hero-date-year">2024</span>
-                  <span class="hero-date-day">05.24</span>
-                  <span class="hero-date-full">领证日 · 2024.05.24</span>
-                </div>
+                <span class="milestone-label">First Met</span>
+                <h3>相识日</h3>
               </div>
-              <div>
-                <h3>成为一家人的那一天</h3>
-                <p class="milestone-hero-copy">这一组日期按关系时间线整理：相识、恋爱、领证、婚礼和生日。日期是主角，流动数字只负责告诉我们，时间已经走过了多久。</p>
-              </div>
+              <span class="milestone-order">01</span>
             </div>
-          </aside>
+            <div class="milestone-date-block">
+              <span class="date-caption">起始日期</span>
+              <time class="date-value" datetime="2016-09-01">2016.09.01</time>
+            </div>
+            <div class="milestone-card-body">
+              <div class="counter" data-since="2016-09-01T00:00:00"></div>
+              <p class="body-copy">从第一次相识开始算。</p>
+            </div>
+          </article>
 
-          <div class="milestone-timeline" aria-label="纪念日时间轴">
-            <article class="milestone-row">
-              <span class="milestone-dot" aria-hidden="true"></span>
-              <div class="milestone-date">
-                <span class="date-full">09.01</span>
-                <span class="date-year">起始日期 2016.09.01</span>
+          <article class="milestone-card" style="--accent: var(--clay);">
+            <div class="milestone-card-head">
+              <div>
+                <span class="milestone-label">Together</span>
+                <h3>恋爱日</h3>
               </div>
-              <div class="milestone-content">
-                <div class="milestone-title">
-                  <h3>相识日</h3>
-                  <span class="milestone-tag">First Met</span>
-                </div>
-                <div class="counter" data-since="2016-09-01T00:00:00"></div>
-                <p class="body-copy">从第一次相识开始算。</p>
-              </div>
-            </article>
+              <span class="milestone-order">02</span>
+            </div>
+            <div class="milestone-date-block">
+              <span class="date-caption">起始日期</span>
+              <time class="date-value" datetime="2019-02-02">2019.02.02</time>
+            </div>
+            <div class="milestone-card-body">
+              <div class="counter" data-since="2019-02-02T00:00:00"></div>
+              <p class="body-copy">从正式在一起开始算。</p>
+            </div>
+          </article>
 
-            <article class="milestone-row">
-              <span class="milestone-dot" aria-hidden="true"></span>
-              <div class="milestone-date">
-                <span class="date-full">02.02</span>
-                <span class="date-year">起始日期 2019.02.02</span>
+          <article class="milestone-card" style="--accent: var(--gold);">
+            <div class="milestone-card-head">
+              <div>
+                <span class="milestone-label">Marriage License</span>
+                <h3>领证日</h3>
               </div>
-              <div class="milestone-content">
-                <div class="milestone-title">
-                  <h3>恋爱日</h3>
-                  <span class="milestone-tag">Together</span>
-                </div>
-                <div class="counter" data-since="2019-02-02T00:00:00"></div>
-                <p class="body-copy">从正式在一起开始算。</p>
-              </div>
-            </article>
+              <span class="milestone-order">03</span>
+            </div>
+            <div class="milestone-date-block">
+              <span class="date-caption">起始日期</span>
+              <time class="date-value" datetime="2024-05-24">2024.05.24</time>
+            </div>
+            <div class="milestone-card-body">
+              <div class="counter" data-since="2024-05-24T00:00:00"></div>
+              <p class="body-copy">从成为法律意义上的一家人开始算。</p>
+            </div>
+          </article>
 
-            <article class="milestone-row">
-              <span class="milestone-dot" aria-hidden="true"></span>
-              <div class="milestone-date">
-                <span class="date-full">05.24</span>
-                <span class="date-year">起始日期 2024.05.24</span>
+          <article class="milestone-card" style="--accent: var(--blue);">
+            <div class="milestone-card-head">
+              <div>
+                <span class="milestone-label">Wedding</span>
+                <h3>婚礼日</h3>
               </div>
-              <div class="milestone-content">
-                <div class="milestone-title">
-                  <h3>领证日</h3>
-                  <span class="milestone-tag">Marriage License</span>
-                </div>
-                <div class="counter" data-since="2024-05-24T00:00:00"></div>
-                <p class="body-copy">从成为法律意义上的一家人开始算。</p>
-              </div>
-            </article>
+              <span class="milestone-order">04</span>
+            </div>
+            <div class="milestone-date-block">
+              <span class="date-caption">起始日期</span>
+              <time class="date-value" datetime="2026-03-31">2026.03.31</time>
+            </div>
+            <div class="milestone-card-body">
+              <div class="counter" data-since="2026-03-31T00:00:00"></div>
+              <p class="body-copy">从婚礼那天开始算。</p>
+            </div>
+          </article>
 
-            <article class="milestone-row">
-              <span class="milestone-dot" aria-hidden="true"></span>
-              <div class="milestone-date">
-                <span class="date-full">03.31</span>
-                <span class="date-year">起始日期 2026.03.31</span>
+          <article class="milestone-card" style="--accent: var(--clay);">
+            <div class="milestone-card-head">
+              <div>
+                <span class="milestone-label">Birthday · Gao</span>
+                <h3>小高生日</h3>
               </div>
-              <div class="milestone-content">
-                <div class="milestone-title">
-                  <h3>婚礼日</h3>
-                  <span class="milestone-tag">Wedding</span>
-                </div>
-                <div class="counter" data-since="2026-03-31T00:00:00"></div>
-                <p class="body-copy">从婚礼那天开始算。</p>
-              </div>
-            </article>
+              <span class="milestone-order">05</span>
+            </div>
+            <div class="milestone-date-block">
+              <span class="date-caption">起始日期</span>
+              <time class="date-value" datetime="1998-01-20">1998.01.20</time>
+            </div>
+            <div class="milestone-card-body">
+              <div class="counter" data-since="1998-01-20T00:00:00"></div>
+              <p class="body-copy">女方生日。</p>
+            </div>
+          </article>
 
-            <article class="milestone-row">
-              <span class="milestone-dot" aria-hidden="true"></span>
-              <div class="milestone-date">
-                <span class="date-full">01.20</span>
-                <span class="date-year">起始日期 1998.01.20</span>
+          <article class="milestone-card" style="--accent: var(--sage);">
+            <div class="milestone-card-head">
+              <div>
+                <span class="milestone-label">Birthday · Chen</span>
+                <h3>小陈生日</h3>
               </div>
-              <div class="milestone-content">
-                <div class="milestone-title">
-                  <h3>小高生日</h3>
-                  <span class="milestone-tag">Birthday · Gao</span>
-                </div>
-                <div class="counter" data-since="1998-01-20T00:00:00"></div>
-                <p class="body-copy">女方生日。</p>
-              </div>
-            </article>
-
-            <article class="milestone-row">
-              <span class="milestone-dot" aria-hidden="true"></span>
-              <div class="milestone-date">
-                <span class="date-full">03.01</span>
-                <span class="date-year">起始日期 1999.03.01</span>
-              </div>
-              <div class="milestone-content">
-                <div class="milestone-title">
-                  <h3>小陈生日</h3>
-                  <span class="milestone-tag">Birthday · Chen</span>
-                </div>
-                <div class="counter" data-since="1999-03-01T00:00:00"></div>
-                <p class="body-copy">男方生日。</p>
-              </div>
-            </article>
-          </div>
+              <span class="milestone-order">06</span>
+            </div>
+            <div class="milestone-date-block">
+              <span class="date-caption">起始日期</span>
+              <time class="date-value" datetime="1999-03-01">1999.03.01</time>
+            </div>
+            <div class="milestone-card-body">
+              <div class="counter" data-since="1999-03-01T00:00:00"></div>
+              <p class="body-copy">男方生日。</p>
+            </div>
+          </article>
         </div>
       </section>
-
 
       <section class="section reveal" id="calendar">
         <div class="section-head">
