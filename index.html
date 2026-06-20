@@ -8,15 +8,21 @@
     <style>
       :root {
         color-scheme: light;
-        --ink: #171717;
-        --muted: #67635d;
-        --soft: #9b9489;
-        --paper: #f7f4ee;
-        --panel: rgba(255, 255, 255, 0.72);
-        --line: rgba(23, 23, 23, 0.13);
-        --accent: #3d685f;
-        --accent-2: #a16346;
+        --ink: #161512;
+        --muted: #69645c;
+        --soft: #9c9488;
+        --paper: #f5f1e9;
+        --paper-deep: #e9e3d8;
+        --surface: rgba(255, 255, 255, 0.62);
+        --surface-strong: rgba(255, 255, 255, 0.82);
+        --line: rgba(22, 21, 18, 0.13);
+        --line-strong: rgba(22, 21, 18, 0.24);
+        --accent: #345f57;
+        --accent-warm: #9a6146;
+        --focus: #1f6f62;
+        --radius: 8px;
         --shadow: 0 24px 70px rgba(33, 29, 24, 0.08);
+        --shadow-hover: 0 30px 90px rgba(33, 29, 24, 0.12);
       }
 
       * {
@@ -28,18 +34,42 @@
       }
 
       body {
+        position: relative;
         margin: 0;
         font-family: Georgia, "Times New Roman", "Noto Serif SC", "Songti SC", serif;
         color: var(--ink);
         background:
           radial-gradient(circle at 16% 8%, rgba(61, 104, 95, 0.16), transparent 26rem),
           radial-gradient(circle at 84% 2%, rgba(161, 99, 70, 0.13), transparent 24rem),
-          linear-gradient(180deg, #fbfaf7 0%, var(--paper) 46%, #eeebe4 100%);
+          linear-gradient(180deg, #fbfaf7 0%, var(--paper) 46%, var(--paper-deep) 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        opacity: 0.42;
+        background-image:
+          linear-gradient(rgba(22, 21, 18, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(22, 21, 18, 0.028) 1px, transparent 1px);
+        background-size: 96px 96px;
       }
 
       a {
         color: inherit;
         text-decoration: none;
+      }
+
+      ::selection {
+        color: #fff;
+        background: var(--accent);
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 4px;
       }
 
       .page {
@@ -57,6 +87,7 @@
         gap: 20px;
         padding: 18px 0;
         backdrop-filter: blur(18px);
+        border-bottom: 1px solid rgba(22, 21, 18, 0.06);
       }
 
       .brand {
@@ -65,6 +96,7 @@
         gap: 12px;
         font-size: 15px;
         letter-spacing: 0;
+        transition: color 180ms ease;
       }
 
       .seal {
@@ -79,6 +111,10 @@
         background: rgba(255, 255, 255, 0.56);
       }
 
+      .brand:hover {
+        color: var(--accent);
+      }
+
       .links {
         display: flex;
         flex-wrap: wrap;
@@ -87,6 +123,28 @@
         color: var(--muted);
         font-family: "Segoe UI", "Noto Sans SC", sans-serif;
         font-size: 13px;
+      }
+
+      .links a {
+        position: relative;
+        padding: 8px 0;
+      }
+
+      .links a::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        bottom: 2px;
+        left: 0;
+        height: 1px;
+        background: currentColor;
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 180ms ease;
+      }
+
+      .links a:hover::after {
+        transform: scaleX(1);
       }
 
       .hero {
@@ -132,12 +190,21 @@
       .button {
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         min-height: 44px;
         padding: 0 18px;
         border: 1px solid var(--ink);
         border-radius: 999px;
         font-family: "Segoe UI", "Noto Sans SC", sans-serif;
         font-size: 14px;
+        transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
+      }
+
+      .button:hover:not(:disabled) {
+        color: #fff;
+        border-color: var(--accent);
+        background: var(--accent);
+        transform: translateY(-1px);
       }
 
       .button.secondary {
@@ -158,10 +225,16 @@
         align-items: end;
         padding: 34px;
         border: 1px solid var(--line);
-        border-radius: 8px;
+        border-radius: var(--radius);
         color: #fff;
         background: #24221f;
         box-shadow: var(--shadow);
+        transition: box-shadow 220ms ease, transform 220ms ease;
+      }
+
+      .carousel-card:hover {
+        box-shadow: var(--shadow-hover);
+        transform: translateY(-2px);
       }
 
       .carousel-card::before {
@@ -171,11 +244,30 @@
         background:
           linear-gradient(90deg, rgba(0, 0, 0, 0.58), rgba(0, 0, 0, 0.18)),
           var(--slide-bg, linear-gradient(135deg, #3d685f, #a16346));
+        transition: opacity 220ms ease;
+      }
+
+      .carousel-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+          linear-gradient(0deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+        background-size: 58px 58px;
+        opacity: 0.34;
       }
 
       .carousel-content {
         position: relative;
         max-width: 620px;
+        z-index: 1;
+        transition: opacity 180ms ease, transform 180ms ease;
+      }
+
+      .carousel-card.is-changing .carousel-content {
+        opacity: 0;
+        transform: translateY(6px);
       }
 
       .carousel-tag {
@@ -203,6 +295,7 @@
 
       .carousel-dots {
         display: flex;
+        align-items: center;
         gap: 10px;
         margin-top: 18px;
       }
@@ -215,14 +308,47 @@
         padding: 0;
         background: rgba(23, 23, 23, 0.18);
         cursor: pointer;
+        transition: width 180ms ease, background 180ms ease;
       }
 
       .carousel-dot.is-active {
+        width: 54px;
         background: var(--ink);
       }
 
+      .carousel-progress {
+        width: min(180px, 28vw);
+        height: 2px;
+        margin-left: 4px;
+        overflow: hidden;
+        background: rgba(23, 23, 23, 0.1);
+      }
+
+      .carousel-progress-bar {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background: var(--accent);
+        transform: scaleX(0);
+        transform-origin: left;
+      }
+
+      .carousel-progress-bar.is-running {
+        animation: slideProgress 5200ms linear forwards;
+      }
+
+      @keyframes slideProgress {
+        from {
+          transform: scaleX(0);
+        }
+
+        to {
+          transform: scaleX(1);
+        }
+      }
+
       .section {
-        padding: 80px 0;
+        padding: 92px 0;
         border-top: 1px solid var(--line);
       }
 
@@ -265,8 +391,16 @@
 
       .panel {
         border: 1px solid var(--line);
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.55);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.58) inset;
+        transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+      }
+
+      .panel:hover {
+        border-color: var(--line-strong);
+        background: var(--surface-strong);
+        box-shadow: 0 16px 50px rgba(33, 29, 24, 0.06);
       }
 
       .calendar {
@@ -307,6 +441,7 @@
         cursor: pointer;
         font-family: "Segoe UI", "Noto Sans SC", sans-serif;
         font-size: 13px;
+        transition: color 160ms ease, background 160ms ease, border-color 160ms ease, transform 160ms ease;
       }
 
       .day:hover,
@@ -314,6 +449,7 @@
         border-color: var(--ink);
         color: var(--ink);
         background: rgba(255, 255, 255, 0.68);
+        transform: translateY(-1px);
       }
 
       .day.is-today {
@@ -324,7 +460,13 @@
 
       .day.has-event {
         color: var(--ink);
-        background: rgba(161, 99, 70, 0.1);
+        background: rgba(154, 97, 70, 0.1);
+      }
+
+      .day.is-selected {
+        border-color: var(--ink);
+        background: var(--ink);
+        color: #fff;
       }
 
       .list {
@@ -399,15 +541,15 @@
         background:
           linear-gradient(90deg, rgba(23, 23, 23, 0.04) 1px, transparent 1px),
           linear-gradient(0deg, rgba(23, 23, 23, 0.04) 1px, transparent 1px),
-          linear-gradient(135deg, rgba(61, 104, 95, 0.18), rgba(255, 255, 255, 0.45));
+          linear-gradient(135deg, rgba(52, 95, 87, 0.18), rgba(255, 255, 255, 0.45));
         background-size: 54px 54px, 54px 54px, auto;
       }
 
       .map-line {
         position: absolute;
         inset: 20% 14% 22% 16%;
-        border-top: 1px solid rgba(61, 104, 95, 0.55);
-        border-right: 1px solid rgba(161, 99, 70, 0.52);
+        border-top: 1px solid rgba(52, 95, 87, 0.55);
+        border-right: 1px solid rgba(154, 97, 70, 0.52);
         transform: skew(-18deg);
       }
 
@@ -487,11 +629,20 @@
       input {
         width: 100%;
         border: 1px solid var(--line);
-        border-radius: 8px;
+        border-radius: var(--radius);
         padding: 14px;
         color: var(--ink);
         background: rgba(255, 255, 255, 0.66);
         font: 14px/1.6 "Segoe UI", "Noto Sans SC", sans-serif;
+        transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+      }
+
+      textarea:focus,
+      input:focus {
+        border-color: var(--accent);
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 0 0 4px rgba(52, 95, 87, 0.1);
+        outline: 0;
       }
 
       textarea {
@@ -544,6 +695,10 @@
 
         .links {
           display: none;
+        }
+
+        .carousel-progress {
+          width: 120px;
         }
       }
 
@@ -605,7 +760,11 @@
                 <p class="carousel-text" id="featureText">从这里开始记录。</p>
               </div>
             </a>
-            <div class="carousel-dots" id="featureDots" aria-label="切换重要事件"></div>
+            <div class="carousel-dots" id="featureDots" aria-label="切换重要事件">
+              <span class="carousel-progress" aria-hidden="true">
+                <span class="carousel-progress-bar" id="featureProgress"></span>
+              </span>
+            </div>
           </div>
         </div>
       </header>
@@ -811,23 +970,33 @@
       function renderFeature(index) {
         const feature = featuredEvents[index];
         const slide = document.getElementById("featureSlide");
+        const progress = document.getElementById("featureProgress");
 
         activeFeatureIndex = index;
-        slide.href = feature.href;
-        slide.style.setProperty("--slide-bg", feature.background);
-        document.getElementById("featureTag").textContent = feature.tag;
-        document.getElementById("featureTitle").textContent = feature.title;
-        document.getElementById("featureText").textContent = feature.text;
+        slide.classList.add("is-changing");
+
+        window.setTimeout(() => {
+          slide.href = feature.href;
+          slide.style.setProperty("--slide-bg", feature.background);
+          document.getElementById("featureTag").textContent = feature.tag;
+          document.getElementById("featureTitle").textContent = feature.title;
+          document.getElementById("featureText").textContent = feature.text;
+          slide.classList.remove("is-changing");
+        }, 120);
 
         document.querySelectorAll(".carousel-dot").forEach((dot, dotIndex) => {
           dot.classList.toggle("is-active", dotIndex === index);
           dot.setAttribute("aria-pressed", String(dotIndex === index));
         });
+
+        progress.classList.remove("is-running");
+        void progress.offsetWidth;
+        progress.classList.add("is-running");
       }
 
       function buildFeatureCarousel() {
         const dots = document.getElementById("featureDots");
-        dots.innerHTML = "";
+        dots.querySelectorAll(".carousel-dot").forEach((dot) => dot.remove());
 
         featuredEvents.forEach((feature, index) => {
           const dot = document.createElement("button");
@@ -839,7 +1008,7 @@
             renderFeature(index);
             startFeatureCarousel();
           });
-          dots.appendChild(dot);
+          dots.insertBefore(dot, dots.querySelector(".carousel-progress"));
         });
 
         renderFeature(0);
