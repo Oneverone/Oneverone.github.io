@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chen & Gao</title>
+    <meta name="description" content="Chen and Gao's personal blog.">
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #27231f;
+        --muted: #6c6259;
+        --paper: #fffaf4;
+        --accent: #2f6f73;
+        --line: #e7ded3;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          linear-gradient(135deg, rgba(47, 111, 115, 0.12), transparent 38%),
+          linear-gradient(315deg, rgba(184, 98, 72, 0.12), transparent 42%),
+          var(--paper);
+      }
+
+      main {
+        width: min(720px, calc(100vw - 32px));
+        padding: 56px 0;
+      }
+
+      .mark {
+        width: 72px;
+        height: 72px;
+        display: grid;
+        place-items: center;
+        margin-bottom: 28px;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        color: var(--accent);
+        background: rgba(255, 255, 255, 0.58);
+        font-size: 22px;
+        font-weight: 650;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(48px, 10vw, 88px);
+        line-height: 0.95;
+        letter-spacing: 0;
+      }
+
+      p {
+        max-width: 560px;
+        margin: 24px 0 0;
+        color: var(--muted);
+        font-size: 20px;
+        line-height: 1.7;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 36px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+        color: var(--accent);
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark">C&G</div>
+      <h1>Chen & Gao</h1>
+      <p>Our little home on the web. The blog, photos, and stories will grow here soon. Today we light up www.chenandgao.com.</p>
+      <div class="status"><span class="dot"></span>GitHub Pages is ready</div>
+    </main>
+  </body>
+</html>
