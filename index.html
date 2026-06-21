@@ -442,8 +442,9 @@
       }
 
       .archive-toolbar {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
         gap: 14px;
         align-items: center;
         margin-bottom: 18px;
@@ -456,8 +457,7 @@
         box-shadow: 0 12px 28px rgba(60, 52, 42, 0.06);
       }
 
-      .view-tabs,
-      .date-jump {
+      .view-tabs {
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -489,22 +489,6 @@
         color: var(--ink);
         background: var(--surface-solid);
         box-shadow: 0 8px 22px rgba(60, 52, 42, 0.08);
-      }
-
-      .date-jump {
-        justify-content: flex-end;
-        padding: 5px 6px;
-        border: 1px solid rgba(32, 35, 31, 0.08);
-        border-radius: calc(var(--radius) + 2px);
-        background: rgba(255, 253, 247, 0.9);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
-      }
-
-      .date-jump-label {
-        padding: 0 8px;
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 850;
       }
 
       .month-select,
@@ -553,17 +537,45 @@
 
       .calendar-top {
         margin: 0;
-        padding: 22px 24px 18px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 14px;
+        align-items: center;
+        padding: 20px 22px 18px;
         border-bottom: 1px solid var(--line);
         background:
           radial-gradient(circle at 88% 18%, rgba(199, 163, 86, 0.12), transparent 8rem),
           rgba(255, 253, 247, 0.88);
       }
 
+      .calendar-headline {
+        display: grid;
+        gap: 6px;
+      }
+
       .calendar-title {
         font-family: var(--serif);
         font-size: clamp(26px, 3.6vw, 42px);
         font-weight: 900;
+      }
+
+      .calendar-jump-inline {
+        justify-self: end;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 6px;
+        border: 1px solid rgba(32, 35, 31, 0.08);
+        border-radius: calc(var(--radius) + 2px);
+        background: rgba(255, 253, 247, 0.9);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+      }
+
+      .calendar-jump-label {
+        padding: 0 8px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 850;
       }
 
       .weekdays {
@@ -1552,7 +1564,7 @@
         }
 
         .view-tabs,
-        .date-jump {
+        .calendar-jump-inline {
           width: 100%;
           justify-content: center;
         }
@@ -1744,33 +1756,36 @@
             <button class="view-tab is-active" type="button" data-archive-view="calendar" aria-pressed="true">日历</button>
             <button class="view-tab" type="button" data-archive-view="list" aria-pressed="false">列表</button>
           </div>
-          <div class="date-jump" aria-label="快速切换年月"><span class="date-jump-label">跳转</span>
-            <button class="icon-button" id="prevMonth" type="button" aria-label="上个月">‹</button>
-            <input class="year-input" id="yearInput" type="number" min="2000" max="2099" aria-label="年份">
-            <select class="month-select" id="monthSelect" aria-label="月份">
-              <option value="0">1 月</option>
-              <option value="1">2 月</option>
-              <option value="2">3 月</option>
-              <option value="3">4 月</option>
-              <option value="4">5 月</option>
-              <option value="5">6 月</option>
-              <option value="6">7 月</option>
-              <option value="7">8 月</option>
-              <option value="8">9 月</option>
-              <option value="9">10 月</option>
-              <option value="10">11 月</option>
-              <option value="11">12 月</option>
-            </select>
-            <button class="icon-button" id="nextMonth" type="button" aria-label="下个月">›</button>
-          </div>
         </div>
 
         <div class="archive-view is-active" id="calendarView">
           <div class="calendar-layout">
             <div class="surface calendar-panel">
               <div class="calendar-top">
-                <strong class="calendar-title" id="calendarTitle">2026 年 6 月</strong>
-                <span class="meta">默认视图</span>
+                <div class="calendar-headline">
+                  <strong class="calendar-title" id="calendarTitle">2026 年 6 月</strong>
+                  <span class="meta">默认视图</span>
+                </div>
+                <div class="calendar-jump-inline" aria-label="快速切换年月">
+                  <span class="calendar-jump-label">跳转</span>
+                  <button class="icon-button" id="prevMonth" type="button" aria-label="上个月">‹</button>
+                  <input class="year-input" id="yearInput" type="number" min="2000" max="2099" aria-label="年份">
+                  <select class="month-select" id="monthSelect" aria-label="月份">
+                    <option value="0">1 月</option>
+                    <option value="1">2 月</option>
+                    <option value="2">3 月</option>
+                    <option value="3">4 月</option>
+                    <option value="4">5 月</option>
+                    <option value="5">6 月</option>
+                    <option value="6">7 月</option>
+                    <option value="7">8 月</option>
+                    <option value="8">9 月</option>
+                    <option value="9">10 月</option>
+                    <option value="10">11 月</option>
+                    <option value="11">12 月</option>
+                  </select>
+                  <button class="icon-button" id="nextMonth" type="button" aria-label="下个月">›</button>
+                </div>
               </div>
               <div class="weekdays" aria-hidden="true">
                 <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
@@ -2494,22 +2509,16 @@
         };
 
         const visitedWorldStyle = Object.assign({}, worldStyle, {
-          color: "rgba(206, 118, 104, 0.96)",
-          weight: 1.35,
           fillColor: "#e9b3aa",
           fillOpacity: 0.48
         });
 
         const visitedChinaRegionStyle = Object.assign({}, chinaStyle, {
-          color: "rgba(206, 118, 104, 0.98)",
-          weight: 1.45,
           fillColor: "#e8b0a7",
           fillOpacity: 0.5
         });
 
         const visitedChinaCityStyle = Object.assign({}, cityBoundaryStyle, {
-          color: "rgba(206, 118, 104, 1)",
-          weight: 1.1,
           fillColor: "#e7aca3",
           fillOpacity: 0.52
         });
