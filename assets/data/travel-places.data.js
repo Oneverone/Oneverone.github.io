@@ -49,28 +49,6 @@ window.__TRAVEL_PLACES__ = {
     coords: [31.4675, 104.6796],
     color: "#b76e55"
   },
-  melbourne: {
-    map: "world",
-    title: "墨尔本",
-    country: "澳大利亚",
-    area: "澳大利亚 / 城市",
-    date: "测试记录",
-    score: "待评分",
-    note: "测试用旅行数据：用于验证世界地图按国家填色，澳大利亚应被点亮。",
-    coords: [-37.8136, 144.9631],
-    color: "#c7a356"
-  },
-  sydney: {
-    map: "world",
-    title: "悉尼",
-    country: "澳大利亚",
-    area: "澳大利亚 / 城市",
-    date: "测试记录",
-    score: "待评分",
-    note: "测试用旅行数据：与墨尔本同属澳大利亚，世界探索进度应按国家去重。",
-    coords: [-33.8688, 151.2093],
-    color: "#617083"
-  },
   chengdu: {
     map: "china",
     title: "成都",
@@ -110,6 +88,28 @@ window.__TRAVEL_PLACES__ = {
     note: "测试用旅行数据：地图数据中对应伊犁哈萨克自治州。",
     coords: [43.9219, 81.3179],
     color: "#c7a356"
+  },
+  melbourne: {
+    map: "world",
+    title: "墨尔本",
+    country: "澳大利亚",
+    area: "澳大利亚 / 城市",
+    date: "测试记录",
+    score: "待评分",
+    note: "测试用旅行数据：用于验证世界地图按国家填色，澳大利亚应被点亮。",
+    coords: [-37.8136, 144.9631],
+    color: "#c7a356"
+  },
+  sydney: {
+    map: "world",
+    title: "悉尼",
+    country: "澳大利亚",
+    area: "澳大利亚 / 城市",
+    date: "测试记录",
+    score: "待评分",
+    note: "测试用旅行数据：与墨尔本同属澳大利亚，世界探索进度应按国家去重。",
+    coords: [-33.8688, 151.2093],
+    color: "#617083"
   },
   istanbul: {
     map: "world",
