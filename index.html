@@ -2558,6 +2558,10 @@
           return props.adcode && visitedChinaProvinceCodes.has(String(props.adcode));
         };
 
+        const visitedFillColor = "#efb9b0";
+        const visitedStrokeColor = "rgba(205, 108, 87, 0.92)";
+        const chinaCityZoomThreshold = 6.3;
+
         const worldStyle = {
           color: "rgba(255, 255, 255, 0.72)",
           weight: 0.9,
@@ -2588,19 +2592,34 @@
         };
 
         const visitedWorldStyle = Object.assign({}, worldStyle, {
-          fillColor: "#e9b3aa",
-          fillOpacity: 0.48
+          color: visitedStrokeColor,
+          fillColor: visitedFillColor,
+          fillOpacity: 0.54
         });
 
         const visitedChinaRegionStyle = Object.assign({}, chinaStyle, {
-          fillColor: "#e8b0a7",
-          fillOpacity: 0.5
+          color: visitedStrokeColor,
+          weight: 1.1,
+          fillColor: visitedFillColor,
+          fillOpacity: 0.58
         });
 
         const visitedChinaCityStyle = Object.assign({}, cityBoundaryStyle, {
-          fillColor: "#e7aca3",
-          fillOpacity: 0.52
+          color: visitedStrokeColor,
+          weight: 0.85,
+          fillColor: visitedFillColor,
+          fillOpacity: 0.7
         });
+
+        let chinaHighlightMode = "province";
+
+        const getChinaProvinceStyle = function (feature) {
+          return chinaHighlightMode === "province" && isVisitedChinaProvince(feature) ? visitedChinaRegionStyle : chinaStyle;
+        };
+
+        const getChinaCityStyle = function (feature) {
+          return chinaHighlightMode === "city" && isVisitedChinaCity(feature) ? visitedChinaCityStyle : cityBoundaryStyle;
+        };
 
         const worldLayer = L.geoJSON(window.__WORLD_COUNTRIES__, {
           style: function (feature) {
@@ -2610,13 +2629,13 @@
 
         const chinaLayer = L.geoJSON(window.__CHINA_ADMIN__, {
           style: function (feature) {
-            return isVisitedChinaProvince(feature) ? visitedChinaRegionStyle : chinaStyle;
+            return getChinaProvinceStyle(feature);
           }
         }).addTo(maps.china);
 
         const cityBoundaryLayer = L.geoJSON(window.__CHINA_CITIES__, {
           style: function (feature) {
-            return isVisitedChinaCity(feature) ? visitedChinaCityStyle : cityBoundaryStyle;
+            return getChinaCityStyle(feature);
           }
         });
 
@@ -2808,11 +2827,24 @@
           scaleNode.textContent = "缩放 " + (Math.round(factor * 10) / 10) + "x";
         };
 
+        const refreshChinaHighlightStyles = function () {
+          chinaLayer.eachLayer(function (layer) {
+            if (layer && layer.feature) {
+              layer.setStyle(getChinaProvinceStyle(layer.feature));
+            }
+          });
+          cityBoundaryLayer.eachLayer(function (layer) {
+            if (layer && layer.feature) {
+              layer.setStyle(getChinaCityStyle(layer.feature));
+            }
+          });
+        };
+
         const updateChinaLabels = function () {
           const zoom = maps.china.getZoom();
           const showProvince = zoom < 5.1;
-          const showCapital = zoom >= 5.1 && zoom < 6.3;
-          const showMoreCities = zoom >= 6.3;
+          const showCapital = zoom >= 5.1 && zoom < chinaCityZoomThreshold;
+          const showMoreCities = zoom >= chinaCityZoomThreshold;
           const toggleLayer = function (layer, shouldShow) {
             if (shouldShow && !maps.china.hasLayer(layer)) {
               maps.china.addLayer(layer);
@@ -2821,6 +2853,9 @@
               maps.china.removeLayer(layer);
             }
           };
+
+          chinaHighlightMode = showMoreCities ? "city" : "province";
+          refreshChinaHighlightStyles();
 
           toggleLayer(provinceLabelLayer, showProvince);
           toggleLayer(capitalLabelLayer, showCapital);
@@ -2959,3 +2994,4 @@
     </script>
   </body>
 </html>
+
