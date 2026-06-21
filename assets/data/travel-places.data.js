@@ -11,6 +11,7 @@ window.__TRAVEL_PLACES__ = {
   },
   shanghai: {
     map: "china",
+    adcode: 310000,
     title: "上海",
     area: "城市",
     date: "示例记录",
@@ -21,6 +22,7 @@ window.__TRAVEL_PLACES__ = {
   },
   hangzhou: {
     map: "china",
+    adcode: 330100,
     title: "杭州",
     area: "城市",
     date: "示例记录",
@@ -31,6 +33,7 @@ window.__TRAVEL_PLACES__ = {
   },
   beijing: {
     map: "china",
+    adcode: 110000,
     title: "北京",
     area: "城市",
     date: "示例记录",
@@ -41,16 +44,18 @@ window.__TRAVEL_PLACES__ = {
   },
   chongqing: {
     map: "china",
-    title: "閲嶅簡",
-    area: "鍩庡競",
-    date: "绀轰緥璁板綍",
-    score: "寰呰瘎鍒?,
-    note: "鐩村睘甯傜敤浜庨獙璇佸湪鍩庡競绮掑害涓嬩篃鑳芥甯搁珮浜€?,
+    adcode: 500000,
+    title: "重庆",
+    area: "城市",
+    date: "示例记录",
+    score: "待评分",
+    note: "直辖市用于验证在城市粒度下也能正常高亮。",
     coords: [29.563, 106.5516],
     color: "#b76e55"
   },
   mianyang: {
     map: "china",
+    adcode: 510700,
     title: "绵阳",
     area: "四川省 / 城市",
     date: "测试记录",
@@ -61,6 +66,7 @@ window.__TRAVEL_PLACES__ = {
   },
   chengdu: {
     map: "china",
+    adcode: 510100,
     title: "成都",
     area: "四川省 / 城市",
     date: "测试记录",
@@ -71,6 +77,7 @@ window.__TRAVEL_PLACES__ = {
   },
   ningbo: {
     map: "china",
+    adcode: 330200,
     title: "宁波",
     area: "浙江省 / 城市",
     date: "测试记录",
@@ -81,6 +88,7 @@ window.__TRAVEL_PLACES__ = {
   },
   urumqi: {
     map: "china",
+    adcode: 650100,
     title: "乌鲁木齐",
     area: "新疆 / 城市",
     date: "测试记录",
@@ -91,6 +99,7 @@ window.__TRAVEL_PLACES__ = {
   },
   ili: {
     map: "china",
+    adcode: 654000,
     title: "伊犁",
     area: "新疆 / 自治州",
     date: "测试记录",

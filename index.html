@@ -2339,7 +2339,8 @@
       const getVisitedPlaceSets = function () {
         const visited = {
           world: new Set(),
-          chinaCity: new Set()
+          chinaCity: new Set(),
+          chinaAdcode: new Set()
         };
 
         Object.values(travelPlaces).forEach(function (place) {
@@ -2349,21 +2350,26 @@
           }
           if (place.map === "china") {
             visited.chinaCity.add(normalizePlaceName(place.title));
+            if (place.adcode) {
+              visited.chinaAdcode.add(String(place.adcode));
+            }
           }
         });
 
         return visited;
       };
 
-      const getVisitedChinaProvinceCodes = function (visitedChinaCityNames) {
+      const getVisitedChinaProvinceCodes = function (visitedChinaCityNames, visitedChinaAdcodes) {
         const provinceCodes = new Set();
+        const visitedAdcodes = visitedChinaAdcodes || new Set();
         if (!window.__CHINA_CITIES__ || !window.__CHINA_ADMIN__) {
           return provinceCodes;
         }
 
         window.__CHINA_CITIES__.features.forEach(function (feature) {
           const props = feature.properties || {};
-          if (!visitedChinaCityNames.has(normalizePlaceName(props.name))) return;
+          const cityCode = props.adcode ? String(props.adcode) : "";
+          if (!visitedChinaCityNames.has(normalizePlaceName(props.name)) && !visitedAdcodes.has(cityCode)) return;
           const provinceCode = props.parent && props.parent.adcode;
           if (provinceCode) {
             provinceCodes.add(String(provinceCode));
@@ -2372,7 +2378,8 @@
 
         window.__CHINA_ADMIN__.features.forEach(function (feature) {
           const props = feature.properties || {};
-          if (visitedChinaCityNames.has(normalizePlaceName(props.name)) && props.adcode) {
+          const provinceCode = props.adcode ? String(props.adcode) : "";
+          if ((visitedChinaCityNames.has(normalizePlaceName(props.name)) || visitedAdcodes.has(provinceCode)) && props.adcode) {
             provinceCodes.add(String(props.adcode));
           }
         });
@@ -2382,7 +2389,7 @@
 
       const getExplorationStats = function () {
         const visited = getVisitedPlaceSets();
-        const visitedChinaProvinceCodes = getVisitedChinaProvinceCodes(visited.chinaCity);
+        const visitedChinaProvinceCodes = getVisitedChinaProvinceCodes(visited.chinaCity, visited.chinaAdcode);
 
         return {
           world: {
@@ -2531,7 +2538,8 @@
         const visitedPlaces = getVisitedPlaceSets();
         const visitedWorldNames = visitedPlaces.world;
         const visitedChinaCityNames = visitedPlaces.chinaCity;
-        const visitedChinaProvinceCodes = getVisitedChinaProvinceCodes(visitedChinaCityNames);
+        const visitedChinaAdcodes = visitedPlaces.chinaAdcode;
+        const visitedChinaProvinceCodes = getVisitedChinaProvinceCodes(visitedChinaCityNames, visitedChinaAdcodes);
 
         const isVisitedCountry = function (feature) {
           const props = feature.properties || {};
@@ -2550,7 +2558,8 @@
 
         const isVisitedChinaCity = function (feature) {
           const props = feature.properties || {};
-          return visitedChinaCityNames.has(normalizePlaceName(props.name));
+          const cityCode = props.adcode ? String(props.adcode) : "";
+          return visitedChinaAdcodes.has(cityCode) || visitedChinaCityNames.has(normalizePlaceName(props.name));
         };
 
         const isVisitedChinaProvince = function (feature) {
@@ -2561,7 +2570,7 @@
         const visitedFillColor = "#f3b5aa";
         const visitedStrokeColor = "rgba(214, 108, 82, 0.98)";
         const chinaCityZoomThreshold = 6.0;
-        const directMunicipalityNames = new Set(["北京", "天津", "上海", "重庆"]);
+        const directMunicipalityCodes = new Set(["110000", "120000", "310000", "500000"]);
 
         const worldStyle = {
           color: "rgba(255, 255, 255, 0.74)",
@@ -2615,8 +2624,8 @@
 
         const isVisitedDirectMunicipality = function (feature) {
           const props = feature.properties || {};
-          const normalizedName = normalizePlaceName(props.name);
-          return directMunicipalityNames.has(normalizedName) && visitedChinaCityNames.has(normalizedName);
+          const provinceCode = props.adcode ? String(props.adcode) : "";
+          return directMunicipalityCodes.has(provinceCode) && visitedChinaAdcodes.has(provinceCode);
         };
 
         const getChinaProvinceStyle = function (feature) {
