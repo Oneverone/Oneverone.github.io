@@ -1065,9 +1065,9 @@
       .travel-marker-core {
         position: absolute;
         inset: 0;
-        border: 2px solid #b44f40;
+        border: 2px solid var(--marker-stroke, #b44f40);
         border-radius: 50% 50% 50% 0;
-        background: #ffb7ad;
+        background: var(--marker-fill, #ffb7ad);
         box-shadow:
           0 10px 20px rgba(60, 52, 42, 0.2),
           0 0 0 5px rgba(255, 251, 244, 0.54);
@@ -2805,13 +2805,33 @@
             createLabelMarker(city.coords, city.name, "city").addTo(cityLabelLayer);
         });
 
-        const markerIcon = function () {
+        const hashString = function (input) {
+          let hash = 0;
+          for (let i = 0; i < input.length; i += 1) {
+            hash = (hash << 5) - hash + input.charCodeAt(i);
+            hash |= 0;
+          }
+          return Math.abs(hash);
+        };
+
+        const markerColorFromPlace = function (place) {
+          const seed = [place.title || "", place.area || "", place.date || "", place.map || ""].join("|");
+          const hash = hashString(seed);
+          const hue = hash % 360;
+          return {
+            fill: "hsl(" + hue + ", 66%, 76%)",
+            stroke: "hsl(" + hue + ", 52%, 44%)"
+          };
+        };
+
+        const markerIcon = function (place) {
+          const markerColor = markerColorFromPlace(place);
           return L.divIcon({
             className: "travel-marker",
             iconSize: [24, 24],
             iconAnchor: [12, 22],
             popupAnchor: [0, -18],
-            html: '<span class="travel-marker-core"></span>'
+            html: '<span class="travel-marker-core" style="--marker-fill:' + markerColor.fill + ';--marker-stroke:' + markerColor.stroke + ';"></span>'
           });
         };
 
@@ -2833,7 +2853,7 @@
 
           const targetMap = maps[place.map];
           if (!targetMap) return;
-          L.marker(place.coords, { icon: markerIcon() })
+          L.marker(place.coords, { icon: markerIcon(place) })
             .addTo(targetMap)
             .bindPopup(popupHtml(place));
         });
