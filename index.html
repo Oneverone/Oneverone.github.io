@@ -2582,15 +2582,7 @@
           lineCap: "round"
         };
 
-        const cityBoundaryStyle = {
-          color: "rgba(208, 112, 88, 0.86)",
-          weight: 1,
-          opacity: 1,
-          fillColor: "#efe3d1",
-          fillOpacity: 1,
-          lineJoin: "round",
-          lineCap: "round"
-        };
+        const cityBoundaryStyle = Object.assign({}, chinaStyle);
 
         const visitedWorldStyle = Object.assign({}, worldStyle, {
           color: visitedStrokeColor,
@@ -2604,23 +2596,13 @@
           fillOpacity: 0.58
         });
 
-        const visitedChinaCityStyle = Object.assign({}, cityBoundaryStyle, {
-          color: visitedStrokeColor,
-          fillColor: visitedFillColor,
-          fillOpacity: 0.58
-        });
-
         const visitedChinaProvinceOutline = Object.assign({}, chinaStyle, {
           color: visitedStrokeColor,
           fillColor: visitedFillColor,
           fillOpacity: 0.58
         });
 
-        const visitedChinaCityOutline = Object.assign({}, cityBoundaryStyle, {
-          color: visitedStrokeColor,
-          fillColor: visitedFillColor,
-          fillOpacity: 0.58
-        });
+        const visitedChinaCityOutline = Object.assign({}, visitedChinaProvinceOutline);
 
         let chinaHighlightMode = "province";
 
