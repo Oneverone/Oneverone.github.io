@@ -491,31 +491,119 @@
         box-shadow: 0 8px 22px rgba(60, 52, 42, 0.08);
       }
 
-      .month-select,
-      .year-input {
-        min-height: 40px;
+      .calendar-jump-inline {
+        justify-self: end;
+        display: grid;
+        gap: 10px;
+        min-width: min(360px, 100%);
+        padding: 10px 12px;
         border: 1px solid rgba(32, 35, 31, 0.08);
-        border-radius: calc(var(--radius) - 2px);
-        color: var(--ink);
-        background: rgba(247, 243, 234, 0.66);
-        font-size: 13px;
-        font-weight: 800;
+        border-radius: calc(var(--radius) + 2px);
+        background: rgba(255, 253, 247, 0.9);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
       }
 
-      .month-select {
+      .calendar-jump-row {
+        display: grid;
+        grid-template-columns: 52px minmax(0, 1fr) 46px;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .calendar-jump-label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      .slider-wrap {
+        position: relative;
+        display: grid;
+        align-items: center;
+        min-height: 38px;
         padding: 0 12px;
-        min-width: 78px;
+        border: 1px solid rgba(32, 35, 31, 0.08);
+        border-radius: 999px;
+        background:
+          linear-gradient(90deg, rgba(183, 110, 85, 0.12), rgba(199, 163, 86, 0.08)),
+          rgba(247, 243, 234, 0.66);
       }
 
-      .year-input {
-        width: 88px;
-        padding: 0 10px;
+      .slider-track {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(31, 35, 31, 0.08);
+        overflow: hidden;
       }
 
-      .month-select:focus-visible,
-      .year-input:focus-visible {
-        outline: 2px solid rgba(183, 110, 85, 0.38);
-        outline-offset: 2px;
+      .slider-track::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        width: var(--fill, 50%);
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--clay), var(--gold));
+      }
+
+      .slider {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: 30px;
+        margin: 0;
+        appearance: none;
+        background: transparent;
+        outline: none;
+      }
+
+      .slider::-webkit-slider-runnable-track {
+        height: 30px;
+        background: transparent;
+      }
+
+      .slider::-webkit-slider-thumb {
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        margin-top: 6px;
+        border: 2px solid rgba(255, 253, 247, 0.96);
+        border-radius: 50%;
+        background: var(--clay);
+        box-shadow: 0 8px 16px rgba(60, 52, 42, 0.22);
+        cursor: pointer;
+      }
+
+      .slider::-moz-range-track {
+        height: 30px;
+        background: transparent;
+      }
+
+      .slider::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 253, 247, 0.96);
+        border-radius: 50%;
+        background: var(--clay);
+        box-shadow: 0 8px 16px rgba(60, 52, 42, 0.22);
+        cursor: pointer;
+      }
+
+      .slider-value {
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 850;
+        text-align: right;
+      }
+
+      .slider-year .slider-track::after {
+        width: var(--year-fill, 50%);
+      }
+
+      .slider-month .slider-track::after {
+        width: var(--month-fill, 50%);
       }
 
       .archive-view {
@@ -557,25 +645,6 @@
         font-family: var(--serif);
         font-size: clamp(26px, 3.6vw, 42px);
         font-weight: 900;
-      }
-
-      .calendar-jump-inline {
-        justify-self: end;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 5px 6px;
-        border: 1px solid rgba(32, 35, 31, 0.08);
-        border-radius: calc(var(--radius) + 2px);
-        background: rgba(255, 253, 247, 0.9);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
-      }
-
-      .calendar-jump-label {
-        padding: 0 8px;
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 850;
       }
 
       .weekdays {
@@ -1767,24 +1836,22 @@
                   <span class="meta">默认视图</span>
                 </div>
                 <div class="calendar-jump-inline" aria-label="快速切换年月">
-                  <span class="calendar-jump-label">跳转</span>
-                  <button class="icon-button" id="prevMonth" type="button" aria-label="上个月">‹</button>
-                  <input class="year-input" id="yearInput" type="number" min="2000" max="2099" aria-label="年份">
-                  <select class="month-select" id="monthSelect" aria-label="月份">
-                    <option value="0">1 月</option>
-                    <option value="1">2 月</option>
-                    <option value="2">3 月</option>
-                    <option value="3">4 月</option>
-                    <option value="4">5 月</option>
-                    <option value="5">6 月</option>
-                    <option value="6">7 月</option>
-                    <option value="7">8 月</option>
-                    <option value="8">9 月</option>
-                    <option value="9">10 月</option>
-                    <option value="10">11 月</option>
-                    <option value="11">12 月</option>
-                  </select>
-                  <button class="icon-button" id="nextMonth" type="button" aria-label="下个月">›</button>
+                  <div class="calendar-jump-row">
+                    <span class="calendar-jump-label">年份</span>
+                    <div class="slider-wrap slider-year" id="yearWrap">
+                      <span class="slider-track" id="yearTrack"></span>
+                      <input class="slider" id="yearInput" type="range" min="2000" max="2099" step="1" aria-label="年份">
+                    </div>
+                    <span class="slider-value" id="yearValue">2026</span>
+                  </div>
+                  <div class="calendar-jump-row">
+                    <span class="calendar-jump-label">月份</span>
+                    <div class="slider-wrap slider-month" id="monthWrap">
+                      <span class="slider-track" id="monthTrack"></span>
+                      <input class="slider" id="monthInput" type="range" min="0" max="11" step="1" aria-label="月份">
+                    </div>
+                    <span class="slider-value" id="monthValue">6月</span>
+                  </div>
                 </div>
               </div>
               <div class="weekdays" aria-hidden="true">
@@ -2111,9 +2178,32 @@
         `).join("");
       }
 
+      function syncJumpControls(monthDate) {
+        const yearInput = document.getElementById("yearInput");
+        const monthInput = document.getElementById("monthInput");
+        const yearValue = document.getElementById("yearValue");
+        const monthValue = document.getElementById("monthValue");
+        const yearWrap = document.getElementById("yearWrap");
+        const monthWrap = document.getElementById("monthWrap");
+
+        const year = monthDate.getFullYear();
+        const month = monthDate.getMonth();
+        const yearMin = Number(yearInput.min);
+        const yearMax = Number(yearInput.max);
+
+        yearInput.value = String(year);
+        monthInput.value = String(month);
+        yearValue.textContent = String(year);
+        monthValue.textContent = (month + 1) + "月";
+
+        const yearFill = ((year - yearMin) / (yearMax - yearMin)) * 100;
+        const monthFill = (month / 11) * 100;
+        yearWrap.style.setProperty("--fill", yearFill + "%");
+        monthWrap.style.setProperty("--fill", monthFill + "%");
+      }
+
       function syncDateControls(monthDate) {
-        document.getElementById("yearInput").value = monthDate.getFullYear();
-        document.getElementById("monthSelect").value = monthDate.getMonth();
+        syncJumpControls(monthDate);
       }
 
       function buildCalendar(monthDate, selectedDate = today) {
@@ -2156,31 +2246,20 @@
 
       function setupCalendar() {
         const yearInput = document.getElementById("yearInput");
-        const monthSelect = document.getElementById("monthSelect");
+        const monthInput = document.getElementById("monthInput");
 
         function jumpToSelectedMonth() {
           const year = Number(yearInput.value);
-          const month = Number(monthSelect.value);
+          const month = Number(monthInput.value);
           if (!Number.isInteger(year) || year < 2000 || year > 2099) return;
+          if (!Number.isInteger(month) || month < 0 || month > 11) return;
           visibleMonth = new Date(year, month, 1);
           buildCalendar(visibleMonth, visibleMonth);
           renderCalendarDetail(visibleMonth);
         }
 
-        document.getElementById("prevMonth").addEventListener("click", () => {
-          visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
-          buildCalendar(visibleMonth, visibleMonth);
-          renderCalendarDetail(visibleMonth);
-        });
-
-        document.getElementById("nextMonth").addEventListener("click", () => {
-          visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1);
-          buildCalendar(visibleMonth, visibleMonth);
-          renderCalendarDetail(visibleMonth);
-        });
-
-        yearInput.addEventListener("change", jumpToSelectedMonth);
-        monthSelect.addEventListener("change", jumpToSelectedMonth);
+        yearInput.addEventListener("input", jumpToSelectedMonth);
+        monthInput.addEventListener("input", jumpToSelectedMonth);
 
         buildCalendar(visibleMonth, today);
         renderCalendarDetail(today);
