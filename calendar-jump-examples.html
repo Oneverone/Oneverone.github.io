@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>时光档案跳转方案示例</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #1f231f;
+        --muted: #6d746b;
+        --line: rgba(31, 35, 31, 0.12);
+        --paper: #fbf7ef;
+        --surface: #fffdf7;
+        --clay: #b76e55;
+        --sage: #667668;
+        --gold: #c7a356;
+        --blue: #617083;
+        --shadow: 0 18px 48px rgba(60, 52, 42, 0.12);
+        --radius: 16px;
+        --serif: "Georgia", "Times New Roman", "Noto Serif SC", serif;
+        --sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 14% 8%, rgba(199, 163, 86, 0.12), transparent 18rem),
+          radial-gradient(circle at 86% 12%, rgba(101, 117, 104, 0.12), transparent 18rem),
+          linear-gradient(180deg, #fcf9f2, #f3ede2);
+      }
+
+      .wrap {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 30px 18px 42px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .eyebrow {
+        color: var(--clay);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 0;
+        font-family: var(--serif);
+        font-size: clamp(28px, 4vw, 52px);
+        line-height: 1.05;
+      }
+      .hero p {
+        margin: 0;
+        max-width: 72ch;
+        color: var(--muted);
+        line-height: 1.8;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+        gap: 18px;
+      }
+
+      .sidebar,
+      .stage {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 253, 247, 0.9);
+        box-shadow: var(--shadow);
+      }
+
+      .sidebar {
+        padding: 16px;
+      }
+      .sidebar h2 {
+        margin: 0 0 8px;
+        font-size: 14px;
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .nav {
+        display: grid;
+        gap: 10px;
+      }
+      .nav button {
+        width: 100%;
+        min-height: 54px;
+        padding: 0 14px;
+        border: 1px solid rgba(31, 35, 31, 0.08);
+        border-radius: 14px;
+        background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(247,243,234,.82));
+        color: var(--ink);
+        text-align: left;
+        font: inherit;
+        cursor: pointer;
+        transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background 160ms ease;
+      }
+      .nav button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 22px rgba(60, 52, 42, 0.08);
+      }
+      .nav button.is-active {
+        border-color: rgba(183, 110, 85, 0.34);
+        background:
+          linear-gradient(135deg, rgba(183, 110, 85, 0.14), rgba(199, 163, 86, 0.08)),
+          #fffdf7;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 12px 24px rgba(183, 110, 85, 0.10);
+      }
+      .nav strong {
+        display: block;
+        font-size: 15px;
+      }
+      .nav span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .stage {
+        padding: 18px;
+        overflow: hidden;
+      }
+
+      .stage-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+        padding: 16px 18px;
+        border: 1px solid rgba(31, 35, 31, 0.08);
+        border-radius: 14px;
+        background:
+          radial-gradient(circle at 88% 18%, rgba(199, 163, 86, 0.12), transparent 8rem),
+          rgba(255, 253, 247, 0.88);
+      }
+      .stage-top strong {
+        font-family: var(--serif);
+        font-size: clamp(24px, 3vw, 40px);
+      }
+      .stage-top p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+      .stage-top .meta {
+        color: var(--clay);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .preview {
+        min-height: 340px;
+        padding: 18px;
+        border: 1px solid rgba(31, 35, 31, 0.08);
+        border-radius: 18px;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,.96), rgba(247,243,234,.84)),
+          var(--surface);
+      }
+
+      .preview-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .pill,
+      .field,
+      .mini-btn,
+      .chip {
+        min-height: 42px;
+        border: 1px solid rgba(31, 35, 31, 0.08);
+        border-radius: 999px;
+        background: rgba(255, 253, 247, 0.88);
+        color: var(--ink);
+        font: inherit;
+        font-weight: 800;
+      }
+      .pill, .field, .mini-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 14px;
+      }
+      .mini-btn {
+        width: 42px;
+        padding: 0;
+        cursor: pointer;
+      }
+      .field {
+        width: 96px;
+      }
+      .field input,
+      .field select {
+        width: 100%;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        font-weight: 800;
+        text-align: center;
+      }
+      .field.select {
+        width: 86px;
+      }
+      .accent-line {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 18px;
+      }
+      .accent {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--clay);
+        box-shadow: 0 0 0 6px rgba(183, 110, 85, 0.10);
+      }
+      .accent-line span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      .demo {
+        display: none;
+        animation: fadeUp 220ms ease;
+      }
+      .demo.is-active { display: block; }
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .title-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .title-row strong {
+        font-family: var(--serif);
+        font-size: 28px;
+      }
+      .title-row em {
+        color: var(--muted);
+        font-style: normal;
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      .inline-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding: 12px 14px;
+        border: 1px solid rgba(31, 35, 31, 0.08);
+        border-radius: 16px;
+        background: rgba(255, 253, 247, 0.86);
+      }
+      .inline-bar .year {
+        font-family: var(--serif);
+        font-size: 30px;
+        font-weight: 900;
+      }
+      .inline-bar .small {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 850;
+      }
+      .inline-bar .div {
+        color: rgba(31,35,31,0.28);
+      }
+
+      .chip-row,
+      .scroll-row,
+      .floating-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .chip {
+        padding: 0 16px;
+      }
+      .chip strong {
+        font-family: var(--serif);
+        font-size: 22px;
+      }
+
+      .floating-panel {
+        display: grid;
+        gap: 12px;
+      }
+      .floating-panel .box {
+        padding: 14px;
+        border: 1px solid rgba(31, 35, 31, 0.08);
+        border-radius: 16px;
+        background: rgba(255, 253, 247, 0.88);
+      }
+      .box-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .box-head strong {
+        font-family: var(--serif);
+        font-size: 26px;
+      }
+      .box-head span {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      .months {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .months button {
+        min-height: 42px;
+        border: 1px solid rgba(31, 35, 31, 0.08);
+        border-radius: 12px;
+        background: rgba(255, 253, 247, 0.88);
+        font: inherit;
+        font-weight: 850;
+        cursor: pointer;
+      }
+      .months button.is-active {
+        color: #fff;
+        border-color: transparent;
+        background: linear-gradient(135deg, var(--clay), #8f5748);
+        box-shadow: 0 12px 24px rgba(183, 110, 85, 0.2);
+      }
+
+      .scroll-track {
+        display: flex;
+        gap: 8px;
+        padding: 10px;
+        border: 1px solid rgba(31, 35, 31, 0.08);
+        border-radius: 16px;
+        background: rgba(255, 253, 247, 0.88);
+        overflow: auto;
+      }
+      .scroll-track::-webkit-scrollbar { height: 10px; }
+      .scroll-track::-webkit-scrollbar-thumb {
+        background: rgba(31, 35, 31, 0.16);
+        border-radius: 999px;
+      }
+      .scroll-track .year-chip,
+      .scroll-track .month-chip {
+        min-width: 78px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(31, 35, 31, 0.08);
+        background: rgba(255, 255, 255, 0.9);
+        text-align: center;
+        font-weight: 800;
+      }
+      .scroll-track .year-chip.is-active,
+      .scroll-track .month-chip.is-active {
+        border-color: rgba(183, 110, 85, 0.28);
+        background: rgba(183, 110, 85, 0.12);
+      }
+
+      .note {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.8;
+      }
+
+      .footer {
+        margin-top: 16px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      @media (max-width: 980px) {
+        .shell { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 720px) {
+        .stage-top { grid-template-columns: 1fr; }
+        .months { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .preview { min-height: 320px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="hero">
+        <div class="eyebrow">Interactive Calendar Jump Patterns</div>
+        <h1>时光档案跳转设计示例</h1>
+        <p>左侧点不同方案，右侧会切换对应演示。每个方案都保留了可点击、可输入、可滚动的交互感，方便你直接看差异。</p>
+      </div>
+
+      <div class="shell">
+        <aside class="sidebar">
+          <h2>方案</h2>
+          <div class="nav" id="nav">
+            <button class="is-active" data-demo="inline">
+              <strong>01 标题内嵌式</strong>
+              <span>把年月直接放进标题里</span>
+            </button>
+            <button data-demo="pill">
+              <strong>02 胶囊时间条</strong>
+              <span>更轻的时间胶囊</span>
+            </button>
+            <button data-demo="flyout">
+              <strong>03 浮层切换器</strong>
+              <span>默认干净，点开再选</span>
+            </button>
+            <button data-demo="merge">
+              <strong>04 卡片头部合一</strong>
+              <span>最适合你现在页面</span>
+            </button>
+            <button data-demo="scroll">
+              <strong>05 滑动式年月</strong>
+              <span>像滚轮一样切换</span>
+            </button>
+          </div>
+          <div class="footer">提示：所有按钮都可以点，示例会跟着变化。</div>
+        </aside>
+
+        <main class="stage">
+          <div class="stage-top">
+            <div>
+              <div class="meta" id="demoMeta">方案 01</div>
+              <strong id="demoTitle">标题内嵌式</strong>
+              <p id="demoDesc">把年月直接放进标题里，视觉上最像真正的日历标题。</p>
+            </div>
+            <div>
+              <p>当前预览</p>
+            </div>
+          </div>
+
+          <div class="preview">
+            <div class="demo is-active" id="demo-inline">
+              <div class="accent-line"><span class="accent"></span><span>标题和跳转合并成一个整体</span></div>
+              <div class="title-row">
+                <strong>2024年 · 1月</strong>
+                <em>‹  ›</em>
+              </div>
+              <div class="inline-bar">
+                <span class="small">2024</span>
+                <span class="div">·</span>
+                <span class="year">1月</span>
+                <span class="div">·</span>
+                <span class="small">可直接嵌入标题区</span>
+              </div>
+              <div class="note">适合编辑感、留白感更强的页面。年月像标题的延伸，不像外挂控件。</div>
+            </div>
+
+            <div class="demo" id="demo-pill">
+              <div class="accent-line"><span class="accent" style="background: var(--gold); box-shadow: 0 0 0 6px rgba(199, 163, 86, 0.10);"></span><span>像一条轻盈的时间胶囊</span></div>
+              <div class="chip-row">
+                <div class="mini-btn">‹</div>
+                <div class="chip"><strong>2024</strong><span>年</span></div>
+                <div class="chip"><strong>1</strong><span>月</span></div>
+                <div class="mini-btn">›</div>
+              </div>
+              <div class="note">适合保留操作感，但做得更圆润、更柔和。切换时可以配合轻微位移动画。</div>
+            </div>
+
+            <div class="demo" id="demo-flyout">
+              <div class="accent-line"><span class="accent" style="background: var(--sage); box-shadow: 0 0 0 6px rgba(102, 118, 104, 0.10);"></span><span>平时干净，点开才展开</span></div>
+              <div class="floating-panel">
+                <div class="box">
+                  <div class="box-head">
+                    <strong>2024年 1月</strong>
+                    <span>点击切换</span>
+                  </div>
+                  <div class="months" id="months">
+                    <button class="is-active">1月</button><button>2月</button><button>3月</button>
+                    <button>4月</button><button>5月</button><button>6月</button>
+                  </div>
+                </div>
+                <div class="note">适合更克制的版式。默认只露出当前年月，切换时再弹出选择内容。</div>
+              </div>
+            </div>
+
+            <div class="demo" id="demo-merge">
+              <div class="accent-line"><span class="accent" style="background: var(--clay); box-shadow: 0 0 0 6px rgba(183, 110, 85, 0.10);"></span><span>最适合当前博客的方向</span></div>
+              <div class="inline-bar" style="justify-content: space-between;">
+                <div style="display:grid; gap:4px;">
+                  <span class="small">日历</span>
+                  <strong style="font-family: var(--serif); font-size: 28px;">2024年 1月</strong>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <div class="mini-btn">‹</div>
+                  <div class="field" style="width:88px;">2024</div>
+                  <div class="field select">1月</div>
+                  <div class="mini-btn">›</div>
+                </div>
+              </div>
+              <div class="note">这个方案把跳转完全收进日历卡片头部，既保留操作，又不会显得割裂。</div>
+            </div>
+
+            <div class="demo" id="demo-scroll">
+              <div class="accent-line"><span class="accent" style="background: var(--blue); box-shadow: 0 0 0 6px rgba(97, 112, 131, 0.10);"></span><span>像滚轮一样滑动选择</span></div>
+              <div class="scroll-track">
+                <div class="year-chip">2022</div>
+                <div class="year-chip">2023</div>
+                <div class="year-chip is-active">2024</div>
+                <div class="year-chip">2025</div>
+                <div class="year-chip">2026</div>
+                <div class="month-chip">1月</div>
+                <div class="month-chip">2月</div>
+                <div class="month-chip is-active">3月</div>
+                <div class="month-chip">4月</div>
+                <div class="month-chip">5月</div>
+              </div>
+              <div class="note">更像时间在缓缓流动，适合加入惯性滚动和细腻过渡。</div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      const data = {
+        inline: ["方案 01", "标题内嵌式", "把年月直接放进标题里，视觉上最像真正的日历标题。"],
+        pill: ["方案 02", "胶囊时间条", "像一条轻盈的时间胶囊，更圆润，也更轻。"],
+        flyout: ["方案 03", "浮层切换器", "默认干净，点开再选，适合更克制的版式。"],
+        merge: ["方案 04", "卡片头部合一", "把跳转完全收进日历头部，是最适合当前博客的方向。"],
+        scroll: ["方案 05", "滑动式年月", "像滚轮一样缓缓选择，更有时间流动感。"]
+      };
+
+      const nav = document.getElementById("nav");
+      const meta = document.getElementById("demoMeta");
+      const title = document.getElementById("demoTitle");
+      const desc = document.getElementById("demoDesc");
+      const demos = document.querySelectorAll(".demo");
+
+      function show(name) {
+        demos.forEach((node) => node.classList.toggle("is-active", node.id === `demo-${name}`));
+        nav.querySelectorAll("button").forEach((btn) => btn.classList.toggle("is-active", btn.dataset.demo === name));
+        const item = data[name];
+        meta.textContent = item[0];
+        title.textContent = item[1];
+        desc.textContent = item[2];
+      }
+
+      nav.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-demo]");
+        if (!button) return;
+        show(button.dataset.demo);
+      });
+
+      document.querySelectorAll("#months button, .scroll-track > div, .chip-row > div, .inline-bar .mini-btn").forEach((node) => {
+        node.addEventListener("click", () => {
+          node.animate([
+            { transform: "translateY(0) scale(1)" },
+            { transform: "translateY(-2px) scale(1.03)" },
+            { transform: "translateY(0) scale(1)" }
+          ], { duration: 220, easing: "ease-out" });
+        });
+      });
+
+      show("inline");
+    </script>
+  </body>
+</html>
