@@ -2558,15 +2558,15 @@
           return props.adcode && visitedChinaProvinceCodes.has(String(props.adcode));
         };
 
-        const visitedFillColor = "#f6d3cc";
-        const visitedStrokeColor = "rgba(214, 123, 98, 0.92)";
+        const visitedFillColor = "#f2c5bd";
+        const visitedStrokeColor = "rgba(208, 112, 88, 0.96)";
         const chinaCityZoomThreshold = 6.0;
 
         const worldStyle = {
           color: "rgba(255, 255, 255, 0.74)",
           weight: 1,
           opacity: 1,
-          fillColor: "#f5ecdc",
+          fillColor: "#efe1ca",
           fillOpacity: 1,
           lineJoin: "round",
           lineCap: "round"
@@ -2576,17 +2576,18 @@
           color: "rgba(255, 255, 255, 0.80)",
           weight: 1,
           opacity: 1,
-          fillColor: "#f3ead8",
+          fillColor: "#efe3d1",
           fillOpacity: 1,
           lineJoin: "round",
           lineCap: "round"
         };
 
         const cityBoundaryStyle = {
-          color: "rgba(214, 123, 98, 0.78)",
+          color: "rgba(208, 112, 88, 0.86)",
           weight: 1,
           opacity: 1,
-          fillOpacity: 0.02,
+          fillColor: "#efe3d1",
+          fillOpacity: 1,
           lineJoin: "round",
           lineCap: "round"
         };
@@ -2594,29 +2595,41 @@
         const visitedWorldStyle = Object.assign({}, worldStyle, {
           color: visitedStrokeColor,
           fillColor: visitedFillColor,
-          fillOpacity: 0.42
+          fillOpacity: 0.58
         });
 
         const visitedChinaRegionStyle = Object.assign({}, chinaStyle, {
           color: visitedStrokeColor,
           fillColor: visitedFillColor,
-          fillOpacity: 0.42
+          fillOpacity: 0.58
         });
 
         const visitedChinaCityStyle = Object.assign({}, cityBoundaryStyle, {
           color: visitedStrokeColor,
           fillColor: visitedFillColor,
-          fillOpacity: 0.42
+          fillOpacity: 0.58
+        });
+
+        const visitedChinaProvinceOutline = Object.assign({}, chinaStyle, {
+          color: visitedStrokeColor,
+          fillColor: visitedFillColor,
+          fillOpacity: 0.58
+        });
+
+        const visitedChinaCityOutline = Object.assign({}, cityBoundaryStyle, {
+          color: visitedStrokeColor,
+          fillColor: visitedFillColor,
+          fillOpacity: 0.58
         });
 
         let chinaHighlightMode = "province";
 
         const getChinaProvinceStyle = function (feature) {
-          return chinaHighlightMode === "province" && isVisitedChinaProvince(feature) ? visitedChinaRegionStyle : chinaStyle;
+          return chinaHighlightMode === "province" && isVisitedChinaProvince(feature) ? visitedChinaProvinceOutline : chinaStyle;
         };
 
         const getChinaCityStyle = function (feature) {
-          return chinaHighlightMode === "city" && isVisitedChinaCity(feature) ? visitedChinaCityStyle : cityBoundaryStyle;
+          return chinaHighlightMode === "city" && isVisitedChinaCity(feature) ? visitedChinaCityOutline : cityBoundaryStyle;
         };
 
         const worldLayer = L.geoJSON(window.__WORLD_COUNTRIES__, {
