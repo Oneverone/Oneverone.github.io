@@ -1065,12 +1065,12 @@
       .travel-marker-core {
         position: absolute;
         inset: 0;
-        border: 3px solid rgba(255, 251, 244, 0.96);
+        border: 2px solid #b44f40;
         border-radius: 50% 50% 50% 0;
-        background: var(--marker-color, var(--clay));
+        background: #ffb7ad;
         box-shadow:
-          0 10px 20px rgba(60, 52, 42, 0.24),
-          0 0 0 6px rgba(255, 251, 244, 0.22);
+          0 10px 20px rgba(60, 52, 42, 0.2),
+          0 0 0 5px rgba(255, 251, 244, 0.54);
         transform: rotate(-45deg);
       }
 
@@ -1079,7 +1079,7 @@
         position: absolute;
         inset: 4px;
         border-radius: 50%;
-        background: var(--surface-solid);
+        background: rgba(255, 251, 244, 0.96);
       }
 
       .travel-visited-legend {
@@ -1105,9 +1105,9 @@
         content: "";
         width: 14px;
         height: 14px;
-        border: 1px solid rgba(183, 110, 85, 0.68);
+        border: 1px solid #b44f40;
         border-radius: 4px;
-        background: rgba(183, 110, 85, 0.38);
+        background: #ffb7ad;
       }
 
       .map-scale {
@@ -1187,7 +1187,7 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        color: var(--ink);
+        color: #1f211f;
         white-space: nowrap;
         text-shadow:
           0 1px 2px rgba(255, 253, 247, 0.95),
@@ -1199,30 +1199,30 @@
         font-size: 12px;
         font-weight: 800;
         letter-spacing: 0.04em;
-        color: rgba(32, 35, 31, 0.78);
+        color: #1f211f;
       }
 
       .geo-label--country {
-        color: rgba(97, 112, 131, 0.9);
+        color: rgba(31, 33, 31, 0.66);
         font-size: 10px;
         font-weight: 750;
       }
 
       .geo-label--country-major {
-        color: rgba(32, 35, 31, 0.78);
+        color: #1f211f;
         font-size: 11px;
         font-weight: 850;
         letter-spacing: 0.02em;
       }
 
       .geo-label--capital {
-        color: rgba(101, 117, 104, 0.98);
+        color: rgba(31, 33, 31, 0.72);
         font-size: 11px;
         font-weight: 800;
       }
 
       .geo-label--city {
-        color: rgba(183, 110, 85, 0.94);
+        color: rgba(31, 33, 31, 0.66);
         font-size: 10px;
         font-weight: 700;
       }
@@ -2567,26 +2567,28 @@
           return props.adcode && visitedChinaProvinceCodes.has(String(props.adcode));
         };
 
-        const visitedFillColor = "#f3b5aa";
-        const visitedStrokeColor = "rgba(214, 108, 82, 0.98)";
+        const mapBaseFillColor = "#efe3d1";
+        const mapBaseStrokeColor = "rgba(255, 255, 255, 0.96)";
+        const visitedFillColor = "#ffb7ad";
+        const visitedStrokeColor = "#b44f40";
         const chinaCityZoomThreshold = 6.0;
         const directMunicipalityCodes = new Set(["110000", "120000", "310000", "500000"]);
 
         const worldStyle = {
-          color: "rgba(255, 255, 255, 0.74)",
+          color: mapBaseStrokeColor,
           weight: 1,
           opacity: 1,
-          fillColor: "#efe1ca",
+          fillColor: mapBaseFillColor,
           fillOpacity: 1,
           lineJoin: "round",
           lineCap: "round"
         };
 
         const chinaStyle = {
-          color: "rgba(255, 255, 255, 0.80)",
+          color: mapBaseStrokeColor,
           weight: 1,
           opacity: 1,
-          fillColor: "#efe3d1",
+          fillColor: mapBaseFillColor,
           fillOpacity: 1,
           lineJoin: "round",
           lineCap: "round"
@@ -2597,19 +2599,19 @@
         const visitedWorldStyle = Object.assign({}, worldStyle, {
           color: visitedStrokeColor,
           fillColor: visitedFillColor,
-          fillOpacity: 0.58
+          fillOpacity: 0.72
         });
 
         const visitedChinaRegionStyle = Object.assign({}, chinaStyle, {
           color: visitedStrokeColor,
           fillColor: visitedFillColor,
-          fillOpacity: 0.58
+          fillOpacity: 0.72
         });
 
         const visitedChinaProvinceOutline = Object.assign({}, chinaStyle, {
           color: visitedStrokeColor,
           fillColor: visitedFillColor,
-          fillOpacity: 0.68
+          fillOpacity: 0.72
         });
 
         const visitedChinaCityOutline = Object.assign({}, visitedChinaProvinceOutline);
@@ -2622,17 +2624,16 @@
 
         let chinaHighlightMode = "province";
 
-        const isVisitedDirectMunicipality = function (feature) {
-          const props = feature.properties || {};
-          const provinceCode = props.adcode ? String(props.adcode) : "";
-          return directMunicipalityCodes.has(provinceCode) && visitedChinaAdcodes.has(provinceCode);
-        };
-
         const getChinaProvinceStyle = function (feature) {
           if (chinaHighlightMode === "province") {
             return isVisitedChinaProvince(feature) ? visitedChinaProvinceOutline : chinaStyle;
           }
-          return isVisitedDirectMunicipality(feature) ? visitedChinaProvinceOutline : hiddenProvinceStyle;
+          const props = feature.properties || {};
+          const provinceCode = props.adcode ? String(props.adcode) : "";
+          if (directMunicipalityCodes.has(provinceCode)) {
+            return visitedChinaAdcodes.has(provinceCode) ? visitedChinaProvinceOutline : chinaStyle;
+          }
+          return hiddenProvinceStyle;
         };
 
         const getChinaCityStyle = function (feature) {
@@ -2804,13 +2805,13 @@
             createLabelMarker(city.coords, city.name, "city").addTo(cityLabelLayer);
         });
 
-        const markerIcon = function (color) {
+        const markerIcon = function () {
           return L.divIcon({
             className: "travel-marker",
             iconSize: [24, 24],
             iconAnchor: [12, 22],
             popupAnchor: [0, -18],
-            html: '<span class="travel-marker-core" style="--marker-color:' + color + ';"></span>'
+            html: '<span class="travel-marker-core"></span>'
           });
         };
 
@@ -2832,7 +2833,7 @@
 
           const targetMap = maps[place.map];
           if (!targetMap) return;
-          L.marker(place.coords, { icon: markerIcon(place.color) })
+          L.marker(place.coords, { icon: markerIcon() })
             .addTo(targetMap)
             .bindPopup(popupHtml(place));
         });
