@@ -2558,9 +2558,10 @@
           return props.adcode && visitedChinaProvinceCodes.has(String(props.adcode));
         };
 
-        const visitedFillColor = "#f2c5bd";
-        const visitedStrokeColor = "rgba(208, 112, 88, 0.96)";
+        const visitedFillColor = "#f3b5aa";
+        const visitedStrokeColor = "rgba(214, 108, 82, 0.98)";
         const chinaCityZoomThreshold = 6.0;
+        const directMunicipalityNames = new Set(["北京", "天津", "上海", "重庆"]);
 
         const worldStyle = {
           color: "rgba(255, 255, 255, 0.74)",
@@ -2599,15 +2600,30 @@
         const visitedChinaProvinceOutline = Object.assign({}, chinaStyle, {
           color: visitedStrokeColor,
           fillColor: visitedFillColor,
-          fillOpacity: 0.58
+          fillOpacity: 0.68
         });
 
         const visitedChinaCityOutline = Object.assign({}, visitedChinaProvinceOutline);
 
+        const hiddenProvinceStyle = Object.assign({}, chinaStyle, {
+          color: "rgba(0, 0, 0, 0)",
+          opacity: 0,
+          fillOpacity: 0
+        });
+
         let chinaHighlightMode = "province";
 
+        const isVisitedDirectMunicipality = function (feature) {
+          const props = feature.properties || {};
+          const normalizedName = normalizePlaceName(props.name);
+          return directMunicipalityNames.has(normalizedName) && visitedChinaCityNames.has(normalizedName);
+        };
+
         const getChinaProvinceStyle = function (feature) {
-          return chinaHighlightMode === "province" && isVisitedChinaProvince(feature) ? visitedChinaProvinceOutline : chinaStyle;
+          if (chinaHighlightMode === "province") {
+            return isVisitedChinaProvince(feature) ? visitedChinaProvinceOutline : chinaStyle;
+          }
+          return isVisitedDirectMunicipality(feature) ? visitedChinaProvinceOutline : hiddenProvinceStyle;
         };
 
         const getChinaCityStyle = function (feature) {
@@ -2848,7 +2864,7 @@
           refreshChinaHighlightStyles();
 
           toggleLayer(provinceLabelLayer, showProvince);
-          toggleLayer(chinaLayer, showProvince);
+          toggleLayer(chinaLayer, showProvince || showMoreCities);
           toggleLayer(cityLabelLayer, showMoreCities);
           toggleLayer(cityBoundaryLayer, showMoreCities);
           scaleNode.textContent += showProvince ? " · 省份" : " · 地级市";

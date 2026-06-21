@@ -39,6 +39,16 @@ window.__TRAVEL_PLACES__ = {
     coords: [39.9042, 116.4074],
     color: "#617083"
   },
+  chongqing: {
+    map: "china",
+    title: "閲嶅簡",
+    area: "鍩庡競",
+    date: "绀轰緥璁板綍",
+    score: "寰呰瘎鍒?,
+    note: "鐩村睘甯傜敤浜庨獙璇佸湪鍩庡競绮掑害涓嬩篃鑳芥甯搁珮浜€?,
+    coords: [29.563, 106.5516],
+    color: "#b76e55"
+  },
   mianyang: {
     map: "china",
     title: "绵阳",
