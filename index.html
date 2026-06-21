@@ -1065,19 +1065,19 @@
       .travel-marker-core {
         position: absolute;
         inset: 0;
-        border: 2px solid var(--marker-stroke, #b44f40);
+        border: 1.5px solid var(--marker-stroke, #b44f40);
         border-radius: 50% 50% 50% 0;
         background: var(--marker-fill, #ffb7ad);
         box-shadow:
-          0 10px 20px rgba(60, 52, 42, 0.2),
-          0 0 0 5px rgba(255, 251, 244, 0.54);
+          0 8px 16px rgba(60, 52, 42, 0.16),
+          0 0 0 3px rgba(255, 251, 244, 0.5);
         transform: rotate(-45deg);
       }
 
       .travel-marker-core::after {
         content: "";
         position: absolute;
-        inset: 4px;
+        inset: 3px;
         border-radius: 50%;
         background: rgba(255, 251, 244, 0.96);
       }
@@ -2824,13 +2824,23 @@
           };
         };
 
+        const markerCoordsFromPlace = function (place) {
+          const seed = [place.title || "", place.area || "", place.date || "", place.map || ""].join("|");
+          const hash = hashString(seed);
+          const angle = (hash % 360) * Math.PI / 180;
+          const radius = place.map === "china" ? 0.06 : 0.18;
+          const latOffset = Math.sin(angle) * radius;
+          const lngOffset = Math.cos(angle) * radius * 1.15;
+          return [place.coords[0] + latOffset, place.coords[1] + lngOffset];
+        };
+
         const markerIcon = function (place) {
           const markerColor = markerColorFromPlace(place);
           return L.divIcon({
             className: "travel-marker",
-            iconSize: [24, 24],
-            iconAnchor: [12, 22],
-            popupAnchor: [0, -18],
+            iconSize: [20, 20],
+            iconAnchor: [10, 18],
+            popupAnchor: [0, -14],
             html: '<span class="travel-marker-core" style="--marker-fill:' + markerColor.fill + ';--marker-stroke:' + markerColor.stroke + ';"></span>'
           });
         };
@@ -2853,7 +2863,7 @@
 
           const targetMap = maps[place.map];
           if (!targetMap) return;
-          L.marker(place.coords, { icon: markerIcon(place) })
+          L.marker(markerCoordsFromPlace(place), { icon: markerIcon(place) })
             .addTo(targetMap)
             .bindPopup(popupHtml(place));
         });
