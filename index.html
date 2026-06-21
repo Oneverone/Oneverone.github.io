@@ -444,14 +444,16 @@
       .archive-toolbar {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
-        gap: 18px;
+        gap: 14px;
         align-items: center;
-        margin-bottom: 22px;
-        padding: 12px;
+        margin-bottom: 18px;
+        padding: 14px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: linear-gradient(135deg, rgba(255, 253, 247, 0.9), rgba(247, 243, 234, 0.72));
-        box-shadow: 0 14px 36px rgba(60, 52, 42, 0.08);
+        background:
+          linear-gradient(180deg, rgba(255, 253, 247, 0.96), rgba(247, 243, 234, 0.84)),
+          var(--surface);
+        box-shadow: 0 12px 28px rgba(60, 52, 42, 0.06);
       }
 
       .view-tabs,
@@ -464,14 +466,15 @@
       .view-tabs {
         width: fit-content;
         padding: 5px;
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        background: rgba(255, 253, 247, 0.82);
+        border: 1px solid rgba(32, 35, 31, 0.08);
+        border-radius: calc(var(--radius) + 2px);
+        background: rgba(255, 253, 247, 0.9);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
       }
 
       .view-tab {
-        min-height: 38px;
-        padding: 0 16px;
+        min-height: 40px;
+        padding: 0 18px;
         border: 0;
         border-radius: calc(var(--radius) - 2px);
         color: var(--muted);
@@ -490,10 +493,11 @@
 
       .date-jump {
         justify-content: flex-end;
-        padding: 5px;
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        background: rgba(255, 253, 247, 0.82);
+        padding: 5px 6px;
+        border: 1px solid rgba(32, 35, 31, 0.08);
+        border-radius: calc(var(--radius) + 2px);
+        background: rgba(255, 253, 247, 0.9);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
       }
 
       .date-jump-label {
@@ -505,21 +509,22 @@
 
       .month-select,
       .year-input {
-        min-height: 38px;
-        border: 1px solid transparent;
+        min-height: 40px;
+        border: 1px solid rgba(32, 35, 31, 0.08);
         border-radius: calc(var(--radius) - 2px);
         color: var(--ink);
-        background: rgba(247, 243, 234, 0.78);
+        background: rgba(247, 243, 234, 0.66);
         font-size: 13px;
         font-weight: 800;
       }
 
       .month-select {
         padding: 0 12px;
+        min-width: 78px;
       }
 
       .year-input {
-        width: 92px;
+        width: 88px;
         padding: 0 10px;
       }
 
@@ -541,7 +546,9 @@
       .calendar-panel {
         padding: 0;
         overflow: hidden;
-        background: linear-gradient(180deg, rgba(255, 253, 247, 0.96), rgba(247, 243, 234, 0.82));
+        background:
+          linear-gradient(180deg, rgba(255, 253, 247, 0.98), rgba(247, 243, 234, 0.86)),
+          var(--surface);
       }
 
       .calendar-top {
@@ -549,13 +556,13 @@
         padding: 22px 24px 18px;
         border-bottom: 1px solid var(--line);
         background:
-          radial-gradient(circle at 88% 18%, rgba(199, 163, 86, 0.14), transparent 8rem),
-          rgba(255, 253, 247, 0.78);
+          radial-gradient(circle at 88% 18%, rgba(199, 163, 86, 0.12), transparent 8rem),
+          rgba(255, 253, 247, 0.88);
       }
 
       .calendar-title {
         font-family: var(--serif);
-        font-size: clamp(28px, 4vw, 46px);
+        font-size: clamp(26px, 3.6vw, 42px);
         font-weight: 900;
       }
 
