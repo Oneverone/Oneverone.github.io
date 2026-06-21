@@ -2504,7 +2504,7 @@
         const mapNodes = document.querySelectorAll(".leaflet-map");
 
         if (!window.L || !window.__WORLD_COUNTRIES__ || !window.__CHINA_ADMIN__ || !window.__CHINA_CITIES__) {
-          scaleNode.textContent = "地图数据未加载";
+          scaleNode.textContent += showProvince ? " · 省份" : " · 地级市";
           return;
         }
 
@@ -2564,7 +2564,7 @@
 
         const worldStyle = {
           color: "rgba(255, 255, 255, 0.72)",
-          weight: 0.9,
+          weight: 1,
           opacity: 1,
           fillColor: "#f7f2e9",
           fillOpacity: 1,
@@ -2574,7 +2574,7 @@
 
         const chinaStyle = {
           color: "rgba(255, 255, 255, 0.78)",
-          weight: 1.05,
+          weight: 1,
           opacity: 1,
           fillColor: "#fbf7ef",
           fillOpacity: 1,
@@ -2584,7 +2584,7 @@
 
         const cityBoundaryStyle = {
           color: "rgba(183, 110, 85, 0.72)",
-          weight: 0.7,
+          weight: 1,
           opacity: 1,
           fillOpacity: 0,
           lineJoin: "round",
@@ -2599,16 +2599,14 @@
 
         const visitedChinaRegionStyle = Object.assign({}, chinaStyle, {
           color: visitedStrokeColor,
-          weight: 1.1,
           fillColor: visitedFillColor,
-          fillOpacity: 0.58
+          fillOpacity: 0.54
         });
 
         const visitedChinaCityStyle = Object.assign({}, cityBoundaryStyle, {
           color: visitedStrokeColor,
-          weight: 0.85,
           fillColor: visitedFillColor,
-          fillOpacity: 0.7
+          fillOpacity: 0.54
         });
 
         let chinaHighlightMode = "province";
@@ -2640,7 +2638,6 @@
         });
 
         const provinceLabelLayer = L.layerGroup().addTo(maps.china);
-        const capitalLabelLayer = L.layerGroup().addTo(maps.china);
         const cityLabelLayer = L.layerGroup();
         const worldMajorLabelLayer = L.layerGroup().addTo(maps.world);
         const worldCountryLabelLayer = L.layerGroup();
@@ -2770,7 +2767,6 @@
         });
 
         chinaCapitalLabels.forEach(function (city) {
-          createLabelMarker(city.coords, city.name, "capital").addTo(capitalLabelLayer);
         });
 
         window.__CHINA_CITIES__.features.forEach(function (feature) {
@@ -2813,7 +2809,7 @@
         };
 
         Object.values(travelPlaces).forEach(function (place) {
-          if (place.map === "china") return;
+
           const targetMap = maps[place.map];
           if (!targetMap) return;
           L.marker(place.coords, { icon: markerIcon(place.color) })
@@ -2842,8 +2838,7 @@
 
         const updateChinaLabels = function () {
           const zoom = maps.china.getZoom();
-          const showProvince = zoom < 5.1;
-          const showCapital = zoom >= 5.1 && zoom < chinaCityZoomThreshold;
+          const showProvince = zoom < chinaCityZoomThreshold;
           const showMoreCities = zoom >= chinaCityZoomThreshold;
           const toggleLayer = function (layer, shouldShow) {
             if (shouldShow && !maps.china.hasLayer(layer)) {
@@ -2858,19 +2853,10 @@
           refreshChinaHighlightStyles();
 
           toggleLayer(provinceLabelLayer, showProvince);
-          toggleLayer(capitalLabelLayer, showCapital);
           toggleLayer(cityLabelLayer, showMoreCities);
           toggleLayer(cityBoundaryLayer, showMoreCities);
-
-          if (showProvince) {
-            scaleNode.textContent += " · 省份";
-          } else if (showCapital) {
-            scaleNode.textContent += " · 省会";
-          } else {
-            scaleNode.textContent += " · 地级市";
-          }
+          scaleNode.textContent += showProvince ? " · 省份" : " · 地级市";
         };
-
         const updateWorldLabels = function () {
           const zoom = maps.world.getZoom();
           const showAllCountries = zoom >= 3;
