@@ -1,16 +1,26 @@
-# React + Vite
+# Chen & Gao
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+静态个人网站，当前页面入口是根目录 `index.html`。项目使用 Leaflet 展示世界地图和中国地图旅行足迹，旅行记录集中维护在 `assets/data/travel-places.data.js` 与 `public/assets/data/travel-places.data.js`。
 
-Currently, two official plugins are available:
+## 本地预览
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+## 构建验证
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+当前 Vite 版本需要 Node.js 20.19+。
 
-## Expanding the ESLint configuration
+```bash
+npm run build
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 文件说明
+
+- `index.html`：主页面、样式和交互逻辑。
+- `assets/`：GitHub Pages 根目录发布使用的静态资源。
+- `public/assets/`：Vite 本地预览和构建时复制到站点根目录的静态资源。
+- `assets/data/travel-places.data.js`：线上旅行记录数据。
+- `public/assets/data/travel-places.data.js`：本地预览/构建旅行记录数据。

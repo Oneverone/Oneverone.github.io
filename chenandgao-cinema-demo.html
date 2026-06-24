@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chen &amp; Gao · 电影剧场风 Demo</title>
+    <style>
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        color: #f7ead6;
+        background:
+          radial-gradient(circle at 50% -10%, rgba(210, 56, 40, 0.32), transparent 28rem),
+          radial-gradient(circle at 14% 78%, rgba(204, 157, 76, 0.18), transparent 22rem),
+          linear-gradient(180deg, #10090a 0%, #050506 100%);
+        font-family: "Didot", "Bodoni 72", "Songti SC", serif;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.18;
+        background:
+          repeating-linear-gradient(90deg, transparent 0 15px, rgba(255,255,255,0.15) 15px 16px),
+          radial-gradient(circle, rgba(255,255,255,0.26) 0.7px, transparent 0.7px);
+        background-size: auto, 11px 11px;
+        mix-blend-mode: screen;
+      }
+      a { color: inherit; text-decoration: none; }
+      .stage {
+        min-height: 100vh;
+        overflow: hidden;
+      }
+      .marquee {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: center;
+        padding: 16px clamp(18px, 4vw, 54px);
+        border-bottom: 1px solid rgba(247, 234, 214, 0.14);
+        background: rgba(5, 5, 6, 0.72);
+        backdrop-filter: blur(16px);
+        font-family: "Avenir Next", "PingFang SC", sans-serif;
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+      .marquee nav {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        color: rgba(247, 234, 214, 0.62);
+      }
+      .hero {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 0.78fr) minmax(360px, 1fr);
+        gap: clamp(28px, 6vw, 84px);
+        align-items: center;
+        width: min(1240px, calc(100% - 32px));
+        min-height: calc(100vh - 58px);
+        margin: 0 auto;
+        padding: 54px 0 68px;
+      }
+      .hero::before {
+        content: "NOW SHOWING";
+        position: absolute;
+        top: 9%;
+        left: 12%;
+        color: rgba(247, 234, 214, 0.055);
+        font-size: clamp(66px, 12vw, 172px);
+        font-weight: 900;
+        letter-spacing: -0.08em;
+        white-space: nowrap;
+      }
+      .poster {
+        position: relative;
+        min-height: 690px;
+        padding: 34px;
+        border: 1px solid rgba(247, 234, 214, 0.18);
+        border-radius: 36px;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0)),
+          radial-gradient(circle at 50% 20%, rgba(202, 49, 35, 0.5), transparent 18rem),
+          linear-gradient(155deg, #2b0d10 0%, #090608 64%, #000 100%);
+        box-shadow: 0 42px 120px rgba(0, 0, 0, 0.64);
+      }
+      .poster::before,
+      .poster::after {
+        content: "";
+        position: absolute;
+        top: 28px;
+        bottom: 28px;
+        width: 32px;
+        border-radius: 999px;
+        background:
+          radial-gradient(circle, rgba(247,234,214,0.9) 0 3px, transparent 4px) 0 0 / 32px 36px;
+        opacity: 0.5;
+      }
+      .poster::before { left: 18px; }
+      .poster::after { right: 18px; }
+      .poster-inner {
+        position: relative;
+        display: grid;
+        align-content: end;
+        min-height: 622px;
+        padding: 38px;
+        overflow: hidden;
+        border-radius: 28px;
+        background:
+          linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.82) 78%),
+          radial-gradient(circle at 50% 32%, rgba(247, 234, 214, 0.24), transparent 12rem),
+          linear-gradient(135deg, #7b1515, #1b1112 52%, #050506);
+      }
+      .spotlight {
+        position: absolute;
+        top: -18%;
+        left: 18%;
+        width: 64%;
+        height: 70%;
+        background: radial-gradient(ellipse, rgba(247,234,214,0.38), transparent 62%);
+        filter: blur(2px);
+      }
+      .poster h1 {
+        position: relative;
+        margin: 0;
+        font-size: clamp(76px, 10vw, 138px);
+        line-height: 0.78;
+        letter-spacing: -0.09em;
+        text-transform: uppercase;
+      }
+      .poster p {
+        position: relative;
+        max-width: 460px;
+        margin: 18px 0 0;
+        color: rgba(247, 234, 214, 0.76);
+        font-family: "Avenir Next", "PingFang SC", sans-serif;
+        line-height: 1.8;
+      }
+      .copy {
+        position: relative;
+        z-index: 2;
+      }
+      .kicker {
+        display: inline-flex;
+        gap: 10px;
+        align-items: center;
+        color: #d6a756;
+        font-family: "Avenir Next", "PingFang SC", sans-serif;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+      .kicker::before { content: ""; width: 44px; height: 1px; background: currentColor; }
+      .copy h2 {
+        margin: 18px 0;
+        font-size: clamp(44px, 6vw, 86px);
+        line-height: 0.95;
+        letter-spacing: -0.06em;
+      }
+      .copy p {
+        max-width: 570px;
+        margin: 0;
+        color: rgba(247, 234, 214, 0.72);
+        font-family: "Avenir Next", "PingFang SC", sans-serif;
+        line-height: 1.9;
+      }
+      .tickets {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 34px;
+      }
+      .ticket {
+        min-height: 154px;
+        padding: 18px;
+        border: 1px solid rgba(247, 234, 214, 0.16);
+        border-radius: 20px;
+        background:
+          linear-gradient(135deg, rgba(247, 234, 214, 0.12), rgba(247, 234, 214, 0.03)),
+          rgba(255, 255, 255, 0.03);
+        box-shadow: inset 0 0 0 1px rgba(0,0,0,0.35);
+      }
+      .ticket strong {
+        display: block;
+        color: #d6a756;
+        font-family: "Avenir Next", "PingFang SC", sans-serif;
+        font-size: 11px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+      .ticket b {
+        display: block;
+        margin-top: 22px;
+        font-size: 28px;
+        line-height: 1;
+      }
+      .reel {
+        width: min(1240px, calc(100% - 32px));
+        margin: 0 auto 70px;
+        padding: 28px;
+        border: 1px solid rgba(247, 234, 214, 0.14);
+        border-radius: 34px;
+        background: rgba(255,255,255,0.035);
+      }
+      .reel-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr 0.8fr;
+        gap: 14px;
+      }
+      .scene {
+        min-height: 230px;
+        padding: 20px;
+        border-radius: 24px;
+        background:
+          linear-gradient(180deg, transparent, rgba(0,0,0,0.62)),
+          linear-gradient(135deg, #331417, #a33b2b 56%, #d6a756);
+      }
+      .scene:nth-child(2) { min-height: 310px; background: linear-gradient(135deg, #08080a, #37312a, #b9793a); }
+      .scene:nth-child(3) { background: linear-gradient(135deg, #220b0d, #111621, #d6a756); }
+      .scene span {
+        display: inline-flex;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: rgba(0,0,0,0.45);
+        font-family: "Avenir Next", "PingFang SC", sans-serif;
+        font-size: 12px;
+      }
+      .chapter-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 24px;
+      }
+      .chapter {
+        min-height: 190px;
+        padding: 18px;
+        border: 1px solid rgba(247, 234, 214, 0.16);
+        border-radius: 22px;
+        background:
+          linear-gradient(145deg, rgba(214, 167, 86, 0.12), rgba(255,255,255,0.03)),
+          rgba(0,0,0,0.18);
+      }
+      .chapter h3 {
+        margin: 14px 0 10px;
+        font-size: 30px;
+        line-height: 1;
+      }
+      .chapter p {
+        margin: 0;
+        color: rgba(247, 234, 214, 0.68);
+        font-family: "Avenir Next", "PingFang SC", sans-serif;
+        line-height: 1.75;
+      }
+      .calendar-strip,
+      .city-strip,
+      .guest-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 16px;
+      }
+      .calendar-strip span,
+      .city-strip span,
+      .guest-strip span {
+        padding: 7px 10px;
+        border: 1px solid rgba(247, 234, 214, 0.16);
+        border-radius: 999px;
+        color: #f7ead6;
+        background: rgba(255,255,255,0.06);
+        font-family: "Avenir Next", "PingFang SC", sans-serif;
+        font-size: 12px;
+      }
+      @media (max-width: 900px) {
+        .hero, .reel-grid, .chapter-grid { grid-template-columns: 1fr; }
+        .poster { min-height: 560px; }
+        .poster-inner { min-height: 490px; }
+        .tickets { grid-template-columns: 1fr; }
+        .marquee { align-items: flex-start; flex-direction: column; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="stage">
+      <header class="marquee">
+        <a href="#">Chen &amp; Gao Theatre</a>
+        <nav>
+          <a href="#tickets">重要场次</a>
+            <a href="#archive">时光档案</a>
+            <a href="#travel">旅行足迹</a>
+          <a href="#guest">亲友观众席</a>
+        </nav>
+      </header>
+
+      <section class="hero">
+        <article class="poster" aria-label="电影海报主视觉">
+          <div class="poster-inner">
+            <span class="spotlight"></span>
+            <h1>Chen<br>&amp; Gao</h1>
+            <p>一部正在上映的双人长片。相识、相爱、旅行、婚礼，全部成为可以回放的章节。</p>
+          </div>
+        </article>
+
+        <div class="copy">
+          <span class="kicker">Romance Theatre · Demo</span>
+          <h2>把首页做成一座只为两个人亮灯的剧场</h2>
+          <p>电影剧场风适合更强情绪、更强仪式感的 Chen &amp; Gao。页面用深色幕布、聚光灯、票根、字幕条和胶片格，让纪念日像首映场，旅行足迹像片段回放。</p>
+          <div class="tickets" id="tickets">
+            <article class="ticket"><strong>Scene 01</strong><b>相识日</b><p>2016.09.01</p></article>
+            <article class="ticket"><strong>Scene 02</strong><b>恋爱日</b><p>2019.02.02</p></article>
+            <article class="ticket"><strong>Finale</strong><b>婚礼日</b><p>2026.03.31</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="reel" id="reel">
+        <span class="kicker">Film Reel</span>
+        <div class="reel-grid">
+          <article class="scene"><span>时光档案 · 开场字幕</span></article>
+          <article class="scene"><span>旅行足迹 · 城市长镜头</span></article>
+            <article class="scene"><span>亲友留言 · 观众席祝福</span></article>
+        </div>
+          <div class="chapter-grid" aria-label="完整页面模块">
+            <article class="chapter" id="archive">
+              <span class="kicker">Archive</span>
+              <h3>时光档案</h3>
+              <p>用“分镜表”表达日历与动态列表，日期像场记板，记录每个值得回放的片段。</p>
+              <div class="calendar-strip"><span>06.20 网站上线</span><span>06.21 设计整理</span><span>06.22 等待素材</span></div>
+            </article>
+            <article class="chapter" id="travel">
+              <span class="kicker">Footprints</span>
+              <h3>旅行足迹</h3>
+              <p>地图模块变成城市长镜头，保留地点、缩放、详情弹窗这些正式页能力。</p>
+              <div class="city-strip"><span>北京</span><span>上海</span><span>成都</span><span>巴黎</span></div>
+            </article>
+            <article class="chapter">
+              <span class="kicker">Milestones</span>
+              <h3>重要场次</h3>
+              <p>相识、恋爱、领证、婚礼、生日都作为票根进入同一张放映排期。</p>
+              <div class="calendar-strip"><span>2016</span><span>2019</span><span>2024</span><span>2026</span></div>
+            </article>
+            <article class="chapter" id="guest">
+              <span class="kicker">Guestbook</span>
+              <h3>亲友留言</h3>
+              <p>留言区像散场后的观众席祝福，后续接入 Giscus 后承接真实评论。</p>
+              <div class="guest-strip"><span>祝福短评</span><span>GitHub Discussions</span><span>待接入</span></div>
+            </article>
+          </div>
+      </section>
+    </main>
+  </body>
+</html>

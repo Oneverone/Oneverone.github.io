@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chen &amp; Gao · 杂志风 Demo</title>
+    <style>
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        color: #171917;
+        background:
+          radial-gradient(circle at 8% 12%, rgba(181, 78, 55, 0.14), transparent 24rem),
+          radial-gradient(circle at 92% 22%, rgba(76, 98, 125, 0.14), transparent 26rem),
+          linear-gradient(112deg, transparent 0 53%, rgba(199, 160, 78, 0.12) 53% 68%, transparent 68%),
+          #f5f0e7;
+        font-family: "Gill Sans", "Avenir Next", "PingFang SC", sans-serif;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background:
+          linear-gradient(rgba(23,25,23,0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(23,25,23,0.03) 1px, transparent 1px);
+        background-size: 72px 72px;
+      }
+      a { color: inherit; text-decoration: none; }
+      .issue {
+        width: min(1280px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 26px 0 64px;
+      }
+      .masthead {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 18px;
+        align-items: center;
+        padding: 14px 0;
+        border-bottom: 2px solid #171917;
+        background: rgba(245, 240, 231, 0.78);
+        backdrop-filter: blur(16px);
+      }
+      .masthead b {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(28px, 4vw, 58px);
+        letter-spacing: -0.08em;
+        text-transform: uppercase;
+      }
+      .masthead span,
+      .masthead nav {
+        color: #686c64;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .masthead nav {
+        display: flex;
+        justify-content: flex-end;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+      .cover {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        grid-auto-rows: minmax(48px, auto);
+        gap: 18px;
+        min-height: 720px;
+        padding: 42px 0 64px;
+      }
+      .cover::before {
+        content: "LOVE ISSUE";
+        position: absolute;
+        top: 76px;
+        right: 0;
+        color: rgba(23,25,23,0.055);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(78px, 15vw, 210px);
+        font-weight: 900;
+        letter-spacing: -0.09em;
+        line-height: 0.8;
+      }
+      .headline {
+        position: relative;
+        z-index: 2;
+        grid-column: 1 / span 7;
+        grid-row: 2 / span 6;
+      }
+      .kicker {
+        display: inline-flex;
+        gap: 12px;
+        align-items: center;
+        color: #b54e37;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      .kicker::before { content: ""; width: 48px; height: 2px; background: currentColor; }
+      h1 {
+        margin: 16px 0 20px;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(76px, 13vw, 176px);
+        line-height: 0.76;
+        letter-spacing: -0.1em;
+      }
+      .headline p,
+      .article p {
+        max-width: 580px;
+        margin: 0;
+        color: #5f665d;
+        font-size: 16px;
+        line-height: 1.86;
+      }
+      .cover-photo {
+        position: relative;
+        grid-column: 7 / span 6;
+        grid-row: 1 / span 8;
+        min-height: 640px;
+        overflow: hidden;
+        border-radius: 44px 44px 160px 44px;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.05), rgba(23,25,23,0.3)),
+          radial-gradient(circle at 24% 18%, rgba(255,255,255,0.66), transparent 11rem),
+          linear-gradient(135deg, #607264, #b54e37 62%, #c6a04e);
+        box-shadow: 0 36px 88px rgba(65, 54, 42, 0.18);
+      }
+      .cover-photo::after {
+        content: "01";
+        position: absolute;
+        right: 28px;
+        bottom: 20px;
+        color: rgba(255,255,255,0.78);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 132px;
+        line-height: 0.8;
+        letter-spacing: -0.09em;
+      }
+      .caption {
+        grid-column: 8 / span 4;
+        grid-row: 8;
+        z-index: 3;
+        align-self: end;
+        padding: 18px;
+        border-radius: 24px;
+        color: #fffaf0;
+        background: rgba(23,25,23,0.72);
+        backdrop-filter: blur(14px);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+      .toc {
+        grid-column: 1 / span 4;
+        grid-row: 8;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .toc a {
+        min-height: 96px;
+        padding: 14px;
+        border: 1px solid rgba(23,25,23,0.14);
+        border-radius: 22px;
+        background: rgba(255, 252, 245, 0.72);
+        font-weight: 900;
+      }
+      .toc small {
+        display: block;
+        margin-bottom: 18px;
+        color: #b54e37;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .flow {
+        position: relative;
+        display: grid;
+        gap: 0;
+        margin-top: 18px;
+      }
+      .flow::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: clamp(22px, 7vw, 96px);
+        width: 2px;
+        background: linear-gradient(180deg, #b54e37, #607264, #4c627d, transparent);
+      }
+      .article {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 18px;
+        min-height: 470px;
+        padding: clamp(64px, 10vw, 118px) 0;
+      }
+      .article::before {
+        content: attr(data-no);
+        position: absolute;
+        left: clamp(5px, 7vw, 78px);
+        top: 88px;
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        color: #fffaf0;
+        background: #171917;
+        font-family: Georgia, "Times New Roman", serif;
+        font-weight: 900;
+      }
+      .article h2 {
+        grid-column: 2 / span 5;
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(44px, 7vw, 104px);
+        line-height: 0.86;
+        letter-spacing: -0.08em;
+      }
+      .article-body {
+        grid-column: 7 / span 5;
+        align-self: center;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 24px;
+      }
+      .card {
+        min-height: 150px;
+        padding: 16px;
+        border-radius: 28px;
+        background:
+          linear-gradient(145deg, rgba(255,255,255,0.82), rgba(245,240,231,0.54));
+        box-shadow: 0 18px 46px rgba(65,54,42,0.1);
+      }
+      .card b {
+        display: block;
+        margin-bottom: 28px;
+        color: #b54e37;
+        font-size: 12px;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+      }
+      .map-block {
+        position: relative;
+        margin-top: 26px;
+        min-height: 240px;
+        overflow: hidden;
+        border-radius: 42px;
+        background:
+          linear-gradient(90deg, transparent 0 49%, rgba(23,25,23,0.12) 49% 50%, transparent 50%),
+          linear-gradient(0deg, transparent 0 49%, rgba(23,25,23,0.12) 49% 50%, transparent 50%),
+          radial-gradient(circle at 26% 52%, #b54e37 0 8px, transparent 9px),
+          radial-gradient(circle at 58% 36%, #607264 0 8px, transparent 9px),
+          radial-gradient(circle at 78% 62%, #4c627d 0 8px, transparent 9px),
+          #e8dfd0;
+        background-size: 100% 100%, 100% 100%, auto, auto, auto, auto;
+      }
+      .map-block::after {
+        content: "Beijing / Shanghai / Chengdu / Paris";
+        position: absolute;
+        right: 18px;
+        bottom: 18px;
+        padding: 9px 12px;
+        border-radius: 999px;
+        background: rgba(255,252,245,0.78);
+        font-size: 12px;
+        font-weight: 900;
+      }
+      .guestbook {
+        display: grid;
+        gap: 12px;
+        margin-top: 26px;
+      }
+      .guest-note {
+        padding: 18px;
+        border-left: 4px solid #b54e37;
+        border-radius: 22px;
+        background: rgba(255, 252, 245, 0.78);
+        box-shadow: 0 14px 34px rgba(65,54,42,0.08);
+      }
+      .guest-note strong {
+        display: block;
+        margin-bottom: 8px;
+        color: #171917;
+      }
+      @media (max-width: 900px) {
+        .masthead, .cover, .article { grid-template-columns: 1fr; }
+        .masthead { position: static; }
+        .masthead nav { justify-content: flex-start; }
+        .headline, .cover-photo, .caption, .toc, .article h2, .article-body {
+          grid-column: auto;
+          grid-row: auto;
+        }
+        .cover-photo { min-height: 430px; }
+        .toc, .cards { grid-template-columns: 1fr; }
+        .flow::before, .article::before { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="issue">
+      <header class="masthead">
+        <span>Vol. 01 · Private Journal</span>
+        <b>Chen &amp; Gao</b>
+        <nav>
+          <a href="#days">Milestones</a>
+          <a href="#archive">Archive</a>
+          <a href="#travel">Travel</a>
+            <a href="#comments">Guestbook</a>
+        </nav>
+      </header>
+
+      <section class="cover">
+        <div class="headline">
+          <span class="kicker">Magazine Demo</span>
+          <h1>Two<br>People,<br>One Issue</h1>
+          <p>杂志风不只是卡片排版，而是一整期关于 Chen &amp; Gao 的特刊：大标题、跨页图像、目录、专栏和贯穿全页的阅读动线，把所有板块串成连续叙事。</p>
+        </div>
+        <div class="cover-photo" aria-label="杂志封面视觉"></div>
+        <p class="caption">封面故事：从第一次相识，到未来的婚礼日，所有日期都被编排成一期可以慢慢翻阅的双人杂志。</p>
+        <div class="toc">
+          <a href="#days"><small>01</small>纪念时刻</a>
+          <a href="#archive"><small>02</small>时光档案</a>
+          <a href="#travel"><small>03</small>旅行足迹</a>
+            <a href="#comments"><small>04</small>亲友留言</a>
+        </div>
+      </section>
+
+      <section class="flow">
+        <article class="article" id="days" data-no="01">
+          <h2>纪念时刻是一组封面副标题</h2>
+          <div class="article-body">
+            <span class="kicker">Milestones</span>
+            <p>重要日子不再各自为政，而像杂志封面上的多个 sell lines：相识日、恋爱日、领证日、婚礼日，围绕同一个主叙事展开。</p>
+            <div class="cards">
+              <div class="card"><b>First Met</b>2016.09.01</div>
+              <div class="card"><b>Together</b>2019.02.02</div>
+              <div class="card"><b>Wedding</b>2026.03.31</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="article" id="archive" data-no="02">
+          <h2>时光档案像连续专栏</h2>
+          <div class="article-body">
+            <span class="kicker">Timeline</span>
+            <p>日历、列表和动态可以作为同一专栏的不同阅读方式：读者先看到月份主题，再进入具体日期，而不是被一个个边框打断。</p>
+            <div class="cards">
+              <div class="card"><b>June</b>网站上线</div>
+              <div class="card"><b>Design</b>整理首页想法</div>
+              <div class="card"><b>Next</b>等待真实素材</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="article" id="travel" data-no="03">
+          <h2>旅行足迹是一张跨页地图</h2>
+          <div class="article-body">
+            <span class="kicker">Footprints</span>
+            <p>地图不用孤立存在，而是作为整期杂志的跨页信息图，连接日期、城市、路线和照片感，让空间记忆接上时间线。</p>
+            <div class="map-block" aria-label="旅行地图视觉示意"></div>
+          </div>
+        </article>
+
+          <article class="article" id="comments" data-no="04">
+            <h2>亲友留言成为读者来信栏目</h2>
+            <div class="article-body">
+              <span class="kicker">Guestbook</span>
+              <p>留言板在杂志风里可以处理成“读者来信”：保留未来 Giscus 接入位置，也让祝福、署名和时间成为页面叙事的一部分。</p>
+              <div class="guestbook">
+                <div class="guest-note"><strong>朋友来信</strong>愿你们的每一期更新，都有新城市、新照片和新的好消息。</div>
+                <div class="guest-note"><strong>评论接入</strong>GitHub Discussions / Giscus-ready，后续可以替换为真实评论流。</div>
+              </div>
+            </div>
+          </article>
+      </section>
+    </main>
+  </body>
+</html>

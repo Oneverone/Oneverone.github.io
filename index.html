@@ -30,6 +30,8 @@
         --shadow: 0 18px 50px rgba(60, 52, 42, 0.12);
         --shadow-hover: 0 28px 70px rgba(60, 52, 42, 0.17);
         --radius: 8px;
+        --radius-loose: 34px;
+        --flow-gutter: clamp(34px, 6vw, 88px);
         --sans: "Segoe UI", "Noto Sans SC", "Microsoft YaHei", sans-serif;
         --serif: Georgia, "Times New Roman", "Noto Serif SC", "Songti SC", serif;
       }
@@ -47,9 +49,10 @@
         color: var(--ink);
         font-family: var(--sans);
         background:
-          radial-gradient(circle at 12% 8%, rgba(101, 117, 104, 0.16), transparent 24rem),
-          radial-gradient(circle at 88% 14%, rgba(183, 110, 85, 0.12), transparent 26rem),
-          linear-gradient(180deg, #fbf8f1 0%, var(--paper) 44%, #efe7db 100%);
+          radial-gradient(ellipse at 8% 5%, rgba(101, 117, 104, 0.22), transparent 30rem),
+          radial-gradient(ellipse at 92% 12%, rgba(183, 110, 85, 0.18), transparent 32rem),
+          radial-gradient(ellipse at 74% 58%, rgba(199, 163, 86, 0.16), transparent 34rem),
+          linear-gradient(145deg, #fbf8f1 0%, var(--paper) 42%, #efe7db 100%);
       }
 
       body::before {
@@ -61,8 +64,9 @@
         opacity: 0.42;
         background-image:
           linear-gradient(rgba(32, 35, 31, 0.035) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(32, 35, 31, 0.028) 1px, transparent 1px);
-        background-size: 72px 72px;
+          linear-gradient(90deg, rgba(32, 35, 31, 0.028) 1px, transparent 1px),
+          linear-gradient(112deg, transparent 0 54%, rgba(183, 110, 85, 0.09) 54% 56%, transparent 56% 100%);
+        background-size: 72px 72px, 72px 72px, 100% 100%;
       }
 
       body::after {
@@ -102,7 +106,7 @@
       }
 
       .wrap {
-        width: min(1180px, calc(100vw - 40px));
+        width: min(1220px, calc(100vw - 40px));
         margin: 0 auto;
       }
 
@@ -166,17 +170,75 @@
       }
 
       .hero {
+        position: relative;
         min-height: calc(100vh - 68px);
         display: grid;
         align-items: center;
-        padding: 62px 0 72px;
+        overflow: hidden;
+        padding: 76px 0 96px;
+      }
+
+      .hero::before {
+        content: "JOURNAL";
+        position: absolute;
+        top: 8%;
+        left: max(18px, calc((100vw - 1220px) / 2));
+        z-index: -1;
+        color: rgba(32, 35, 31, 0.045);
+        font-family: var(--serif);
+        font-size: clamp(96px, 19vw, 260px);
+        font-weight: 900;
+        letter-spacing: -0.08em;
+        line-height: 0.76;
+        pointer-events: none;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        right: -10vw;
+        bottom: -14vw;
+        z-index: -1;
+        width: min(680px, 58vw);
+        aspect-ratio: 1;
+        border: 1px solid rgba(101, 117, 104, 0.22);
+        border-radius: 44% 56% 48% 52%;
+        background:
+          radial-gradient(circle at 35% 32%, rgba(255, 253, 247, 0.5), transparent 26%),
+          linear-gradient(135deg, rgba(101, 117, 104, 0.18), rgba(183, 110, 85, 0.11));
       }
 
       .hero-grid {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(360px, 470px);
-        gap: 48px;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 18px;
         align-items: center;
+      }
+
+      .hero-grid > div:first-child {
+        grid-column: 1 / span 7;
+        position: relative;
+        z-index: 2;
+      }
+
+      .hero-grid > div:last-child {
+        grid-column: 8 / span 5;
+        position: relative;
+      }
+
+      .hero-grid > div:first-child::after {
+        content: "Vol. 01 / Two-person archive";
+        display: block;
+        width: fit-content;
+        margin-top: 36px;
+        padding: 10px 14px;
+        color: var(--muted);
+        border-top: 1px solid var(--line-strong);
+        border-bottom: 1px solid var(--line-strong);
+        font-size: 12px;
+        font-weight: 850;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
       }
 
       .eyebrow,
@@ -220,9 +282,11 @@
       h1 {
         max-width: 760px;
         margin-bottom: 24px;
-        font-size: clamp(64px, 12vw, 148px);
-        line-height: 0.9;
-        font-weight: 700;
+        font-size: clamp(72px, 13.4vw, 172px);
+        line-height: 0.78;
+        font-weight: 900;
+        letter-spacing: -0.08em;
+        text-wrap: balance;
       }
 
       h2 {
@@ -287,12 +351,13 @@
 
       .memory-card {
         position: relative;
-        min-height: 560px;
+        min-height: 610px;
         overflow: hidden;
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
+        border: 0;
+        border-radius: 46px 46px 140px 46px;
         background: var(--surface-solid);
-        box-shadow: var(--shadow);
+        box-shadow: 0 32px 80px rgba(60, 52, 42, 0.18);
+        transform: rotate(1.4deg);
       }
 
       .memory-visual {
@@ -305,8 +370,9 @@
       .memory-visual::before {
         content: "";
         position: absolute;
-        inset: 18px;
-        border: 1px solid rgba(255, 253, 247, 0.52);
+        inset: 22px;
+        border: 1px solid rgba(255, 253, 247, 0.48);
+        border-radius: 34px 34px 118px 34px;
       }
 
       .memory-visual::after {
@@ -326,9 +392,11 @@
         min-height: inherit;
         display: grid;
         align-content: end;
-        padding: 28px;
+        padding: 34px;
         color: #fff;
-        background: linear-gradient(180deg, rgba(32, 35, 31, 0.04) 0%, rgba(32, 35, 31, 0.58) 100%);
+        background:
+          linear-gradient(158deg, rgba(32, 35, 31, 0.02) 0%, rgba(32, 35, 31, 0.68) 78%),
+          linear-gradient(90deg, rgba(32, 35, 31, 0.16), transparent 52%);
         transition: opacity 220ms ease, transform 220ms ease;
       }
 
@@ -368,9 +436,9 @@
         grid-template-columns: auto 1fr auto;
         align-items: center;
         gap: 12px;
-        padding: 16px 18px 18px;
-        border-top: 1px solid var(--line);
-        background: rgba(255, 253, 247, 0.84);
+        padding: 16px 24px 20px;
+        border-top: 0;
+        background: rgba(255, 253, 247, 0.9);
       }
 
       .dots {
@@ -418,16 +486,103 @@
       }
 
       .section {
-        padding: 86px 0;
-        border-top: 1px solid var(--line);
+        position: relative;
+        padding: clamp(86px, 12vw, 150px) 0;
+        border-top: 0;
+        isolation: isolate;
+      }
+
+      main.wrap {
+        position: relative;
+      }
+
+      main.wrap::before {
+        content: "";
+        position: absolute;
+        top: -44px;
+        bottom: 42px;
+        left: var(--flow-gutter);
+        z-index: -1;
+        width: 2px;
+        background:
+          linear-gradient(180deg, transparent, rgba(183, 110, 85, 0.42) 9%, rgba(101, 117, 104, 0.3) 48%, rgba(97, 112, 131, 0.32) 78%, transparent);
+      }
+
+      main.wrap::after {
+        content: "";
+        position: absolute;
+        top: 10%;
+        right: calc(var(--flow-gutter) * -0.6);
+        z-index: -2;
+        width: 48vw;
+        height: 72%;
+        border-radius: 50%;
+        background: linear-gradient(180deg, rgba(217, 225, 214, 0.22), rgba(234, 210, 199, 0.16), transparent);
+        filter: blur(2px);
+        pointer-events: none;
+      }
+
+      .section::before {
+        position: absolute;
+        top: clamp(58px, 8vw, 112px);
+        left: calc(var(--flow-gutter) - 18px);
+        z-index: 0;
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border: 1px solid rgba(32, 35, 31, 0.16);
+        border-radius: 50%;
+        color: var(--surface-solid);
+        background: var(--ink);
+        font-family: var(--serif);
+        font-size: 14px;
+        font-weight: 900;
+        box-shadow: 0 12px 30px rgba(60, 52, 42, 0.14);
+      }
+
+      .section:nth-of-type(1)::before { content: "01"; }
+      .section:nth-of-type(2)::before { content: "02"; }
+      .section:nth-of-type(3)::before { content: "03"; }
+      .section:nth-of-type(4)::before { content: "04"; }
+
+      .section::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        bottom: 34px;
+        left: calc(var(--flow-gutter) + 58px);
+        z-index: -1;
+        height: 1px;
+        background: linear-gradient(90deg, rgba(32, 35, 31, 0.16), transparent);
       }
 
       .section-head {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(280px, 480px);
-        gap: 32px;
+        grid-template-columns: minmax(250px, 0.72fr) minmax(280px, 0.44fr);
+        gap: clamp(28px, 7vw, 96px);
         align-items: end;
-        margin-bottom: 30px;
+        margin: 0 0 40px calc(var(--flow-gutter) + 44px);
+      }
+
+      .section-head h2 {
+        max-width: 8ch;
+        font-size: clamp(56px, 8vw, 112px);
+        letter-spacing: -0.07em;
+      }
+
+      .section:nth-of-type(even) .section-head {
+        grid-template-columns: minmax(280px, 0.52fr) minmax(250px, 0.64fr);
+        margin-right: clamp(0px, 3vw, 72px);
+      }
+
+      .section:nth-of-type(even) .section-head > div {
+        grid-column: 2;
+      }
+
+      .section:nth-of-type(even) .section-head .section-kicker {
+        grid-column: 1;
+        grid-row: 1;
       }
 
       .section-kicker,
@@ -439,6 +594,7 @@
       .section-kicker {
         margin-bottom: 0;
         font-size: 16px;
+        max-width: 430px;
       }
 
       .archive-toolbar {
@@ -447,14 +603,15 @@
         justify-content: flex-start;
         gap: 14px;
         align-items: center;
-        margin-bottom: 18px;
-        padding: 14px;
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
+        width: fit-content;
+        margin: -20px 0 22px calc(var(--flow-gutter) + 44px);
+        padding: 8px;
+        border: 0;
+        border-radius: 999px;
         background:
-          linear-gradient(180deg, rgba(255, 253, 247, 0.96), rgba(247, 243, 234, 0.84)),
+          linear-gradient(180deg, rgba(255, 253, 247, 0.98), rgba(247, 243, 234, 0.84)),
           var(--surface);
-        box-shadow: 0 12px 28px rgba(60, 52, 42, 0.06);
+        box-shadow: 0 18px 42px rgba(60, 52, 42, 0.08);
       }
 
       .view-tabs {
@@ -717,10 +874,12 @@
       }
 
       .surface {
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        background: var(--surface);
-        box-shadow: var(--shadow);
+        border: 1px solid rgba(255, 253, 247, 0.52);
+        border-radius: var(--radius-loose);
+        background:
+          linear-gradient(145deg, rgba(255, 253, 247, 0.88), rgba(247, 243, 234, 0.66)),
+          var(--surface);
+        box-shadow: 0 22px 58px rgba(60, 52, 42, 0.11);
       }
 
       .bento {
@@ -769,8 +928,29 @@
       .travel-layout,
       .comment-layout {
         display: grid;
-        grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
-        gap: 18px;
+        grid-template-columns: minmax(0, 1.16fr) minmax(320px, 0.84fr);
+        gap: 24px;
+      }
+
+      .calendar-layout,
+      .travel-dashboard,
+      .comment-layout {
+        position: relative;
+        margin-left: calc(var(--flow-gutter) + 44px);
+      }
+
+      .calendar-layout::before,
+      .travel-dashboard::before,
+      .comment-layout::before {
+        content: "";
+        position: absolute;
+        inset: -22px auto auto -38px;
+        width: 70px;
+        height: 70px;
+        border-left: 1px solid rgba(183, 110, 85, 0.34);
+        border-top: 1px solid rgba(183, 110, 85, 0.34);
+        border-radius: 28px 0 0 0;
+        pointer-events: none;
       }
 
       .calendar-panel {
@@ -885,7 +1065,10 @@
       .calendar-panel {
         padding: 0;
         overflow: hidden;
-        background: linear-gradient(180deg, rgba(255, 253, 247, 0.96), rgba(247, 243, 234, 0.82));
+        border-radius: 42px;
+        background:
+          radial-gradient(circle at 18% 12%, rgba(199, 163, 86, 0.14), transparent 15rem),
+          linear-gradient(180deg, rgba(255, 253, 247, 0.96), rgba(247, 243, 234, 0.82));
       }
 
       .calendar-top {
@@ -976,17 +1159,21 @@
       .calendar-detail {
         padding: 24px;
         background:
-          linear-gradient(180deg, rgba(255, 253, 247, 0.94), rgba(247, 243, 234, 0.78)),
+          linear-gradient(150deg, rgba(97, 112, 131, 0.12), transparent 38%),
+          linear-gradient(180deg, rgba(255, 253, 247, 0.92), rgba(247, 243, 234, 0.72)),
           var(--surface);
       }
 
       .travel-dashboard {
         display: grid;
-        gap: 18px;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 0.35fr);
+        gap: 24px;
+        align-items: stretch;
       }
 
       .map-shell {
         padding: 18px;
+        border-radius: 46px 46px 46px 112px;
       }
 
       .map-toolbar {
@@ -1036,7 +1223,7 @@
         min-height: 560px;
         overflow: hidden;
         border: 1px solid var(--line);
-        border-radius: var(--radius);
+        border-radius: 34px 34px 34px 92px;
         background:
           radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.34), transparent 20%),
           linear-gradient(180deg, #c6e7f3 0%, #aedbea 100%);
@@ -1228,7 +1415,9 @@
       }
 
       .explore-stats {
-        padding: 22px;
+        align-self: end;
+        padding: 28px;
+        border-radius: 90px 34px 34px 34px;
       }
 
       .stats-grid {
@@ -1261,8 +1450,9 @@
 
       .milestone-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 18px;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 22px;
+        margin-left: calc(var(--flow-gutter) + 44px);
       }
 
       .milestone-card {
@@ -1270,16 +1460,49 @@
         display: grid;
         grid-template-rows: auto auto 1fr auto;
         gap: 18px;
-        min-height: 360px;
-        padding: 24px;
+        min-height: 340px;
+        padding: 26px;
         overflow: hidden;
-        border: 1px solid rgba(32, 35, 31, 0.12);
-        border-radius: var(--radius);
+        border: 1px solid rgba(255, 253, 247, 0.7);
+        border-radius: 34px;
         background:
           linear-gradient(160deg, rgba(255, 253, 247, 0.98), rgba(247, 243, 234, 0.86)),
           var(--surface-solid);
         box-shadow: 0 16px 44px rgba(60, 52, 42, 0.09);
         transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+      }
+
+      .milestone-card:nth-child(6n + 1) {
+        grid-column: span 7;
+        min-height: 430px;
+        border-radius: 42px 42px 120px 42px;
+      }
+
+      .milestone-card:nth-child(6n + 2) {
+        grid-column: span 5;
+        margin-top: 74px;
+        border-radius: 120px 42px 42px 42px;
+      }
+
+      .milestone-card:nth-child(6n + 3) {
+        grid-column: 2 / span 4;
+        margin-top: -28px;
+      }
+
+      .milestone-card:nth-child(6n + 4) {
+        grid-column: span 4;
+        border-radius: 42px 100px 42px 42px;
+      }
+
+      .milestone-card:nth-child(6n + 5) {
+        grid-column: span 4;
+        margin-top: 52px;
+      }
+
+      .milestone-card:nth-child(6n) {
+        grid-column: 5 / span 6;
+        margin-top: -6px;
+        border-radius: 42px 42px 42px 116px;
       }
 
       .milestone-card::before {
@@ -1288,7 +1511,9 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 6px;
+        height: 100%;
+        width: 7px;
+        right: auto;
         background: var(--accent, var(--clay));
       }
 
@@ -1432,7 +1657,16 @@
 
       .comment-form,
       .giscus-ready {
-        padding: 22px;
+        padding: 28px;
+      }
+
+      .comment-form {
+        border-radius: 42px 42px 42px 112px;
+      }
+
+      .giscus-ready {
+        margin-top: 58px;
+        border-radius: 112px 42px 42px 42px;
       }
 
       input,
@@ -1470,7 +1704,7 @@
       .footer {
         padding: 44px 0 64px;
         color: var(--muted);
-        border-top: 1px solid var(--line);
+        border-top: 0;
       }
 
       .reveal {
@@ -1548,6 +1782,49 @@
           grid-template-columns: 1fr;
         }
 
+        .hero-grid > div:first-child,
+        .hero-grid > div:last-child,
+        .section:nth-of-type(even) .section-head > div,
+        .section:nth-of-type(even) .section-head .section-kicker {
+          grid-column: auto;
+          grid-row: auto;
+        }
+
+        .hero-grid {
+          gap: 30px;
+        }
+
+        .memory-card {
+          transform: none;
+        }
+
+        .section-head,
+        .section:nth-of-type(even) .section-head,
+        .archive-toolbar,
+        .calendar-layout,
+        .travel-dashboard,
+        .comment-layout,
+        .milestone-grid {
+          margin-left: 0;
+          margin-right: 0;
+        }
+
+        main.wrap::before {
+          left: 18px;
+        }
+
+        .section::before {
+          left: 0;
+        }
+
+        .section::after {
+          left: 58px;
+        }
+
+        .section-head h2 {
+          max-width: none;
+        }
+
         .map-toolbar {
           align-items: stretch;
           flex-direction: column;
@@ -1567,6 +1844,13 @@
 
         .milestone-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .milestone-card,
+        .milestone-card:nth-child(n) {
+          grid-column: auto;
+          margin-top: 0;
+          min-height: 320px;
         }
 
         .story-card.is-large {
@@ -1598,6 +1882,28 @@
 
         .section {
           padding: 68px 0;
+        }
+
+        .section::before,
+        main.wrap::before,
+        main.wrap::after,
+        .section::after,
+        .calendar-layout::before,
+        .travel-dashboard::before,
+        .comment-layout::before {
+          display: none;
+        }
+
+        .memory-card,
+        .map-shell,
+        .map-stage,
+        .explore-stats,
+        .comment-form,
+        .giscus-ready,
+        .milestone-card,
+        .milestone-card:nth-child(n),
+        .surface {
+          border-radius: 26px;
         }
 
         .gallery {
@@ -1700,115 +2006,7 @@
           <p class="section-kicker">每个重要日子独立成卡。先看它是什么日子和起始日期，再看它已经陪我们走过多久。</p>
         </div>
 
-        <div class="milestone-grid">
-          <article class="milestone-card" style="--accent: var(--sage);">
-            <div class="milestone-card-head">
-              <div>
-                <span class="milestone-label">First Met</span>
-                <h3>相识日</h3>
-              </div>
-              <span class="milestone-order">01</span>
-            </div>
-            <div class="milestone-date-block">
-              <span class="date-caption">起始日期</span>
-              <time class="date-value" datetime="2016-09-01">2016.09.01</time>
-            </div>
-            <div class="milestone-card-body">
-              <div class="counter" data-since="2016-09-01T00:00:00"></div>
-              <p class="body-copy">从第一次相识开始算。</p>
-            </div>
-          </article>
-
-          <article class="milestone-card" style="--accent: var(--clay);">
-            <div class="milestone-card-head">
-              <div>
-                <span class="milestone-label">Together</span>
-                <h3>恋爱日</h3>
-              </div>
-              <span class="milestone-order">02</span>
-            </div>
-            <div class="milestone-date-block">
-              <span class="date-caption">起始日期</span>
-              <time class="date-value" datetime="2019-02-02">2019.02.02</time>
-            </div>
-            <div class="milestone-card-body">
-              <div class="counter" data-since="2019-02-02T00:00:00"></div>
-              <p class="body-copy">从正式在一起开始算。</p>
-            </div>
-          </article>
-
-          <article class="milestone-card" style="--accent: var(--gold);">
-            <div class="milestone-card-head">
-              <div>
-                <span class="milestone-label">Marriage License</span>
-                <h3>领证日</h3>
-              </div>
-              <span class="milestone-order">03</span>
-            </div>
-            <div class="milestone-date-block">
-              <span class="date-caption">起始日期</span>
-              <time class="date-value" datetime="2024-05-24">2024.05.24</time>
-            </div>
-            <div class="milestone-card-body">
-              <div class="counter" data-since="2024-05-24T00:00:00"></div>
-              <p class="body-copy">从成为法律意义上的一家人开始算。</p>
-            </div>
-          </article>
-
-          <article class="milestone-card" style="--accent: var(--blue);">
-            <div class="milestone-card-head">
-              <div>
-                <span class="milestone-label">Wedding</span>
-                <h3>婚礼日</h3>
-              </div>
-              <span class="milestone-order">04</span>
-            </div>
-            <div class="milestone-date-block">
-              <span class="date-caption">起始日期</span>
-              <time class="date-value" datetime="2026-03-31">2026.03.31</time>
-            </div>
-            <div class="milestone-card-body">
-              <div class="counter" data-since="2026-03-31T00:00:00"></div>
-              <p class="body-copy">从婚礼那天开始算。</p>
-            </div>
-          </article>
-
-          <article class="milestone-card" style="--accent: var(--clay);">
-            <div class="milestone-card-head">
-              <div>
-                <span class="milestone-label">Birthday · Gao</span>
-                <h3>小高生日</h3>
-              </div>
-              <span class="milestone-order">05</span>
-            </div>
-            <div class="milestone-date-block">
-              <span class="date-caption">起始日期</span>
-              <time class="date-value" datetime="1998-01-20">1998.01.20</time>
-            </div>
-            <div class="milestone-card-body">
-              <div class="counter" data-since="1998-01-20T00:00:00"></div>
-              <p class="body-copy">女方生日。</p>
-            </div>
-          </article>
-
-          <article class="milestone-card" style="--accent: var(--sage);">
-            <div class="milestone-card-head">
-              <div>
-                <span class="milestone-label">Birthday · Chen</span>
-                <h3>小陈生日</h3>
-              </div>
-              <span class="milestone-order">06</span>
-            </div>
-            <div class="milestone-date-block">
-              <span class="date-caption">起始日期</span>
-              <time class="date-value" datetime="1999-03-01">1999.03.01</time>
-            </div>
-            <div class="milestone-card-body">
-              <div class="counter" data-since="1999-03-01T00:00:00"></div>
-              <p class="body-copy">男方生日。</p>
-            </div>
-          </article>
-        </div>
+        <div class="milestone-grid" id="milestoneGrid"></div>
       </section>
 
       <section class="section reveal" id="calendar">
@@ -1965,92 +2163,35 @@
     <script src="./assets/maps/world-countries.data.js"></script>
     <script src="./assets/maps/china-admin.data.js"></script>
     <script src="./assets/maps/china-cities.data.js"></script>
+    <script src="./assets/data/featured-events.data.js"></script>
+    <script src="./assets/data/archive-events.data.js"></script>
+    <script src="./assets/data/anniversary-days.data.js"></script>
     <script src="./assets/data/travel-places.data.js"></script>
     <script>
       const today = new Date();
       let visibleMonth = new Date(today.getFullYear(), today.getMonth(), 1);
       const monthFormatter = new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "long" });
       const eventDateFormatter = new Intl.DateTimeFormat("zh-CN", { month: "2-digit", day: "2-digit", weekday: "long" });
-
-      const featuredEvents = [
-        {
-          tag: "纪念时刻",
-          title: "网站上线",
-          text: "www.chenandgao.com 已经点亮，属于 Chen & Gao 的小小空间正式开始。",
-          href: "#days",
-          background: "linear-gradient(135deg, #657568 0%, #b76e55 100%)"
-        },
-        {
-          tag: "旅行足迹",
-          title: "第一枚地图钉",
-          text: "把走过的城市慢慢连起来，旅行日志会成为这里最有温度的路线。",
-          href: "#travel",
-          background: "linear-gradient(135deg, #617083 0%, #c7a356 100%)"
-        },
-        {
-          tag: "动态",
-          title: "博客开始建设",
-          text: "从首页开始，把日常、文章、照片和纪念日一点点放进来。",
-          href: "#calendar",
-          background: "linear-gradient(135deg, #9ba298 0%, #657568 100%)"
-        },
-        {
-          tag: "时光档案",
-          title: "时光归档",
-          text: "每个被点亮的日期，都可以留下当天发生的事。",
-          href: "#calendar",
-          background: "linear-gradient(135deg, #d8dee5 0%, #617083 100%)"
-        },
-        {
-          tag: "亲友留言",
-          title: "亲友留言待接入",
-          text: "评论功能会在下一阶段接入真实服务，让朋友也能留下祝福。",
-          href: "#comments",
-          background: "linear-gradient(135deg, #ead2c7 0%, #657568 100%)"
-        }
-      ];
-
-      const calendarEvents = {
-        "2026-06-20": [
-          {
-            type: "里程碑",
-            title: "网站上线",
-            text: "www.chenandgao.com 能够打开，属于这个博客的第一盏灯亮起来了。"
-          }
-        ],
-        "2026-06-21": [
-          {
-            type: "设计",
-            title: "整理首页想法",
-            text: "把日历、动态、旅行和重要日子这些模块先放进同一个清爽的首页。"
-          },
-          {
-            type: "设计",
-            title: "重新整理视觉方向",
-            text: "少一点用力过猛，多一点纸感、留白和照片感。"
-          }
-        ],
-        "2026-06-22": [
-          {
-            type: "计划",
-            title: "等待真实素材",
-            text: "真实照片到位后，旅行和相册会更像两个人的记忆档案。"
-          }
-        ]
-      };
+      const featuredEvents = window.__FEATURED_EVENTS__ || [];
+      const independentArchiveEvents = window.__ARCHIVE_EVENTS__ || {};
+      const anniversaryDays = window.__ANNIVERSARY_DAYS__ || [];
+      const travelPlaces = window.__TRAVEL_PLACES__ || {};
+      const archiveYearMin = 2000;
+      const archiveYearMax = 2099;
+      const calendarEvents = buildCalendarEvents();
 
       let activeFeatureIndex = 0;
       let featureTimer;
       let carouselPaused = false;
 
       function renderFeature(index) {
-        const feature = featuredEvents[index];
+        if (!featuredEvents.length) return;
         const card = document.getElementById("featureCard");
         const visual = document.getElementById("featureVisual");
         const link = document.getElementById("featureLink");
         const progress = document.getElementById("featureProgress");
 
-        activeFeatureIndex = (index + featuredEvents.length) % featuredEvents.length;
+        activeFeatureIndex = ((index % featuredEvents.length) + featuredEvents.length) % featuredEvents.length;
         card.classList.add("is-changing");
 
         window.setTimeout(() => {
@@ -2087,6 +2228,7 @@
       function setupCarousel() {
         const dots = document.getElementById("featureDots");
         const card = document.getElementById("featureCard");
+        if (!featuredEvents.length || !dots || !card) return;
 
         featuredEvents.forEach((feature, index) => {
           const dot = document.createElement("button");
@@ -2130,6 +2272,153 @@
         const month = String(date.getMonth() + 1).padStart(2, "0");
         const day = String(date.getDate()).padStart(2, "0");
         return `${year}-${month}-${day}`;
+      }
+
+      function formatDateText(dateText) {
+        return String(dateText || "").replaceAll("-", ".");
+      }
+
+      function isArchiveDate(dateText) {
+        return /^\d{4}-\d{2}-\d{2}$/.test(String(dateText || ""));
+      }
+
+      function parseArchiveDateParts(dateText) {
+        if (!isArchiveDate(dateText)) return null;
+        const [year, month, day] = dateText.split("-").map(Number);
+        return { year, month, day };
+      }
+
+      function makeArchiveDate(year, month, day) {
+        return [
+          String(year).padStart(4, "0"),
+          String(month).padStart(2, "0"),
+          String(day).padStart(2, "0")
+        ].join("-");
+      }
+
+      function addArchiveEvent(eventsByDate, date, event) {
+        if (!isArchiveDate(date)) return;
+        if (!eventsByDate[date]) eventsByDate[date] = [];
+
+        const duplicateKey = [
+          event.source || "",
+          event.sourceId || "",
+          event.type || "",
+          event.title || "",
+          event.text || ""
+        ].join("|");
+
+        const hasDuplicate = eventsByDate[date].some((item) => [
+          item.source || "",
+          item.sourceId || "",
+          item.type || "",
+          item.title || "",
+          item.text || ""
+        ].join("|") === duplicateKey);
+
+        if (!hasDuplicate) eventsByDate[date].push(event);
+      }
+
+      function getAnniversaryArchiveEvents() {
+        return anniversaryDays.flatMap((day) => {
+          const start = parseArchiveDateParts(day.date);
+          if (!start) return [];
+
+          const id = day.id || day.title;
+          const events = [{
+            date: day.date,
+            source: "anniversary",
+            sourceId: id,
+            type: day.archiveType || "纪念时刻",
+            title: day.archiveTitle || day.title,
+            text: day.archiveText || day.description || `${day.title} 已被记录为重要日子。`
+          }];
+
+          const firstAnniversaryYear = Math.max(start.year + 1, archiveYearMin);
+          for (let year = firstAnniversaryYear; year <= archiveYearMax; year += 1) {
+            const anniversaryYears = year - start.year;
+            events.push({
+              date: makeArchiveDate(year, start.month, start.day),
+              source: "anniversary-yearly",
+              sourceId: `${id}-${year}`,
+              type: "纪念日",
+              title: `${day.title}第 ${anniversaryYears} 周年`,
+              text: `今天是${day.title}第 ${anniversaryYears} 周年。${day.description || ""}`
+            });
+          }
+
+          return events;
+        });
+      }
+
+      function getTravelArchiveEvents() {
+        return Object.entries(travelPlaces)
+          .filter(([, place]) => isArchiveDate(place.date))
+          .map(([id, place]) => ({
+            date: place.date,
+            source: "travel",
+            sourceId: id,
+            type: place.archiveType || "旅行足迹",
+            title: place.archiveTitle || `到达${place.title}`,
+            text: place.archiveText || place.note || `${place.area || "目的地"}：${place.title}`
+          }));
+      }
+
+      function buildCalendarEvents() {
+        const eventsByDate = {};
+
+        Object.entries(independentArchiveEvents).forEach(([date, events]) => {
+          (events || []).forEach((event) => {
+            addArchiveEvent(eventsByDate, date, {
+              source: "manual",
+              ...event
+            });
+          });
+        });
+
+        getAnniversaryArchiveEvents().forEach((event) => {
+          addArchiveEvent(eventsByDate, event.date, event);
+        });
+
+        getTravelArchiveEvents().forEach((event) => {
+          addArchiveEvent(eventsByDate, event.date, event);
+        });
+
+        return Object.fromEntries(
+          Object.entries(eventsByDate).sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+        );
+      }
+
+      function renderMilestones() {
+        const root = document.getElementById("milestoneGrid");
+        if (!root) return;
+
+        root.innerHTML = anniversaryDays.map((day, index) => {
+          const date = day.date || "";
+          const since = day.since || (date ? `${date}T00:00:00` : "");
+          const order = String(index + 1).padStart(2, "0");
+          const accent = day.accent || "var(--sage)";
+
+          return `
+            <article class="milestone-card" style="--accent: ${accent};">
+              <div class="milestone-card-head">
+                <div>
+                  <span class="milestone-label">${day.label || day.type || "Milestone"}</span>
+                  <h3>${day.title}</h3>
+                </div>
+                <span class="milestone-order">${day.order || order}</span>
+              </div>
+              <div class="milestone-date-block">
+                <span class="date-caption">${day.dateCaption || "起始日期"}</span>
+                <time class="date-value" datetime="${date}">${formatDateText(date)}</time>
+              </div>
+              <div class="milestone-card-body">
+                <div class="counter" data-since="${since}"></div>
+                <p class="body-copy">${day.description || ""}</p>
+              </div>
+            </article>
+          `;
+        }).join("");
       }
 
       function renderCalendarDetail(selectedDate) {
@@ -2251,7 +2540,7 @@
         function jumpToSelectedMonth() {
           const year = Number(yearInput.value);
           const month = Number(monthInput.value);
-          if (!Number.isInteger(year) || year < 2000 || year > 2099) return;
+          if (!Number.isInteger(year) || year < archiveYearMin || year > archiveYearMax) return;
           if (!Number.isInteger(month) || month < 0 || month > 11) return;
           visibleMonth = new Date(year, month, 1);
           buildCalendar(visibleMonth, visibleMonth);
@@ -2311,8 +2600,6 @@
           node.innerHTML = formatDuration(splitDuration((now - start) / 1000));
         });
       }
-
-      const travelPlaces = window.__TRAVEL_PLACES__ || {};
 
       const explorationTotals = {
         world: 195,
@@ -3022,6 +3309,7 @@
       }
 
       setupCarousel();
+      renderMilestones();
       setupCalendar();
       setupArchiveViews();
       setupTravelMap();
@@ -3032,4 +3320,3 @@
     </script>
   </body>
 </html>
-
