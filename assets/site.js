@@ -2,11 +2,11 @@ const q = (selector, root = document) => root.querySelector(selector);
 const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
 
 const memories = [
-  { title: '雨夜，晚风和你', text: '那天我们在江边聊了很久的话，留了好多未来的计划。<br>晚风很温柔，你也很温柔。', image: 'memory-1.png', scene: 'home-memory-photo-clean.png' },
-  { title: '望远镜和远方', text: '我们把看见的星光收进心里，像给未来寄出一封很慢的信。', image: 'memory-2.png', scene: 'hero-memory.png' },
-  { title: '星线计划', text: '每一条线都连向一个日子，也连向我们还没有走到的地方。', image: 'memory-3.png', scene: 'home-memory-photo-clean.png' },
-  { title: '夜行片段', text: '车窗外的灯一盏一盏退后，身边的人却一直在同一个位置。', image: 'memory-4.png', scene: 'hero-memory.png' },
-  { title: '黑胶回声', text: '生活被轻轻放上唱针，普通的晚上也开始有了回声。', image: 'memory-5.png', scene: 'home-memory-photo-clean.png' }
+  { title: '雨夜，晚风和你', text: '那天我们在江边聊了很久的话，留了好多未来的计划。<br>晚风很温柔，你也很温柔。', image: 'memory-1.png', scene: 'home-memory-rain-night-v3.png' },
+  { title: '望远镜和远方', text: '我们把看见的星光收进心里，像给未来寄出一封很慢的信。', image: 'memory-2.png', scene: 'home-memory-telescope-v3.png' },
+  { title: '星线计划', text: '每一条线都连向一个日子，也连向我们还没有走到的地方。', image: 'memory-3.png', scene: 'home-memory-map-v3.png' },
+  { title: '夜行片段', text: '车窗外的灯一盏一盏退后，身边的人却一直在同一个位置。', image: 'memory-4.png', scene: 'home-memory-night-drive-v3.png' },
+  { title: '黑胶回声', text: '生活被轻轻放上唱针，普通的晚上也开始有了回声。', image: 'memory-5.png', scene: 'home-memory-vinyl-v3.png' }
 ];
 
 const milestones = [
@@ -57,10 +57,15 @@ function renderMemories(index = memoryIndex) {
   q('#memoryTitle').textContent = data.title;
   q('#memoryText').innerHTML = data.text;
   q('#railTrack').textContent = data.title;
-  q('#heroPhoto').style.backgroundImage = `linear-gradient(90deg, rgba(3,10,17,.92) 0%, rgba(3,10,17,.64) 39%, transparent 76%), linear-gradient(0deg, rgba(2,8,13,.76), transparent 46%), url("assets/${data.scene}")`;
+  const heroPhoto = q('#heroPhoto');
+  heroPhoto.classList.add('is-changing');
+  window.setTimeout(() => {
+    heroPhoto.style.backgroundImage = `url("assets/${data.scene}")`;
+    heroPhoto.classList.remove('is-changing');
+  }, 130);
   q('#memoryThumbs').innerHTML = memories.map((item, i) => `<button type="button" class="${i === memoryIndex ? 'is-active':''}" data-memory="${i}" aria-label="切换到${item.title}"><img src="assets/${item.image}" alt="${item.title}"></button>`).join('');
   q('#memoryDots').innerHTML = memories.map((item,i)=>`<button class="${i===memoryIndex?'is-active':''}" type="button" data-memory="${i}" aria-label="第${i+1}段回忆"></button>`).join('');
-  makeWave(q('#heroWave'));
+  makeWave(q('#heroWave'), 100);
   qa('[data-memory]').forEach(button=>button.addEventListener('click',()=>renderMemories(Number(button.dataset.memory))));
 }
 

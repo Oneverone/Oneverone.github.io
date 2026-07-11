@@ -9,7 +9,10 @@
     <link rel="stylesheet" href="assets/site.css">
   </head>
   <body>
-    <div class="site-atmosphere" aria-hidden="true"></div>
+    <div class="site-atmosphere" aria-hidden="true">
+      <span class="atmosphere-stars"></span>
+      <span class="atmosphere-galaxy"></span>
+    </div>
 
     <aside class="floating-rail" aria-label="网站导航与音乐播放器">
       <a class="rail-brand" href="#home" aria-label="回到首页">
@@ -44,8 +47,7 @@
         </header>
 
         <section class="hero-memory" aria-label="精选回忆轮播">
-          <div class="sound-arc sound-arc-left" aria-hidden="true"></div>
-          <div class="sound-arc sound-arc-right" aria-hidden="true"></div>
+          <img class="hero-sound-arcs" src="assets/home-sound-arcs-v3.png" alt="" aria-hidden="true">
           <div class="hero-photo" id="heroPhoto" aria-hidden="true"></div>
           <div class="hero-copy">
             <h2 id="memoryTitle">雨夜，晚风和你</h2>
@@ -62,9 +64,9 @@
 
         <section class="home-stats" aria-label="共同记忆统计">
           <article><span class="stat-icon calendar-icon" aria-hidden="true"></span><div><strong><em>4</em>20 <small>天</small></strong><p>相伴天数</p></div></article>
-          <article><span class="stat-icon">♡</span><div><strong>128 <small>段</small></strong><p>珍藏回忆</p></div></article>
-          <article><span class="stat-icon">⌖</span><div><strong>32 <small>城</small></strong><p>足迹城市</p></div></article>
-          <article><span class="stat-icon">♡</span><div><strong>36 <small>条</small></strong><p>亲友心语</p></div></article>
+          <article><span class="stat-icon memory-icon" aria-hidden="true"></span><div><strong>128 <small>段</small></strong><p>珍藏回忆</p></div></article>
+          <article><span class="stat-icon place-icon" aria-hidden="true"></span><div><strong>32 <small>城</small></strong><p>足迹城市</p></div></article>
+          <article><span class="stat-icon message-icon" aria-hidden="true"></span><div><strong>36 <small>条</small></strong><p>亲友心语</p></div></article>
         </section>
       </section>
 
