@@ -128,7 +128,7 @@
   const configuredAutoplayDuration = Number(carousel?.dataset.autoplayDuration);
   const autoplayDuration = Number.isFinite(configuredAutoplayDuration) && configuredAutoplayDuration >= 1000
     ? configuredAutoplayDuration
-    : 8000;
+    : 3000;
   const autoplayEnabled = Boolean(carousel && autoplayProgress && memoryTotal > 1 && !reduceMotion);
   let autoplayVisible = true;
   let autoplayRunning = false;
