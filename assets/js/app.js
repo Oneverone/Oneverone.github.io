@@ -600,7 +600,6 @@
   const leaflet = window.L;
   let travelMap;
   let geoLayer;
-  let routeLayer;
   let mapMarkers = [];
   let mapScope = "world";
   let selectedPlace = mapPoints.length > 1 ? 1 : mapPoints.length ? 0 : -1;
@@ -736,7 +735,6 @@
       return;
     }
     if (geoLayer) travelMap.removeLayer(geoLayer);
-    if (routeLayer) travelMap.removeLayer(routeLayer);
     mapMarkers.forEach(marker => travelMap.removeLayer(marker));
     mapMarkers = [];
     const data = mapScope === "world" ? window.__WORLD_COUNTRIES__ : window.__CHINA_ADMIN__;
@@ -788,14 +786,6 @@
       travelMap.fitBounds(geoLayer.getBounds(), { padding: [30, 30], maxZoom: 4.6, animate: !reduceMotion });
     }
     const visitedPoints = points.filter(point => point.status === "visited");
-    routeLayer = leaflet.polyline(visitedPoints.map(point => [point.lat, point.lng]), {
-      className: "journey-route",
-      color: "#e67556",
-      weight: 1.35,
-      opacity: 0.88,
-      dashArray: "2 7",
-      interactive: false
-    }).addTo(travelMap);
     const label = q("[data-map-label]");
     if (label) label.textContent = mapScope === "world" ? "世界 · 共同坐标" : "中国 · 城市足迹";
     const mapCount = q("[data-map-count]");
