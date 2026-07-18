@@ -18,21 +18,56 @@
 
   const menu = q("[data-menu]");
   const navigation = q("#site-navigation");
-  const closeMenu = () => {
+  const mobileMenuQuery = matchMedia("(max-width: 980px)");
+  let menuFocusTimer = 0;
+  const menuIsOpen = () => menu?.getAttribute("aria-expanded") === "true";
+  const syncMenuAccessibility = () => {
+    if (navigation) navigation.inert = mobileMenuQuery.matches && !menuIsOpen();
+    menu?.setAttribute("aria-label", menuIsOpen() ? "关闭章节目录" : "打开章节目录");
+  };
+  const closeMenu = ({ restoreFocus = false } = {}) => {
+    const wasOpen = menuIsOpen();
+    clearTimeout(menuFocusTimer);
     menu?.setAttribute("aria-expanded", "false");
     navigation?.classList.remove("open");
     document.body.classList.remove("menu-open");
+    syncMenuAccessibility();
+    if (restoreFocus && wasOpen) menu?.focus({ preventScroll: true });
   };
   menu?.addEventListener("click", () => {
-    const open = menu.getAttribute("aria-expanded") !== "true";
+    const open = !menuIsOpen();
     menu.setAttribute("aria-expanded", String(open));
     navigation?.classList.toggle("open", open);
     document.body.classList.toggle("menu-open", open);
+    syncMenuAccessibility();
+    if (open) {
+      clearTimeout(menuFocusTimer);
+      menuFocusTimer = setTimeout(
+        () => q("a", navigation)?.focus({ preventScroll: true }),
+        reduceMotion ? 0 : 380
+      );
+    }
   });
-  qa("#site-navigation a").forEach(link => link.addEventListener("click", closeMenu));
+  qa("#site-navigation a").forEach(link => link.addEventListener("click", () => closeMenu()));
   addEventListener("keydown", event => {
-    if (event.key === "Escape") closeMenu();
+    if (event.key === "Escape") closeMenu({ restoreFocus: true });
+    if (event.key !== "Tab" || !menuIsOpen() || !mobileMenuQuery.matches) return;
+    const focusable = [menu, ...qa("a", navigation)].filter(Boolean);
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last?.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first?.focus();
+    }
   });
+  mobileMenuQuery.addEventListener?.("change", () => {
+    if (!mobileMenuQuery.matches) closeMenu();
+    syncMenuAccessibility();
+  });
+  syncMenuAccessibility();
 
   const carousel = q("[data-carousel]");
   const memoryTabs = qa("[data-memory]");
@@ -340,6 +375,17 @@
       numeral.textContent = selectedDay.slice(-2);
     }
     record.append(meta, title, copy, numeral);
+    if (!reduceMotion) {
+      [meta, title, copy].forEach((node, index) => node.animate([
+        { opacity: .35, transform: "translateY(7px)" },
+        { opacity: 1, transform: "translateY(0)" }
+      ], {
+        duration: 300 + index * 45,
+        delay: index * 35,
+        easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+        fill: "both"
+      }));
+    }
   };
 
   const renderArchive = () => {
