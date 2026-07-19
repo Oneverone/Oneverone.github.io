@@ -870,6 +870,12 @@
 
   const scenes = qa("[data-chapter]");
   const navLinks = qa("[data-nav]");
+  const siteHeader = q("[data-header]");
+  const railProgress = q("[data-rail-progress]");
+  const railPercent = q("[data-rail-percent]");
+  const heroIntro = q(".hero-grid");
+  const pointerLight = q(".pointer-light");
+  const heroCinema = q(".hero-cinema");
   const setActiveScene = scene => {
     const id = scene.id;
     navLinks.forEach(link => {
@@ -890,24 +896,43 @@
   scenes.forEach(scene => sceneObserver.observe(scene));
 
   let scrollFrame = 0;
+  let scrollStopTimer = 0;
+  let scrollMax = 1;
+  let heroHeight = 1;
+  let heroOffset = 0;
+  let lastRailPercent = -1;
+  const refreshScrollMetrics = () => {
+    scrollMax = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+    if (heroIntro) {
+      heroHeight = Math.max(1, heroIntro.offsetHeight);
+      heroOffset = heroIntro.getBoundingClientRect().top + scrollY;
+    }
+  };
   const updateScroll = () => {
     scrollFrame = 0;
-    const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
-    const progress = clamp(scrollY / max);
-    document.documentElement.style.setProperty("--page-progress", String(progress));
-    q("[data-header]")?.classList.toggle("scrolled", scrollY > 24);
-    const railProgress = q("[data-rail-progress]");
-    const railPercent = q("[data-rail-percent]");
+    const progress = clamp(scrollY / scrollMax);
+    const percent = Math.round(progress * 100);
+    navigation?.style.setProperty("--page-progress", String(progress));
+    siteHeader?.classList.toggle("scrolled", scrollY > 24);
     if (railProgress) railProgress.style.transform = `scaleY(${progress})`;
-    if (railPercent) railPercent.textContent = String(Math.round(progress * 100)).padStart(2, "0");
-    const heroIntro = q(".hero-grid");
-    if (heroIntro) document.documentElement.style.setProperty("--hero-progress", String(clamp(-heroIntro.getBoundingClientRect().top / Math.max(1, heroIntro.offsetHeight))));
-
+    if (railPercent && percent !== lastRailPercent) {
+      railPercent.textContent = String(percent).padStart(2, "0");
+      lastRailPercent = percent;
+    }
+    if (heroIntro) heroIntro.style.setProperty("--hero-progress", String(clamp((scrollY - heroOffset) / heroHeight)));
   };
   addEventListener("scroll", () => {
+    if (!document.body.classList.contains("is-scrolling")) document.body.classList.add("is-scrolling");
+    clearTimeout(scrollStopTimer);
+    scrollStopTimer = setTimeout(() => document.body.classList.remove("is-scrolling"), 140);
     if (!scrollFrame) scrollFrame = requestAnimationFrame(updateScroll);
   }, { passive: true });
-  addEventListener("resize", updateScroll, { passive: true });
+  addEventListener("resize", () => {
+    refreshScrollMetrics();
+    updateScroll();
+  }, { passive: true });
+  new ResizeObserver(refreshScrollMetrics).observe(document.documentElement);
+  refreshScrollMetrics();
   updateScroll();
 
   if (!reduceMotion && !coarsePointer) {
@@ -916,10 +941,10 @@
       if (pointerFrame) return;
       pointerFrame = requestAnimationFrame(() => {
         pointerFrame = 0;
-        document.documentElement.style.setProperty("--pointer-x", `${event.clientX}px`);
-        document.documentElement.style.setProperty("--pointer-y", `${event.clientY}px`);
-        document.documentElement.style.setProperty("--pointer-nx", String(event.clientX / innerWidth - 0.5));
-        document.documentElement.style.setProperty("--pointer-ny", String(event.clientY / innerHeight - 0.5));
+        pointerLight?.style.setProperty("--pointer-x", `${event.clientX}px`);
+        pointerLight?.style.setProperty("--pointer-y", `${event.clientY}px`);
+        heroCinema?.style.setProperty("--pointer-nx", String(event.clientX / innerWidth - 0.5));
+        heroCinema?.style.setProperty("--pointer-ny", String(event.clientY / innerHeight - 0.5));
       });
     }, { passive: true });
   }
