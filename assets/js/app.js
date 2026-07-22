@@ -69,6 +69,74 @@
   });
   syncMenuAccessibility();
 
+  const player = q("[data-player]");
+  const audio = q("[data-audio]", player || document);
+  const audioToggle = q("[data-audio-toggle]", player || document);
+  const audioLabel = q("[data-player-label]", player || document);
+  const setAudioState = state => {
+    if (!player) return;
+    player.dataset.audioState = state;
+    const labels = {
+      loading: "正在读取",
+      ready: "点击播放",
+      playing: "正在播放",
+      paused: "已暂停",
+      missing: "声音尚未上传",
+      error: "声音读取失败"
+    };
+    if (audioLabel) audioLabel.textContent = labels[state] || labels.loading;
+    const available = !["loading", "missing", "error"].includes(state);
+    if (audioToggle) audioToggle.disabled = !available;
+    if (audioToggle) {
+      const playing = state === "playing";
+      audioToggle.setAttribute("aria-label", playing ? "暂停声音" : "播放声音");
+      audioToggle.setAttribute("aria-pressed", String(playing));
+    }
+  };
+  if (audio && !audio.getAttribute("src")) {
+    setAudioState("missing");
+  } else if (audio) {
+    let pausedByUser = false;
+    audio.volume = 0.56;
+    setAudioState("loading");
+    const attemptDefaultPlayback = async () => {
+      if (pausedByUser || !audio.paused) return;
+      try {
+        await audio.play();
+      } catch {
+        setAudioState("ready");
+      }
+    };
+    audio.addEventListener("loadedmetadata", () => {
+      setAudioState(audio.paused ? "ready" : "playing");
+      attemptDefaultPlayback();
+    });
+    audio.addEventListener("canplay", attemptDefaultPlayback, { once: true });
+    audio.addEventListener("play", () => setAudioState("playing"));
+    audio.addEventListener("pause", () => setAudioState(audio.currentTime ? "paused" : "ready"));
+    audio.addEventListener("error", () => setAudioState(audio.error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED ? "missing" : "error"));
+    audioToggle?.addEventListener("click", async () => {
+      try {
+        if (audio.paused) {
+          pausedByUser = false;
+          await audio.play();
+        } else {
+          pausedByUser = true;
+          audio.pause();
+        }
+      } catch {
+        setAudioState("error");
+      }
+    });
+    const resumeDefaultAudio = event => {
+      if (event.target instanceof Element && event.target.closest("[data-audio-toggle]")) return;
+      attemptDefaultPlayback();
+    };
+    document.addEventListener("pointerdown", resumeDefaultAudio, { once: true, capture: true });
+    document.addEventListener("keydown", resumeDefaultAudio, { once: true, capture: true });
+    attemptDefaultPlayback();
+  }
+
   const carousel = q("[data-carousel]");
   const memoryTabs = qa("[data-memory]");
   const memoryTotal = memoryTabs.length;
@@ -106,11 +174,6 @@
     if (number) number.textContent = formatted;
     const playerIndex = q("[data-player-index]");
     if (playerIndex) playerIndex.textContent = formatted;
-    const title = q("[data-story].active h3", carousel)?.textContent;
-    if (title) {
-      const playerTitle = q("[data-player-title]");
-      if (playerTitle) playerTitle.textContent = title;
-    }
     if (innerWidth <= 700) {
       const tabStrip = q(".hero-memory-tabs", carousel);
       const activeTab = memoryTabs[next];
@@ -867,6 +930,63 @@
     syncJourneyAccessibility(mapPoints[selectedPlace]);
   });
   schedulePlaceScrollControls();
+
+  const giscusPanel = q("[data-provider='giscus']");
+  const giscusHost = q("[data-giscus-host]", giscusPanel || document);
+  const giscusState = q("[data-giscus-state]", giscusPanel || document);
+  const giscusCopy = q("[data-giscus-copy]", giscusPanel || document);
+  const onlineHosts = new Set(["www.chenandgao.com", "chenandgao.com", "oneverone.github.io"]);
+  const configureGiscus = () => {
+    if (!giscusPanel || !giscusHost) return;
+    if (location.protocol === "file:" || !onlineHosts.has(location.hostname.toLowerCase())) {
+      giscusPanel.dataset.giscusStatus = "preview";
+      if (giscusState) giscusState.textContent = "本地预览";
+      return;
+    }
+    const repo = giscusPanel.dataset.giscusRepo;
+    const repoId = giscusPanel.dataset.giscusRepoId;
+    const category = giscusPanel.dataset.giscusCategory;
+    const categoryId = giscusPanel.dataset.giscusCategoryId;
+    if (!repo || !repoId || !category || !categoryId) {
+      giscusPanel.dataset.giscusStatus = "configuration-required";
+      if (giscusState) giscusState.textContent = "等待 GitHub 配置";
+      if (giscusCopy) giscusCopy.textContent = "留言界面已就绪，启用 Discussions 并写入分类 ID 后开放。";
+      return;
+    }
+    giscusPanel.dataset.giscusStatus = "loading";
+    if (giscusState) giscusState.textContent = "正在连接 GitHub";
+    const script = document.createElement("script");
+    Object.assign(script.dataset, {
+      repo,
+      repoId,
+      category,
+      categoryId,
+      mapping: "specific",
+      term: "chen-gao-guestbook",
+      strict: "1",
+      reactionsEnabled: "1",
+      emitMetadata: "0",
+      inputPosition: "top",
+      theme: "transparent_dark",
+      lang: "zh-CN",
+      loading: "lazy"
+    });
+    script.src = "https://giscus.app/client.js";
+    script.async = true;
+    script.crossOrigin = "anonymous";
+    script.addEventListener("load", () => {
+      giscusPanel.dataset.giscusStatus = "ready";
+      if (giscusState) giscusState.textContent = "在线留言已开放";
+      if (giscusCopy) giscusCopy.textContent = "使用 GitHub 登录即可留下公开留言。";
+    });
+    script.addEventListener("error", () => {
+      giscusPanel.dataset.giscusStatus = "error";
+      if (giscusState) giscusState.textContent = "连接失败";
+      if (giscusCopy) giscusCopy.textContent = "留言服务暂时不可用，请稍后重试。";
+    });
+    giscusHost.append(script);
+  };
+  configureGiscus();
 
   const scenes = qa("[data-chapter]");
   const navLinks = qa("[data-nav]");
