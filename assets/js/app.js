@@ -72,7 +72,16 @@
   const player = q("[data-player]");
   const audio = q("[data-audio]", player || document);
   const audioToggle = q("[data-audio-toggle]", player || document);
+  const audioTrackButtons = qa("[data-audio-track]", player || document);
   const audioLabel = q("[data-player-label]", player || document);
+  const audioTitle = q("[data-player-title]", player || document);
+  let audioPlaylist = [];
+  let audioTrackIndex = 0;
+  try {
+    audioPlaylist = JSON.parse(player?.dataset.audioPlaylist || "[]");
+  } catch {
+    audioPlaylist = [];
+  }
   const setAudioState = state => {
     if (!player) return;
     player.dataset.audioState = state;
@@ -87,6 +96,7 @@
     if (audioLabel) audioLabel.textContent = labels[state] || labels.loading;
     const available = !["loading", "missing", "error"].includes(state);
     if (audioToggle) audioToggle.disabled = !available;
+    audioTrackButtons.forEach(button => { button.disabled = !available || audioPlaylist.length < 2; });
     if (audioToggle) {
       const playing = state === "playing";
       audioToggle.setAttribute("aria-label", playing ? "暂停声音" : "播放声音");
@@ -96,12 +106,48 @@
   if (audio && !audio.getAttribute("src")) {
     setAudioState("missing");
   } else if (audio) {
+    const backgroundVolume = 0.22;
+    const fadeInDuration = reduceMotion ? 80 : 900;
+    const fadeOutDuration = reduceMotion ? 80 : 600;
     let pausedByUser = false;
-    audio.volume = 0.56;
+    let audioFadeFrame = 0;
+    let audioFadeSequence = 0;
+    audio.volume = 0;
     setAudioState("loading");
+    const fadeAudioTo = (targetVolume, duration) => {
+      cancelAnimationFrame(audioFadeFrame);
+      const sequence = ++audioFadeSequence;
+      const fromVolume = audio.volume;
+      const volumeDelta = targetVolume - fromVolume;
+      if (duration <= 0 || Math.abs(volumeDelta) < 0.001) {
+        audio.volume = targetVolume;
+        return Promise.resolve(sequence);
+      }
+      return new Promise(resolve => {
+        const startedAt = performance.now();
+        const step = now => {
+          if (sequence !== audioFadeSequence) return resolve(sequence);
+          const progress = clamp((now - startedAt) / duration);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          audio.volume = clamp(fromVolume + volumeDelta * eased);
+          if (progress < 1) {
+            audioFadeFrame = requestAnimationFrame(step);
+          } else {
+            resolve(sequence);
+          }
+        };
+        audioFadeFrame = requestAnimationFrame(step);
+      });
+    };
+    const fadeOutAndPause = async () => {
+      const sequence = await fadeAudioTo(0, fadeOutDuration);
+      if (sequence !== audioFadeSequence || !pausedByUser) return;
+      audio.pause();
+    };
     const attemptDefaultPlayback = async () => {
       if (pausedByUser || !audio.paused) return;
       try {
+        audio.volume = 0;
         await audio.play();
       } catch {
         setAudioState("ready");
@@ -112,24 +158,50 @@
       attemptDefaultPlayback();
     });
     audio.addEventListener("canplay", attemptDefaultPlayback, { once: true });
-    audio.addEventListener("play", () => setAudioState("playing"));
+    audio.addEventListener("play", () => {
+      setAudioState("playing");
+      fadeAudioTo(backgroundVolume, fadeInDuration);
+    });
     audio.addEventListener("pause", () => setAudioState(audio.currentTime ? "paused" : "ready"));
     audio.addEventListener("error", () => setAudioState(audio.error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED ? "missing" : "error"));
     audioToggle?.addEventListener("click", async () => {
       try {
         if (audio.paused) {
           pausedByUser = false;
+          audio.volume = 0;
           await audio.play();
         } else {
           pausedByUser = true;
-          audio.pause();
+          await fadeOutAndPause();
         }
       } catch {
         setAudioState("error");
       }
     });
+    audioTrackButtons.forEach(button => button.addEventListener("click", async () => {
+      if (audioPlaylist.length < 2) return;
+      const direction = Number(button.dataset.audioTrack) || 1;
+      const continuePlaying = !audio.paused;
+      if (continuePlaying) await fadeAudioTo(0, fadeOutDuration);
+      audioTrackIndex = (audioTrackIndex + direction + audioPlaylist.length) % audioPlaylist.length;
+      const nextTrack = audioPlaylist[audioTrackIndex];
+      pausedByUser = !continuePlaying;
+      setAudioState("loading");
+      if (audioTitle) audioTitle.textContent = nextTrack.title;
+      audio.src = nextTrack.src;
+      audio.loop = audioPlaylist.length === 1;
+      audio.load();
+      if (continuePlaying) {
+        try {
+          audio.volume = 0;
+          await audio.play();
+        } catch {
+          setAudioState("ready");
+        }
+      }
+    }));
     const resumeDefaultAudio = event => {
-      if (event.target instanceof Element && event.target.closest("[data-audio-toggle]")) return;
+      if (event.target instanceof Element && event.target.closest("[data-audio-toggle],[data-audio-track]")) return;
       attemptDefaultPlayback();
     };
     document.addEventListener("pointerdown", resumeDefaultAudio, { once: true, capture: true });
