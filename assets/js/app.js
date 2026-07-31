@@ -106,9 +106,9 @@
   if (audio && !audio.getAttribute("src")) {
     setAudioState("missing");
   } else if (audio) {
-    const backgroundVolume = 0.22;
-    const fadeInDuration = reduceMotion ? 80 : 900;
-    const fadeOutDuration = reduceMotion ? 80 : 600;
+    const backgroundVolume = clamp(Number(player?.dataset.audioDefaultVolume || audioPlaylist[0]?.defaultVolume || 0.18), 0, 0.35);
+    const fadeInDuration = reduceMotion ? 80 : Math.max(0, Number(player?.dataset.audioFadeIn || audioPlaylist[0]?.fadeInMs || 900));
+    const fadeOutDuration = reduceMotion ? 80 : Math.max(0, Number(player?.dataset.audioFadeOut || audioPlaylist[0]?.fadeOutMs || 900));
     let pausedByUser = false;
     let audioFadeFrame = 0;
     let audioFadeSequence = 0;
@@ -458,6 +458,36 @@
     });
     const total = q("[data-duration-total]");
     if (total) total.textContent = calendarDuration(total.dataset.durationFrom).text;
+
+    const milestoneDates = qa("[data-milestone-item][data-milestone-date]").map(element => {
+      const source = parseCalendarDate(element.dataset.milestoneDate);
+      const today = new Date();
+      const current = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 12);
+      let occurrence = new Date(current.getFullYear(), source.getMonth(), source.getDate(), 12);
+      if (occurrence < current) occurrence = new Date(current.getFullYear() + 1, source.getMonth(), source.getDate(), 12);
+      return {
+        label: element.dataset.milestoneLabel,
+        occurrence,
+        days: Math.ceil((occurrence - current) / 86400000)
+      };
+    }).sort((left, right) => left.occurrence - right.occurrence);
+    const nextMilestone = milestoneDates[0];
+    if (nextMilestone) {
+      const nextLabel = q("[data-next-milestone-label]");
+      const nextDate = q("[data-next-milestone-date]");
+      const nextDays = q("[data-next-milestone-days]");
+      const nextUnit = q("[data-next-milestone-unit]");
+      if (nextLabel) nextLabel.textContent = nextMilestone.label;
+      if (nextDate) {
+        const year = nextMilestone.occurrence.getFullYear();
+        const month = String(nextMilestone.occurrence.getMonth() + 1).padStart(2, "0");
+        const day = String(nextMilestone.occurrence.getDate()).padStart(2, "0");
+        nextDate.dateTime = `${year}-${month}-${day}`;
+        nextDate.textContent = `${year}.${month}.${day}`;
+      }
+      if (nextDays) nextDays.textContent = nextMilestone.days === 0 ? "今天" : nextMilestone.days.toLocaleString("zh-CN");
+      if (nextUnit) nextUnit.textContent = nextMilestone.days === 0 ? "" : "天后";
+    }
   };
   updateDurations();
   setInterval(updateDurations, 3600000);
@@ -481,8 +511,72 @@
   const archiveYearOptions = archiveYearSelect ? [...archiveYearSelect.options].map(option => Number(option.value)).filter(Number.isFinite) : [];
   const archiveMinYear = archiveYearOptions[0] ?? archiveInitialYear;
   const archiveMaxYear = archiveYearOptions[archiveYearOptions.length - 1] ?? archiveInitialYear;
+  const archiveStateKeys = ["archiveYear", "archiveMonth", "archiveFilter", "archiveView", "archiveDay"];
+  const archiveParams = new URLSearchParams(location.search);
+  let archiveStateTouched = archiveStateKeys.some(key => archiveParams.has(key));
+  const restoredYear = Number(archiveParams.get("archiveYear"));
+  const restoredMonth = Number(archiveParams.get("archiveMonth"));
+  if (Number.isInteger(restoredYear) && restoredYear >= archiveMinYear && restoredYear <= archiveMaxYear && Number.isInteger(restoredMonth) && restoredMonth >= 1 && restoredMonth <= 12) {
+    archiveMonth = new Date(restoredYear, restoredMonth - 1, 1);
+  }
+  const restoredFilter = archiveParams.get("archiveFilter");
+  if (["all", "日常", "纪念", "旅行"].includes(restoredFilter)) archiveFilter = restoredFilter;
+  const restoredView = archiveParams.get("archiveView");
+  if (["calendar", "stream"].includes(restoredView)) archiveView = restoredView;
+  const restoredDay = archiveParams.get("archiveDay") || "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(restoredDay)) selectedDay = restoredDay;
+
+  const syncArchiveUrl = () => {
+    if (!archiveStateTouched) return;
+    const url = new URL(location.href);
+    url.searchParams.set("archiveYear", String(archiveMonth.getFullYear()));
+    url.searchParams.set("archiveMonth", String(archiveMonth.getMonth() + 1).padStart(2, "0"));
+    url.searchParams.set("archiveFilter", archiveFilter);
+    url.searchParams.set("archiveView", archiveView);
+    if (selectedDay) url.searchParams.set("archiveDay", selectedDay);
+    else url.searchParams.delete("archiveDay");
+    history.replaceState(history.state, "", url.href);
+  };
 
   const filteredEvents = () => archiveFilter === "all" ? archiveEvents : archiveEvents.filter(event => event.type === archiveFilter);
+  const createArchiveMedia = (event, dateKey) => {
+    const media = document.createElement("figure");
+    media.className = "day-record-media";
+    media.dataset.storyMedia = "";
+    const caption = document.createElement("figcaption");
+    if (event?.media?.src) {
+      media.dataset.mediaSource = event.media.source;
+      const image = document.createElement("img");
+      image.src = event.media.src;
+      image.width = event.media.width;
+      image.height = event.media.height;
+      image.alt = event.media.alt || "档案记录影像";
+      image.loading = "lazy";
+      image.fetchPriority = "low";
+      image.decoding = "async";
+      image.style.setProperty("--media-focus-desktop", event.media.focus?.desktop || "50% 50%");
+      image.style.setProperty("--media-focus-mobile", event.media.focus?.mobile || "50% 50%");
+      caption.textContent = event.media.source;
+      media.append(image, caption);
+      return media;
+    }
+    const materialDate = event?.date || dateKey;
+    media.classList.add("day-record-material");
+    media.dataset.mediaSource = "程序生成";
+    media.setAttribute("role", "img");
+    media.setAttribute("aria-label", `${materialDate} 的程序化日期星图`);
+    const label = document.createElement("span");
+    label.textContent = "日期星图";
+    label.setAttribute("aria-hidden", "true");
+    const date = document.createElement("time");
+    date.dateTime = materialDate;
+    date.textContent = materialDate.slice(5).replace("-", "·");
+    const orbit = document.createElement("b");
+    orbit.setAttribute("aria-hidden", "true");
+    caption.textContent = "程序生成";
+    media.append(label, date, orbit, caption);
+    return media;
+  };
   const renderDayRecord = (event, { year, month, monthHasEvents } = {}) => {
     const record = q("[data-day-record]");
     if (!record) return;
@@ -509,14 +603,17 @@
       copy.textContent = "选择有标记的日期。";
       numeral.textContent = selectedDay.slice(-2);
     }
+    const materialDate = event?.date || selectedDay || `${year}-${String(month + 1).padStart(2, "0")}-01`;
+    const media = createArchiveMedia(event, materialDate);
+    record.append(media);
     record.append(meta, title, copy, numeral);
     if (!reduceMotion) {
-      [meta, title, copy].forEach((node, index) => node.animate([
-        { opacity: .35, transform: "translateY(7px)" },
-        { opacity: 1, transform: "translateY(0)" }
+      [media, meta, title, copy].forEach((node, index) => node.animate([
+        { opacity: .32, transform: "translateX(14px)", clipPath: "inset(0 0 0 9%)" },
+        { opacity: 1, transform: "translateX(0)", clipPath: "inset(0 0 0 0)" }
       ], {
-        duration: 300 + index * 45,
-        delay: index * 35,
+        duration: 315 + index * 28,
+        delay: index * 24,
         easing: "cubic-bezier(0.16, 1, 0.3, 1)",
         fill: "both"
       }));
@@ -530,18 +627,22 @@
     const events = filteredEvents();
     const monthKey = `${year}-${String(month + 1).padStart(2, "0")}`;
     const monthEvents = events.filter(event => event.date.startsWith(monthKey));
-    if (!monthEvents.some(event => event.date === selectedDay)) {
+    const selectedDate = new Date(`${selectedDay}T00:00:00`);
+    const selectedInMonth = selectedDay.startsWith(`${monthKey}-`) && !Number.isNaN(selectedDate.getTime()) && selectedDate.getFullYear() === year && selectedDate.getMonth() === month;
+    if (!selectedInMonth) {
       selectedDay = monthEvents[0]?.date || "";
     }
     const title = q("[data-calendar-title]");
     const yearLabel = q("[data-month-year]");
     const numberLabel = q("[data-month-number]");
     const countLabel = q("[data-archive-count]");
+    const countScope = q("[data-archive-count-scope]");
     const monthCaption = q(".month-index > p");
     if (title) title.textContent = `${year} 年 ${month + 1} 月`;
     if (yearLabel) yearLabel.textContent = String(year);
     if (numberLabel) numberLabel.textContent = String(month + 1).padStart(2, "0");
     if (countLabel) countLabel.textContent = String(archiveView === "stream" ? events.length : monthEvents.length);
+    if (countScope) countScope.textContent = archiveView === "stream" ? "全部" : "本月";
     if (monthCaption) monthCaption.textContent = monthNames[month];
     if (archiveYearSelect) archiveYearSelect.value = String(year);
     qa("[data-year]").forEach(button => {
@@ -583,8 +684,8 @@
       button.dataset.day = key;
       button.setAttribute("role", "gridcell");
       button.classList.toggle("has-event", Boolean(event));
-      button.classList.toggle("selected", Boolean(event) && key === selectedDay);
-      button.setAttribute("aria-selected", String(Boolean(event) && key === selectedDay));
+      button.classList.toggle("selected", key === selectedDay);
+      button.setAttribute("aria-selected", String(key === selectedDay));
       button.tabIndex = key === focusableDay ? 0 : -1;
       button.setAttribute("aria-label", `${key}${event ? `，${event.title}` : "，暂无记录"}`);
       const dayNumber = document.createElement("span");
@@ -596,12 +697,12 @@
         button.append(type);
       }
       button.addEventListener("click", () => {
+        archiveStateTouched = true;
         selectedDay = key;
         qa("[data-day]", grid).forEach(item => {
           const active = item === button;
-          const selected = active && item.classList.contains("has-event");
-          item.classList.toggle("selected", selected);
-          item.setAttribute("aria-selected", String(selected));
+          item.classList.toggle("selected", active);
+          item.setAttribute("aria-selected", String(active));
           item.tabIndex = active ? 0 : -1;
         });
         renderDayRecord(event, { year, month, monthHasEvents: monthEvents.length > 0 });
@@ -611,12 +712,17 @@
     }
     const selectedEvent = monthEvents.find(item => item.date === selectedDay);
     renderDayRecord(selectedEvent, { year, month, monthHasEvents: monthEvents.length > 0 });
-    qa("[data-event-type]", archive).forEach(article => {
+    const streamArticles = qa("[data-event-type]", archive);
+    streamArticles.forEach(article => {
       article.hidden = archiveFilter !== "all" && article.dataset.eventType !== archiveFilter;
     });
+    const streamEmpty = q("[data-stream-empty]", archive);
+    if (streamEmpty) streamEmpty.hidden = streamArticles.some(article => !article.hidden);
+    syncArchiveUrl();
   };
 
   const changeArchiveMonth = delta => {
+    archiveStateTouched = true;
     archiveMonth.setMonth(archiveMonth.getMonth() + delta);
     if (archiveMonth.getFullYear() < archiveMinYear) archiveMonth = new Date(archiveMinYear, 0, 1);
     if (archiveMonth.getFullYear() > archiveMaxYear) archiveMonth = new Date(archiveMaxYear, 11, 1);
@@ -624,6 +730,7 @@
     renderArchive();
   };
   const changeArchiveYear = delta => {
+    archiveStateTouched = true;
     const nextYear = clamp(archiveMonth.getFullYear() + delta, archiveMinYear, archiveMaxYear);
     archiveMonth = new Date(nextYear, archiveMonth.getMonth(), 1);
     selectedDay = "";
@@ -632,12 +739,14 @@
   qa("[data-month]").forEach(button => button.addEventListener("click", () => changeArchiveMonth(Number(button.dataset.month))));
   qa("[data-year]").forEach(button => button.addEventListener("click", () => changeArchiveYear(Number(button.dataset.year))));
   archiveYearSelect?.addEventListener("change", () => {
+    archiveStateTouched = true;
     archiveMonth = new Date(Number(archiveYearSelect.value), archiveMonth.getMonth(), 1);
     selectedDay = "";
     renderArchive();
   });
   qa("[data-jump-month]").forEach(button => {
     button.addEventListener("click", () => {
+      archiveStateTouched = true;
       archiveMonth = new Date(archiveMonth.getFullYear(), Number(button.dataset.jumpMonth), 1);
       selectedDay = "";
       renderArchive();
@@ -657,6 +766,7 @@
     });
   });
   qa("[data-filter]").forEach(button => button.addEventListener("click", () => {
+    archiveStateTouched = true;
     archiveFilter = button.dataset.filter;
     qa("[data-filter]").forEach(item => {
       const active = item === button;
@@ -682,6 +792,20 @@
     });
     archive.classList.toggle("stream-mode", streamMode);
     renderArchive();
+    if (!reduceMotion) {
+      const entering = streamMode
+        ? [q("[data-stream]", archive)]
+        : [q(".month-index", archive), q(".calendar-panel", archive), q("[data-day-record]", archive)];
+      entering.filter(Boolean).forEach((node, index) => node.animate([
+        { opacity: .3, transform: "translateX(18px)", clipPath: "inset(0 0 0 7%)" },
+        { opacity: 1, transform: "translateX(0)", clipPath: "inset(0 0 0 0)" }
+      ], {
+        duration: 360,
+        delay: index * 34,
+        easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+        fill: "both"
+      }));
+    }
     if (moveFocus) {
       requestAnimationFrame(() => {
         const target = streamMode
@@ -691,8 +815,16 @@
       });
     }
   };
-  qa("[data-view]").forEach(button => button.addEventListener("click", () => setArchiveView(button.dataset.view)));
-  renderArchive();
+  qa("[data-view]").forEach(button => button.addEventListener("click", () => {
+    archiveStateTouched = true;
+    setArchiveView(button.dataset.view);
+  }));
+  qa("[data-filter]").forEach(button => {
+    const active = button.dataset.filter === archiveFilter;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  setArchiveView(archiveView, false);
   q("[data-calendar-grid]")?.addEventListener("keydown", event => {
     const target = event.target.closest("[data-day]");
     if (!target) return;
@@ -732,12 +864,17 @@
   const mapRoot = q("[data-map]");
   const mapPoints = mapRoot ? JSON.parse(mapRoot.dataset.mapPoints || "[]") : [];
   const mapRegions = mapRoot ? JSON.parse(mapRoot.dataset.regions || "[]") : [];
-  const leaflet = window.L;
+  let leaflet = window.L || null;
   let travelMap;
   let geoLayer;
   let mapMarkers = [];
-  let mapScope = "world";
-  let selectedPlace = mapPoints.length > 1 ? 1 : mapPoints.length ? 0 : -1;
+  const travelParams = new URLSearchParams(location.search);
+  const restoredTravelScope = travelParams.get("travelScope");
+  let mapScope = ["world", "china"].includes(restoredTravelScope) ? restoredTravelScope : "world";
+  const restoredTravelPlace = travelParams.get("travelPlace");
+  const restoredTravelIndex = mapPoints.findIndex(point => point.id === restoredTravelPlace);
+  let selectedPlace = restoredTravelIndex >= 0 ? restoredTravelIndex : mapPoints.length > 1 ? 1 : mapPoints.length ? 0 : -1;
+  let travelStateTouched = travelParams.has("travelScope") || travelParams.has("travelPlace");
   const placeButtons = qa("[data-place]");
   const placeSelector = q(".place-selector");
   const placeScrollButtons = qa("[data-place-scroll]");
@@ -745,6 +882,7 @@
   const journeyDrawer = q("[data-journey-drawer]");
   const journeyToggle = q("[data-story-toggle]");
   const firstChinaPlace = mapPoints.findIndex(point => point.scope === "china");
+  if (mapScope === "china" && mapPoints[selectedPlace]?.scope !== "china") selectedPlace = firstChinaPlace;
   const lastSelectedPlace = {
     world: selectedPlace,
     china: mapPoints[selectedPlace]?.scope === "china" ? selectedPlace : firstChinaPlace
@@ -755,11 +893,16 @@
     placeScrollFrame = 0;
     if (!placeSelector) return;
     const maximum = Math.max(0, placeSelector.scrollWidth - placeSelector.clientWidth);
+    const shell = placeSelector.closest(".place-selector-shell");
+    const canScrollLeft = placeSelector.scrollLeft > 1;
+    const canScrollRight = placeSelector.scrollLeft < maximum - 1;
     placeScrollButtons.forEach(button => {
       const direction = Number(button.dataset.placeScroll);
-      button.disabled = direction < 0 ? placeSelector.scrollLeft <= 1 : placeSelector.scrollLeft >= maximum - 1;
+      button.disabled = direction < 0 ? !canScrollLeft : !canScrollRight;
     });
-    placeSelector.closest(".place-selector-shell")?.toggleAttribute("data-scrollable", maximum > 1);
+    shell?.toggleAttribute("data-scrollable", maximum > 1);
+    shell?.toggleAttribute("data-can-scroll-left", canScrollLeft);
+    shell?.toggleAttribute("data-can-scroll-right", canScrollRight);
   };
   const schedulePlaceScrollControls = () => {
     if (!placeScrollFrame) placeScrollFrame = requestAnimationFrame(updatePlaceScrollControls);
@@ -767,7 +910,8 @@
   placeScrollButtons.forEach(button => button.addEventListener("click", () => {
     if (!placeSelector) return;
     const direction = Number(button.dataset.placeScroll) < 0 ? -1 : 1;
-    const distance = Math.max(154, placeSelector.clientWidth * .72) * direction;
+    const firstVisiblePlace = q("[data-place]:not(.hidden)", placeSelector);
+    const distance = Math.max(150, firstVisiblePlace?.getBoundingClientRect().width || 0) * direction;
     placeSelector.scrollBy({ left: distance, behavior: reduceMotion ? "auto" : "smooth" });
   }));
   placeSelector?.addEventListener("scroll", schedulePlaceScrollControls, { passive: true });
@@ -787,6 +931,23 @@
     if (available.includes(preferred)) return preferred;
     if (available.includes(lastSelectedPlace[scope])) return lastSelectedPlace[scope];
     return available[0] ?? -1;
+  };
+
+  const syncTravelUrl = () => {
+    if (!travelStateTouched || selectedPlace < 0) return;
+    const url = new URL(location.href);
+    url.searchParams.set("travelScope", mapScope);
+    url.searchParams.set("travelPlace", mapPoints[selectedPlace].id);
+    history.replaceState(history.state, "", url.href);
+  };
+
+  const syncTravelScopeUi = () => {
+    scopeButtons.forEach(item => {
+      const active = item.dataset.scope === mapScope;
+      item.classList.toggle("active", active);
+      item.setAttribute("aria-pressed", String(active));
+    });
+    placeButtons.forEach(item => item.classList.toggle("hidden", mapScope === "china" && item.dataset.placeScope !== "china"));
   };
 
   const centerSelectedPlace = button => {
@@ -857,6 +1018,7 @@
     if (focusMap && travelMap && mapPoints[index]) {
       travelMap.flyTo([mapPoints[index].lat, mapPoints[index].lng], mapScope === "world" ? 4 : 7, { duration: reduceMotion ? 0 : 0.8 });
     }
+    syncTravelUrl();
   };
 
   const renderTravelMap = () => {
@@ -887,15 +1049,15 @@
     geoLayer = leaflet.geoJSON(data, {
       style: feature => {
         const state = regionState(regionKey(feature));
-        if (state?.status === "visited") return { color: "#efaf72", weight: 1.2, fillColor: "#945340", fillOpacity: 0.9 };
-        return { color: "#727985", weight: 0.72, fillColor: "#16232f", fillOpacity: 0.84 };
+        if (state?.status === "visited") return { className: "map-region-visited", color: "#f0b367", weight: 1.45, opacity: 1, fillColor: "#9b5b42", fillOpacity: 0.82, lineCap: "round", lineJoin: "round" };
+        return { className: "map-region-unvisited", color: "#748593", weight: 0.82, opacity: 0.84, fillColor: "#132431", fillOpacity: 0.76, lineCap: "round", lineJoin: "round" };
       },
       onEachFeature: (feature, layer) => {
         const key = regionKey(feature);
         const name = regionName(feature);
         const state = regionState(key);
         layer.on({
-          mouseover: () => layer.setStyle({ weight: 1.5, fillOpacity: 0.96 }),
+          mouseover: () => layer.setStyle({ weight: state?.status === "visited" ? 2 : 1.35, opacity: 1, fillOpacity: state?.status === "visited" ? 0.92 : 0.84 }),
           mouseout: () => geoLayer.resetStyle(layer),
           click: () => layer.bindPopup(`<b>${name}</b><br><span>${state?.status === "visited" ? "已经留下共同足迹" : "暂无共同足迹"}</span>`).openPopup()
         });
@@ -912,13 +1074,17 @@
       });
       const marker = leaflet.marker([point.lat, point.lng], { icon }).addTo(travelMap);
       marker.__memoryIndex = index;
-      marker.on("click", () => choosePlace(index, false));
+      marker.on("click", () => {
+        travelStateTouched = true;
+        choosePlace(index, false);
+      });
       mapMarkers.push(marker);
     });
+    const compactMap = innerWidth <= 700;
     if (mapScope === "world") {
-      travelMap.fitBounds([[-55, -170], [78, 180]], { padding: [26, 26], maxZoom: 2.9, animate: !reduceMotion });
+      travelMap.fitBounds([[-55, -170], [78, 180]], { padding: compactMap ? [12, 12] : [26, 26], maxZoom: compactMap ? 2.45 : 2.9, animate: !reduceMotion });
     } else {
-      travelMap.fitBounds(geoLayer.getBounds(), { padding: [30, 30], maxZoom: 4.6, animate: !reduceMotion });
+      travelMap.fitBounds(geoLayer.getBounds(), { padding: compactMap ? [18, 18] : [30, 30], maxZoom: compactMap ? 4.1 : 4.6, animate: !reduceMotion });
     }
     const visitedPoints = points.filter(point => point.status === "visited");
     const label = q("[data-map-label]");
@@ -931,7 +1097,57 @@
     choosePlace(selectedPlace, false);
   };
 
-  if (leaflet && q("#travelMap")) {
+  const failTravelMap = () => {
+    if (!mapRoot) return;
+    q("[data-map-loading]")?.setAttribute("hidden", "");
+    q("[data-map-fallback]")?.removeAttribute("hidden");
+    mapRoot.dataset.mapReady = "false";
+    mapRoot.dataset.mapState = "error";
+    mapRoot.dataset.mapAssets = "error";
+    choosePlace(selectedPlace, false);
+  };
+
+  const loadMapStylesheet = href => new Promise((resolve, reject) => {
+    const existing = q(`link[data-map-asset="${href}"]`);
+    if (existing) {
+      if (existing.sheet) resolve(existing);
+      else existing.addEventListener("load", () => resolve(existing), { once: true });
+      return;
+    }
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    link.dataset.mapAsset = href;
+    link.addEventListener("load", () => resolve(link), { once: true });
+    link.addEventListener("error", reject, { once: true });
+    document.head.append(link);
+  });
+
+  const loadMapScript = src => new Promise((resolve, reject) => {
+    const existing = q(`script[data-map-asset="${src}"]`);
+    if (existing) {
+      if (existing.dataset.loaded === "true") resolve(existing);
+      else existing.addEventListener("load", () => resolve(existing), { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    script.dataset.mapAsset = src;
+    script.addEventListener("load", () => {
+      script.dataset.loaded = "true";
+      resolve(script);
+    }, { once: true });
+    script.addEventListener("error", reject, { once: true });
+    document.head.append(script);
+  });
+
+  const initializeTravelMap = () => {
+    leaflet = window.L || null;
+    if (!leaflet || !q("#travelMap") || travelMap) {
+      if (!travelMap) failTravelMap();
+      return;
+    }
     travelMap = leaflet.map("travelMap", {
       zoomControl: false,
       attributionControl: false,
@@ -941,22 +1157,50 @@
       zoomSnap: 0.25,
       worldCopyJump: true
     });
+    mapRoot.dataset.mapAssets = "ready";
     renderTravelMap();
     travelMap.on("zoomend", () => {
       const label = q("[data-map-label]");
       if (label) label.textContent = `${mapScope === "world" ? "世界" : "中国"} · ${travelMap.getZoom().toFixed(1)}x`;
     });
     new ResizeObserver(() => travelMap.invalidateSize(false)).observe(q("#travelMap"));
-  } else if (mapRoot) {
-    q("[data-map-loading]").hidden = true;
-    q("[data-map-fallback]").hidden = false;
-    mapRoot.dataset.mapReady = "false";
-    mapRoot.dataset.mapState = "error";
+  };
+
+  let mapAssetsPromise;
+  const loadTravelAssets = () => {
+    if (!mapRoot) return Promise.resolve();
+    if (mapAssetsPromise) return mapAssetsPromise;
+    mapRoot.dataset.mapAssets = "loading";
+    mapAssetsPromise = Promise.all([
+      loadMapStylesheet("./assets/vendor/leaflet/leaflet.css"),
+      loadMapScript("./assets/vendor/leaflet/leaflet.js")
+    ]).then(() => Promise.all([
+      loadMapScript("./assets/maps/world-countries.data.js"),
+      loadMapScript("./assets/maps/china-admin.data.js")
+    ])).then(initializeTravelMap).catch(failTravelMap);
+    return mapAssetsPromise;
+  };
+
+  if (mapRoot) {
+    syncTravelScopeUi();
     choosePlace(selectedPlace, false);
+    if ("IntersectionObserver" in window) {
+      const travelLoader = new IntersectionObserver(entries => {
+        if (!entries.some(entry => entry.isIntersecting)) return;
+        travelLoader.disconnect();
+        loadTravelAssets();
+      }, { rootMargin: "900px 0px" });
+      travelLoader.observe(mapRoot);
+    } else {
+      loadTravelAssets();
+    }
   }
 
   placeButtons.forEach(button => {
-    button.addEventListener("click", () => choosePlace(Number(button.dataset.place), true));
+    button.addEventListener("click", () => {
+      travelStateTouched = true;
+      choosePlace(Number(button.dataset.place), true);
+    });
     button.addEventListener("keydown", event => {
       const direction = ["ArrowLeft", "ArrowUp"].includes(event.key)
         ? -1
@@ -967,6 +1211,7 @@
       const current = visibleButtons.indexOf(button);
       if (current < 0 || !visibleButtons.length) return;
       const next = visibleButtons[(current + direction + visibleButtons.length) % visibleButtons.length];
+      travelStateTouched = true;
       choosePlace(Number(next.dataset.place), true);
       next.focus({ preventScroll: true });
     });
@@ -976,20 +1221,18 @@
     const current = available.indexOf(selectedPlace);
     if (!available.length || current < 0) return;
     const direction = Number(button.dataset.placeStep) < 0 ? -1 : 1;
+    travelStateTouched = true;
     choosePlace(available[(current + direction + available.length) % available.length], true);
   }));
   scopeButtons.forEach(button => button.addEventListener("click", () => {
     const nextScope = button.dataset.scope;
     if (nextScope !== "world" && nextScope !== "china") return;
+    travelStateTouched = true;
     mapScope = nextScope;
-    scopeButtons.forEach(item => {
-      const active = item === button;
-      item.classList.toggle("active", active);
-      item.setAttribute("aria-pressed", String(active));
-    });
-    placeButtons.forEach(item => item.classList.toggle("hidden", mapScope === "china" && item.dataset.placeScope !== "china"));
+    syncTravelScopeUi();
     selectedPlace = resolvePlaceIndex(mapScope, lastSelectedPlace[mapScope]);
     renderTravelMap();
+    syncTravelUrl();
     requestAnimationFrame(schedulePlaceScrollControls);
   }));
   q("[data-map-zoom=in]")?.addEventListener("click", () => travelMap?.zoomIn());
@@ -1007,34 +1250,50 @@
   const giscusHost = q("[data-giscus-host]", giscusPanel || document);
   const giscusState = q("[data-giscus-state]", giscusPanel || document);
   const giscusCopy = q("[data-giscus-copy]", giscusPanel || document);
-  const onlineHosts = new Set(["www.chenandgao.com", "chenandgao.com", "oneverone.github.io"]);
+  const giscusRetry = q("[data-giscus-retry]", giscusPanel || document);
+  const onlineHosts = new Set((giscusPanel?.dataset.giscusHosts || "").split(",").filter(Boolean).map(host => host.toLowerCase()));
+  let giscusTimeout = 0;
+  let giscusObserver = null;
+  const setGiscusStatus = (status, label, copy, retry = false) => {
+    if (!giscusPanel) return;
+    giscusPanel.dataset.giscusStatus = status;
+    if (giscusState) giscusState.textContent = label;
+    if (giscusCopy) giscusCopy.textContent = copy;
+    if (giscusRetry) giscusRetry.hidden = !retry;
+  };
+  const stopGiscusWatch = () => {
+    clearTimeout(giscusTimeout);
+    giscusObserver?.disconnect();
+    giscusObserver = null;
+  };
   const configureGiscus = () => {
     if (!giscusPanel || !giscusHost) return;
+    stopGiscusWatch();
     if (location.protocol === "file:" || !onlineHosts.has(location.hostname.toLowerCase())) {
-      giscusPanel.dataset.giscusStatus = "preview";
-      if (giscusState) giscusState.textContent = "本地预览";
+      setGiscusStatus("preview", "本地预览", "本地预览不收集信息；正式域名启用后通过 GitHub 登录留言。");
       return;
     }
     const repo = giscusPanel.dataset.giscusRepo;
     const repoId = giscusPanel.dataset.giscusRepoId;
     const category = giscusPanel.dataset.giscusCategory;
     const categoryId = giscusPanel.dataset.giscusCategoryId;
-    if (!repo || !repoId || !category || !categoryId) {
-      giscusPanel.dataset.giscusStatus = "configuration-required";
-      if (giscusState) giscusState.textContent = "等待 GitHub 配置";
-      if (giscusCopy) giscusCopy.textContent = "留言界面已就绪，启用 Discussions 并写入分类 ID 后开放。";
+    const discussionsEnabled = giscusPanel.dataset.giscusEnabled === "true";
+    if (!discussionsEnabled || !repo || !repoId || !category || !categoryId) {
+      setGiscusStatus("configuration-required", "等待 GitHub 配置", discussionsEnabled
+        ? "留言界面已就绪，写入真实分类 ID 后开放。"
+        : "仓库 Discussions 尚未启用，启用并创建 Guestbook 分类后开放。");
       return;
     }
-    giscusPanel.dataset.giscusStatus = "loading";
-    if (giscusState) giscusState.textContent = "正在连接 GitHub";
+    setGiscusStatus("loading", "正在连接 GitHub", "正在安全加载留言界面，请稍候。");
+    giscusHost.replaceChildren();
     const script = document.createElement("script");
     Object.assign(script.dataset, {
       repo,
       repoId,
       category,
       categoryId,
-      mapping: "specific",
-      term: "chen-gao-guestbook",
+      mapping: giscusPanel.dataset.giscusMapping || "specific",
+      term: giscusPanel.dataset.giscusTerm || "chen-gao-guestbook",
       strict: "1",
       reactionsEnabled: "1",
       emitMetadata: "0",
@@ -1047,29 +1306,39 @@
     script.async = true;
     script.crossOrigin = "anonymous";
     script.addEventListener("load", () => {
-      giscusPanel.dataset.giscusStatus = "ready";
-      if (giscusState) giscusState.textContent = "在线留言已开放";
-      if (giscusCopy) giscusCopy.textContent = "使用 GitHub 登录即可留下公开留言。";
+      if (giscusPanel.dataset.giscusStatus !== "ready") setGiscusStatus("loading", "正在建立留言簿", "连接成功，正在等待 GitHub 留言界面。");
     });
     script.addEventListener("error", () => {
-      giscusPanel.dataset.giscusStatus = "error";
-      if (giscusState) giscusState.textContent = "连接失败";
-      if (giscusCopy) giscusCopy.textContent = "留言服务暂时不可用，请稍后重试。";
+      stopGiscusWatch();
+      setGiscusStatus("blocked", "留言脚本被拦截", "浏览器或网络阻止了 Giscus，可允许第三方脚本后重试。", true);
     });
+    giscusObserver = new MutationObserver(() => {
+      const frame = q("iframe", giscusHost);
+      if (!frame) return;
+      stopGiscusWatch();
+      setGiscusStatus("ready", "留言框已连接", "若尚未登录，请在下方使用 GitHub 登录后留下公开留言。");
+    });
+    giscusObserver.observe(giscusHost, { childList: true, subtree: true });
+    giscusTimeout = window.setTimeout(() => {
+      stopGiscusWatch();
+      setGiscusStatus("blocked", "连接等待超时", "留言脚本可能被网络或隐私扩展拦截，请检查后重试。", true);
+    }, 12000);
     giscusHost.append(script);
   };
+  giscusRetry?.addEventListener("click", configureGiscus);
   configureGiscus();
 
   const scenes = qa("[data-chapter]");
   const navLinks = qa("[data-nav]");
-  const siteHeader = q("[data-header]");
   const railProgress = q("[data-rail-progress]");
   const railPercent = q("[data-rail-percent]");
-  const heroIntro = q(".hero-grid");
   const pointerLight = q(".pointer-light");
   const heroCinema = q(".hero-cinema");
+  let activeSceneId = "";
   const setActiveScene = scene => {
     const id = scene.id;
+    if (id === activeSceneId) return;
+    activeSceneId = id;
     navLinks.forEach(link => {
       const active = link.dataset.nav === id;
       link.classList.toggle("active", active);
@@ -1078,66 +1347,90 @@
     });
     document.body.dataset.scene = id;
   };
+  const syncActiveScene = () => {
+    const readingLine = scrollY + innerHeight * .38;
+    let current = scenes[0];
+    scenes.forEach(scene => {
+      if (scene.offsetTop <= readingLine) current = scene;
+    });
+    if (current) setActiveScene(current);
+  };
   const sceneObserver = new IntersectionObserver(entries => {
-    const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-    if (visible) setActiveScene(visible.target);
     entries.forEach(entry => {
       if (entry.isIntersecting) entry.target.classList.add("seen");
     });
   }, { rootMargin: "-28% 0px -44%", threshold: [0, 0.1, 0.35] });
   scenes.forEach(scene => sceneObserver.observe(scene));
 
-  let scrollFrame = 0;
-  let scrollStopTimer = 0;
+  let visualFrame = 0;
+  let scrollDirty = true;
+  let pointerDirty = false;
+  let pointerX = innerWidth * 0.6;
+  let pointerY = innerHeight * 0.35;
   let scrollMax = 1;
-  let heroHeight = 1;
-  let heroOffset = 0;
   let lastRailPercent = -1;
   const refreshScrollMetrics = () => {
     scrollMax = Math.max(1, document.documentElement.scrollHeight - innerHeight);
-    if (heroIntro) {
-      heroHeight = Math.max(1, heroIntro.offsetHeight);
-      heroOffset = heroIntro.getBoundingClientRect().top + scrollY;
+  };
+  const renderVisuals = () => {
+    visualFrame = 0;
+    if (scrollDirty) {
+      scrollDirty = false;
+      const progress = clamp(scrollY / scrollMax);
+      const percent = Math.round(progress * 100);
+      if (railProgress) railProgress.style.transform = `scaleY(${progress})`;
+      if (railPercent && percent !== lastRailPercent) {
+        railPercent.textContent = String(percent).padStart(2, "0");
+        lastRailPercent = percent;
+      }
+      syncActiveScene();
+    }
+    if (pointerDirty) {
+      pointerDirty = false;
+      pointerLight?.style.setProperty("--pointer-x", `${pointerX}px`);
+      pointerLight?.style.setProperty("--pointer-y", `${pointerY}px`);
+      heroCinema?.style.setProperty("--pointer-nx", String(pointerX / innerWidth - 0.5));
+      heroCinema?.style.setProperty("--pointer-ny", String(pointerY / innerHeight - 0.5));
     }
   };
-  const updateScroll = () => {
-    scrollFrame = 0;
-    const progress = clamp(scrollY / scrollMax);
-    const percent = Math.round(progress * 100);
-    navigation?.style.setProperty("--page-progress", String(progress));
-    siteHeader?.classList.toggle("scrolled", scrollY > 24);
-    if (railProgress) railProgress.style.transform = `scaleY(${progress})`;
-    if (railPercent && percent !== lastRailPercent) {
-      railPercent.textContent = String(percent).padStart(2, "0");
-      lastRailPercent = percent;
-    }
-    if (heroIntro) heroIntro.style.setProperty("--hero-progress", String(clamp((scrollY - heroOffset) / heroHeight)));
+  const scheduleVisuals = () => {
+    if (!visualFrame) visualFrame = requestAnimationFrame(renderVisuals);
   };
   addEventListener("scroll", () => {
-    if (!document.body.classList.contains("is-scrolling")) document.body.classList.add("is-scrolling");
-    clearTimeout(scrollStopTimer);
-    scrollStopTimer = setTimeout(() => document.body.classList.remove("is-scrolling"), 140);
-    if (!scrollFrame) scrollFrame = requestAnimationFrame(updateScroll);
+    scrollDirty = true;
+    scheduleVisuals();
   }, { passive: true });
   addEventListener("resize", () => {
     refreshScrollMetrics();
-    updateScroll();
+    scrollDirty = true;
+    scheduleVisuals();
   }, { passive: true });
-  new ResizeObserver(refreshScrollMetrics).observe(document.documentElement);
+  new ResizeObserver(() => {
+    refreshScrollMetrics();
+    scrollDirty = true;
+    scheduleVisuals();
+  }).observe(document.documentElement);
   refreshScrollMetrics();
-  updateScroll();
+  scheduleVisuals();
+
+  const alignSceneFromHash = () => {
+    const id = decodeURIComponent(location.hash.slice(1));
+    const target = scenes.find(scene => scene.id === id);
+    if (!target) return;
+    target.scrollIntoView({ block: "start" });
+    setActiveScene(target);
+  };
+  const scheduleHashAlignment = () => requestAnimationFrame(() => requestAnimationFrame(alignSceneFromHash));
+  addEventListener("hashchange", scheduleHashAlignment);
+  if (document.readyState === "complete") scheduleHashAlignment();
+  else addEventListener("load", scheduleHashAlignment, { once: true });
 
   if (!reduceMotion && !coarsePointer) {
-    let pointerFrame = 0;
     addEventListener("pointermove", event => {
-      if (pointerFrame) return;
-      pointerFrame = requestAnimationFrame(() => {
-        pointerFrame = 0;
-        pointerLight?.style.setProperty("--pointer-x", `${event.clientX}px`);
-        pointerLight?.style.setProperty("--pointer-y", `${event.clientY}px`);
-        heroCinema?.style.setProperty("--pointer-nx", String(event.clientX / innerWidth - 0.5));
-        heroCinema?.style.setProperty("--pointer-ny", String(event.clientY / innerHeight - 0.5));
-      });
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      pointerDirty = true;
+      scheduleVisuals();
     }, { passive: true });
   }
 })();
