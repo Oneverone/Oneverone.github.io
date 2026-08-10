@@ -862,6 +862,12 @@
   let travelMap;
   let geoLayer;
   let detailGeoLayer;
+  let cityOverviewLayer;
+  let cityOverviewOutlineLayer;
+  let cityOverviewLabels = [];
+  let cityOverviewPromise;
+  let cityOverviewRenderer;
+  let targetCityResolution = "overview";
   let cityBoundaryLoadToken = 0;
   let cityBoundaryVisibleKey = "";
   let cityBoundaryRequestedKey = "";
@@ -874,6 +880,8 @@
   let cityMarkers = [];
   let mapPositionFrame = 0;
   let mapHierarchyFrame = 0;
+  let mapHierarchyPreviewFrame = 0;
+  let previewHierarchy = null;
   let mapScopeSwitchFrame = 0;
   let pendingMapScope = "";
   let mapHierarchyIdleTimer = 0;
@@ -898,11 +906,13 @@
   const scopeBaseZoom = { world: 1.5, china: 3.5 };
   const hierarchyZoomOffset = { world: 0.25, china: 0.25 };
   const hierarchyPrefetchLead = { world: 0.55, china: 0.55 };
+  const wheelPxPerZoomLevel = { world: 22, china: 30 };
   const hierarchyLevels = {
     world: { base: "country", detail: "province" },
     china: { base: "province", detail: "city" }
   };
   const targetHierarchyLevel = { world: "country", china: "province" };
+  const manualHierarchyLevel = { world: "", china: "" };
   const scopeCameraState = { world: null, china: null };
   const cityBoundaryCacheLimit = 36;
   const travelParams = new URLSearchParams(location.search);
@@ -913,9 +923,12 @@
   let selectedPlace = restoredTravelIndex >= 0 ? restoredTravelIndex : mapPoints.length > 1 ? 1 : mapPoints.length ? 0 : -1;
   let travelStateTouched = travelParams.has("travelScope") || travelParams.has("travelPlace");
   const placeButtons = qa("[data-place]");
+  const placeButtonByIndex = new Map(placeButtons.map(button => [Number(button.dataset.place), button]));
   const placeSelector = q(".place-selector");
   const placeScrollButtons = qa("[data-place-scroll]");
   const scopeButtons = qa("[data-scope]");
+  const levelSwitch = q("[data-map-level-switch]");
+  const levelButtons = qa("[data-map-level-option]", levelSwitch || document);
   const journeyDrawer = q("[data-journey-drawer]");
   const journeyToggle = q("[data-story-toggle]");
   const firstChinaPlace = mapPoints.findIndex(point => point.scope === "china");
@@ -954,10 +967,33 @@
   placeSelector?.addEventListener("scroll", schedulePlaceScrollControls, { passive: true });
   if (placeSelector && "ResizeObserver" in window) new ResizeObserver(schedulePlaceScrollControls).observe(placeSelector);
 
-  const availablePlaceIndexes = scope => mapPoints.reduce((indexes, point, index) => {
-    if (scope === "world" || point.scope === "china") indexes.push(index);
+  const comparePlaceIndexesByVisit = (left, right) => String(mapPoints[right]?.date || "").localeCompare(String(mapPoints[left]?.date || "")) || left - right;
+  const orderedPlaceIndexes = indexes => [...indexes].sort(comparePlaceIndexesByVisit);
+  const visiblePlaceIndexesForHierarchy = level => orderedPlaceIndexes(mapPoints.reduce((indexes, point, index) => {
+    if (point.status !== "visited") return indexes;
+    if (mapScope === "china" && point.scope === "china") indexes.push(index);
+    else if (mapScope === "world" && (level === "country" || point.scope !== "china")) indexes.push(index);
     return indexes;
-  }, []);
+  }, []));
+  const orderVisiblePlaceButtons = indexes => {
+    if (!placeSelector) return [];
+    const ordered = orderedPlaceIndexes(indexes);
+    const visible = new Set(ordered);
+    placeButtons.forEach(button => button.classList.toggle("hidden", !visible.has(Number(button.dataset.place))));
+    ordered.forEach((index, order) => {
+      const button = placeButtonByIndex.get(index);
+      if (!button) return;
+      const number = button.querySelector(":scope > span");
+      if (number) number.textContent = String(order + 1).padStart(2, "0");
+      placeSelector.append(button);
+    });
+    return ordered;
+  };
+
+  const availablePlaceIndexes = scope => orderedPlaceIndexes(mapPoints.reduce((indexes, point, index) => {
+    if ((scope === "world" && point.scope !== "china") || (scope === "china" && point.scope === "china")) indexes.push(index);
+    return indexes;
+  }, []));
 
   const resolvePlaceIndex = (scope, preferred) => {
     const available = availablePlaceIndexes(scope);
@@ -974,6 +1010,35 @@
     history.replaceState(history.state, "", url.href);
   };
 
+  const presentedMapLevel = () => presentedHierarchyKey.startsWith(`${mapScope}:`)
+    ? presentedHierarchyKey.split(":")[1]
+    : mapRoot?.dataset.mapLevel || hierarchyLevels[mapScope].base;
+
+  const syncMapLevelSwitchUi = (level = presentedMapLevel(), pendingLevel = "") => {
+    if (!levelSwitch) return;
+    const config = hierarchyLevels[mapScope];
+    const allowed = new Set([config.base, config.detail]);
+    const currentLevel = allowed.has(level) ? level : config.base;
+    const pending = allowed.has(pendingLevel) && pendingLevel !== currentLevel ? pendingLevel : "";
+    levelSwitch.dataset.scope = mapScope;
+    levelSwitch.setAttribute("aria-label", `${mapScope === "world" ? "世界" : "中国"}地图粒度`);
+    levelSwitch.setAttribute("aria-busy", String(Boolean(pending)));
+    levelButtons.forEach(button => {
+      const option = button.dataset.mapLevelOption || "";
+      const visible = allowed.has(option);
+      const active = visible && option === currentLevel;
+      const isPending = visible && option === pending;
+      button.hidden = !visible;
+      button.disabled = !travelMap || mapRoot?.dataset.mapState === "error";
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+      if (isPending) button.dataset.pending = "true";
+      else delete button.dataset.pending;
+      button.textContent = option === "country" ? "国家" : option === "city" ? "市" : mapScope === "world" ? "省州" : "省";
+      button.setAttribute("aria-label", `显示${button.textContent}${option === "country" ? "边界" : "级边界"}`);
+    });
+  };
+
   const syncTravelScopeUi = () => {
     scopeButtons.forEach(item => {
       const active = item.dataset.scope === mapScope;
@@ -981,6 +1046,7 @@
       item.setAttribute("aria-pressed", String(active));
     });
     placeButtons.forEach(item => item.classList.toggle("hidden", mapScope === "china" && item.dataset.placeScope !== "china"));
+    syncMapLevelSwitchUi();
   };
 
   const centerSelectedPlace = button => {
@@ -1030,29 +1096,39 @@
     .replace(/特别行政区|地区|盟|市|省/g, "")
     .replace(/\s+/g, "")
     .trim();
-  const normalizeWorldAdminName = value => normalizeAdminName(value)
-    .replace(/[州都府道县区]$/g, "")
-    .trim();
+  const worldAdminAliases = new Map([
+    ["伊斯坦堡", "伊斯坦布尔"],
+    ["伊茲密爾次分區", "伊兹密尔"]
+  ]);
+  const normalizeWorldAdminName = value => {
+    const normalized = normalizeAdminName(value)
+      .replace(/[州都府道县区]$/g, "")
+      .trim();
+    return worldAdminAliases.get(normalized) || normalized;
+  };
+  const worldProvinceGroupKey = (country, province) => `${normalizeWorldAdminName(country)}\u0000${normalizeWorldAdminName(province)}`;
   const worldProvinceVisitGroups = mapPoints.reduce((groups, point, index) => {
+    if (point.scope === "china" || point.status !== "visited") return groups;
     const parts = point.region.split(" · ");
+    const country = parts[0];
     const label = parts[1] || parts[0];
-    const key = normalizeWorldAdminName(label);
-    const group = groups.get(key) || { label, indexes: [] };
+    const key = worldProvinceGroupKey(country, label);
+    const group = groups.get(key) || { country, label, indexes: [] };
     group.indexes.push(index);
     groups.set(key, group);
     return groups;
   }, new Map());
   const worldProvinceVisit = feature => {
     const provinceCode = String(feature?.properties?.adcode || "");
-    if (feature?.properties?.countryCode === "CHN" || provinceCode) {
-      const state = chinaRegionState(provinceCode);
-      const label = state?.label || provinceNames[provinceCode] || feature?.properties?.name || "";
-      const group = worldProvinceVisitGroups.get(normalizeWorldAdminName(label));
-      return { status: state?.status || "unvisited", label, indexes: group?.indexes || [] };
+    if (feature?.properties?.countryCode === "CHN") {
+      const label = provinceNames[provinceCode] || feature?.properties?.name || "";
+      return { status: "unvisited", label, indexes: [] };
     }
     const label = feature?.properties?.name || "";
-    const group = worldProvinceVisitGroups.get(normalizeWorldAdminName(label));
-    return { status: group?.indexes?.length ? "visited" : "unvisited", label, indexes: group?.indexes || [] };
+    const country = feature?.properties?.country || "";
+    const hierarchyKey = worldProvinceGroupKey(country, label);
+    const group = worldProvinceVisitGroups.get(hierarchyKey);
+    return { status: group?.indexes?.length ? "visited" : "unvisited", label, hierarchyKey, indexes: group?.indexes || [] };
   };
   const chinaPointByAdminName = new Map();
   mapPoints.forEach((point, index) => {
@@ -1247,18 +1323,26 @@
   const activeCityBoundaryEntries = () => [...cityBoundaryLayers.values()].filter(entry => entry.active);
   const hasActiveCityBoundaries = () => activeCityBoundaryEntries().length > 0;
 
-  const setBoundaryLevelPresentation = (level, cityReady = hasActiveCityBoundaries()) => {
+  const setBoundaryLevelPresentation = (level, cityReady = Boolean(cityOverviewLayer), cityResolution = "overview") => {
     if (!travelMap) return;
     const showCity = mapScope === "china" && level === "city" && cityReady;
+    const showCityOverview = showCity && cityResolution === "overview";
+    const showCityDetail = showCity && cityResolution === "detail";
     const showWorldProvince = mapScope === "world" && level === "province" && Boolean(detailGeoLayer);
     const primaryPane = travelMap.getPane("primaryBoundary");
     const primaryLabelPane = travelMap.getPane("primaryLabels");
     const provincePane = travelMap.getPane("provinceDetail");
     const cityPane = travelMap.getPane("cityBoundary");
+    const cityOverviewPane = travelMap.getPane("cityOverview");
     const provinceOutlinePane = travelMap.getPane("provinceOutline");
+    const cityOverviewOutlinePane = travelMap.getPane("cityOverviewOutline");
     const cityLabelPane = travelMap.getPane("cityLabels");
+    const cityOverviewLabelPane = travelMap.getPane("cityOverviewLabels");
     if (primaryPane) {
       primaryPane.style.zIndex = "400";
+      // The city layer already owns the full base fill. Hiding the province
+      // layer prevents two independent renderers from visibly chasing each
+      // other during animated zoom.
       primaryPane.style.opacity = showCity ? "0" : showWorldProvince ? "0.16" : "1";
       primaryPane.style.pointerEvents = showCity || showWorldProvince ? "none" : "auto";
       primaryPane.inert = showCity || showWorldProvince;
@@ -1277,23 +1361,42 @@
       provincePane.setAttribute("aria-hidden", String(!showWorldProvince));
     }
     if (cityPane) {
-      cityPane.style.opacity = showCity ? "1" : "0";
-      cityPane.style.pointerEvents = showCity ? "auto" : "none";
-      cityPane.inert = !showCity;
-      cityPane.setAttribute("aria-hidden", String(!showCity));
+      cityPane.style.opacity = showCityDetail ? "1" : "0";
+      cityPane.style.pointerEvents = showCityDetail ? "auto" : "none";
+      cityPane.inert = !showCityDetail;
+      cityPane.setAttribute("aria-hidden", String(!showCityDetail));
+    }
+    if (cityOverviewPane) {
+      cityOverviewPane.style.opacity = showCityOverview ? "1" : "0";
+      cityOverviewPane.style.pointerEvents = showCityOverview ? "auto" : "none";
+      cityOverviewPane.inert = !showCityOverview;
+      cityOverviewPane.setAttribute("aria-hidden", String(!showCityOverview));
     }
     if (provinceOutlinePane) {
-      provinceOutlinePane.style.opacity = showCity ? "1" : "0";
+      provinceOutlinePane.style.opacity = showCityDetail ? "1" : "0";
       provinceOutlinePane.style.pointerEvents = "none";
-      provinceOutlinePane.inert = !showCity;
-      provinceOutlinePane.setAttribute("aria-hidden", String(!showCity));
+      provinceOutlinePane.inert = !showCityDetail;
+      provinceOutlinePane.setAttribute("aria-hidden", String(!showCityDetail));
+    }
+    if (cityOverviewOutlinePane) {
+      cityOverviewOutlinePane.style.opacity = showCityOverview ? "1" : "0";
+      cityOverviewOutlinePane.style.pointerEvents = "none";
+      cityOverviewOutlinePane.inert = !showCityOverview;
+      cityOverviewOutlinePane.setAttribute("aria-hidden", String(!showCityOverview));
     }
     if (cityLabelPane) {
-      cityLabelPane.style.opacity = showCity ? "1" : "0";
+      cityLabelPane.style.opacity = showCityDetail ? "1" : "0";
       cityLabelPane.style.pointerEvents = "none";
-      cityLabelPane.inert = !showCity;
-      cityLabelPane.setAttribute("aria-hidden", String(!showCity));
+      cityLabelPane.inert = !showCityDetail;
+      cityLabelPane.setAttribute("aria-hidden", String(!showCityDetail));
     }
+    if (cityOverviewLabelPane) {
+      cityOverviewLabelPane.style.opacity = showCityOverview ? "1" : "0";
+      cityOverviewLabelPane.style.pointerEvents = "none";
+      cityOverviewLabelPane.inert = !showCityOverview;
+      cityOverviewLabelPane.setAttribute("aria-hidden", String(!showCityOverview));
+    }
+    mapRoot.dataset.cityResolution = showCity ? cityResolution : "none";
     mapRoot.dataset.boundaryPresentation = showCity ? "city" : showWorldProvince ? "province" : mapScope === "world" ? "country" : "province";
     const preparing = (mapScope === "china" && level === "city" && !cityReady)
       || (mapScope === "world" && level === "province" && !detailGeoLayer);
@@ -1301,14 +1404,35 @@
     mapRoot.setAttribute("aria-busy", String(preparing));
   };
 
-  const mapLevel = () => {
-    const zoom = travelMap?.getZoom() ?? scopeBaseZoom[mapScope];
-    const config = hierarchyLevels[mapScope];
-    const current = targetHierarchyLevel[mapScope] || config.base;
-    const threshold = hierarchyThreshold(mapScope);
-    const next = current === config.detail
+  const hierarchyLevelAtZoom = (scope, zoom) => {
+    const config = hierarchyLevels[scope];
+    const current = targetHierarchyLevel[scope] || config.base;
+    const threshold = hierarchyThreshold(scope);
+    return current === config.detail
       ? zoom >= threshold - 0.12 ? config.detail : config.base
       : zoom >= threshold - 0.01 ? config.detail : config.base;
+  };
+
+  // Granularity is semantic, not camera-dependent: once the user selects
+  // "city", every visible part of China remains city-level at every zoom.
+  const cityResolutionAtZoom = () => {
+    targetCityResolution = "overview";
+    return targetCityResolution;
+  };
+
+  const mapLevel = () => {
+    const config = hierarchyLevels[mapScope];
+    const manualLevel = manualHierarchyLevel[mapScope];
+    if (manualLevel && [config.base, config.detail].includes(manualLevel)) {
+      targetHierarchyLevel[mapScope] = manualLevel;
+      return manualLevel;
+    }
+    if (previewHierarchy?.scope === mapScope && [config.base, config.detail].includes(previewHierarchy.level)) {
+      targetHierarchyLevel[mapScope] = previewHierarchy.level;
+      return previewHierarchy.level;
+    }
+    const zoom = travelMap?.getZoom() ?? scopeBaseZoom[mapScope];
+    const next = hierarchyLevelAtZoom(mapScope, zoom);
     targetHierarchyLevel[mapScope] = next;
     return next;
   };
@@ -1332,6 +1456,9 @@
 
   const stopTravelMapMotion = () => {
     if (!travelMap) return;
+    if (mapHierarchyPreviewFrame) cancelAnimationFrame(mapHierarchyPreviewFrame);
+    mapHierarchyPreviewFrame = 0;
+    previewHierarchy = null;
     const wheel = travelMap.scrollWheelZoom;
     if (wheel?._timer) clearTimeout(wheel._timer);
     if (wheel) {
@@ -1373,14 +1500,19 @@
       : level === "province" ? "省份总览" : "市级边界";
     if (label) label.textContent = `${mapScope === "world" ? "世界" : "中国"} · ${levelLabel}`;
     const note = q("[data-map-level-note]");
-    if (note) note.textContent = level === hierarchyLevels[mapScope].base
-      ? `继续放大查看${mapScope === "world" ? "省州" : "城市"}`
-      : `缩小返回${mapScope === "world" ? "国家" : "省份"}`;
+    const manualLevel = manualHierarchyLevel[mapScope];
+    mapRoot.dataset.mapLevelMode = manualLevel ? "manual" : "auto";
+    if (note) note.textContent = manualLevel
+      ? `已手动显示${level === "country" ? "国家" : level === "province" ? (mapScope === "world" ? "省州" : "省份") : "城市"}边界 · 缩放比例未改变`
+      : level === hierarchyLevels[mapScope].base
+        ? `继续放大查看${mapScope === "world" ? "省州" : "城市"}`
+        : `缩小返回${mapScope === "world" ? "国家" : "省份"}`;
     const listNoun = level === "country" ? "国家" : level === "province" ? (mapScope === "world" ? "省州" : "省份") : "城市";
     qa("[data-place-scroll]").forEach(button => {
       const direction = Number(button.dataset.placeScroll) < 0 ? "向左" : "向右";
       button.setAttribute("aria-label", `${direction}浏览已到访${listNoun}`);
     });
+    syncMapLevelSwitchUi(level);
     updateZoomControls();
   };
 
@@ -1413,8 +1545,8 @@
     mapRoot.dataset.mapListMode = "visited-only";
     placeSelector.setAttribute("aria-label", level === "country" ? "选择已经到访的国家或地区" : level === "province" ? `选择已经到访的${mapScope === "world" ? "省州" : "省份"}` : "选择已经到访的城市");
     qa("[data-hierarchy-place]", placeSelector).forEach(button => button.remove());
-    const visitedPoints = mapPoints.filter(point => point.status === "visited");
-    const visiblePoints = mapScope === "world" ? visitedPoints : visitedPoints.filter(point => point.scope === "china");
+    const visibleIndexes = visiblePlaceIndexesForHierarchy(level);
+    const visiblePoints = visibleIndexes.map(index => mapPoints[index]);
     const cityMode = level === "city";
     placeButtons.forEach(button => {
       const point = mapPoints[Number(button.dataset.place)];
@@ -1423,31 +1555,77 @@
       button.classList.toggle("hidden", !cityMode || !inScope || !isVisited);
     });
     if (cityMode) {
+      orderVisiblePlaceButtons(visibleIndexes);
       schedulePlaceScrollControls();
       return;
     }
+    const countryMeta = mapScope === "world" && level === "province"
+      ? visiblePoints.reduce((result, point) => {
+        const country = point.region.split(" · ")[0];
+        const pointIndex = mapPoints.indexOf(point);
+        const meta = result.get(country) || { latest: point.date, firstIndex: pointIndex };
+        if (point.date > meta.latest) {
+          meta.latest = point.date;
+          meta.firstIndex = pointIndex;
+        } else if (point.date === meta.latest && pointIndex < meta.firstIndex) {
+          meta.firstIndex = pointIndex;
+        }
+        result.set(country, meta);
+        return result;
+      }, new Map())
+      : null;
     const groups = [...visiblePoints.reduce((result, point) => {
       const parts = point.region.split(" · ");
-      const key = level === "country" ? (point.scope === "china" ? "中国" : parts[0]) : (parts[1] || parts[0]);
-      const group = result.get(key) || { key, indexes: [], latest: point.date, latTotal: 0, lngTotal: 0 };
-      group.indexes.push(mapPoints.indexOf(point));
+      const parent = parts[0];
+      const key = level === "country" ? (point.scope === "china" ? "中国" : parent) : (parts[1] || parent);
+      const hierarchyKey = mapScope === "world" && level === "province" ? worldProvinceGroupKey(parent, key) : key;
+      const pointIndex = mapPoints.indexOf(point);
+      const group = result.get(hierarchyKey) || { key, hierarchyKey, parent, indexes: [], latest: point.date, firstIndex: pointIndex, latTotal: 0, lngTotal: 0 };
+      group.indexes.push(pointIndex);
       group.latTotal += point.lat;
       group.lngTotal += point.lng;
-      if (point.date > group.latest) group.latest = point.date;
-      result.set(key, group);
+      if (point.date > group.latest) {
+        group.latest = point.date;
+        group.firstIndex = pointIndex;
+      } else if (point.date === group.latest && pointIndex < group.firstIndex) {
+        group.firstIndex = pointIndex;
+      }
+      result.set(hierarchyKey, group);
       return result;
-    }, new Map()).values()];
+    }, new Map()).values()].sort((left, right) => {
+      if (countryMeta) {
+        const leftCountry = countryMeta.get(left.parent);
+        const rightCountry = countryMeta.get(right.parent);
+        const countryOrder = rightCountry.latest.localeCompare(leftCountry.latest) || leftCountry.firstIndex - rightCountry.firstIndex;
+        if (countryOrder) return countryOrder;
+      }
+      return right.latest.localeCompare(left.latest) || left.firstIndex - right.firstIndex || left.key.localeCompare(right.key, "zh-CN");
+    });
+    const selectedPoint = mapPoints[selectedPlace];
+    const selectedParts = selectedPoint?.region?.split(" · ") || [];
+    const selectedLabel = level === "country"
+      ? (selectedPoint?.scope === "china" ? "中国" : selectedParts[0])
+      : (selectedParts[1] || selectedParts[0]);
+    const selectedGroupKey = mapScope === "world" && level === "province"
+      ? worldProvinceGroupKey(selectedParts[0], selectedLabel)
+      : selectedLabel;
+    if (!groups.some(group => group.hierarchyKey === activeHierarchyKey)) {
+      activeHierarchyKey = groups.some(group => group.hierarchyKey === selectedGroupKey) ? selectedGroupKey : groups[0]?.hierarchyKey || "";
+    }
     groups.forEach((group, order) => {
       const button = document.createElement("button");
       button.type = "button";
       button.dataset.hierarchyPlace = level;
-      button.dataset.hierarchyKey = group.key;
-      const active = activeHierarchyKey === group.key;
+      button.dataset.hierarchyKey = group.hierarchyKey;
+      const active = activeHierarchyKey === group.hierarchyKey;
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", String(active));
       button.tabIndex = active || (!activeHierarchyKey && order === 0) ? 0 : -1;
-      button.innerHTML = `<span>${String(order + 1).padStart(2, "0")}</span><b>${group.key}<small>${String(group.indexes.length).padStart(2, "0")} 个到访城市</small></b><i class="visited" aria-hidden="true"></i>`;
-      button.setAttribute("aria-label", `${group.key}，${group.indexes.length} 个到访城市`);
+      const detail = mapScope === "world" && level === "province"
+        ? `${group.parent} · ${group.latest}`
+        : `${group.latest} · ${String(group.indexes.length).padStart(2, "0")} 处`;
+      button.innerHTML = `<span>${String(order + 1).padStart(2, "0")}</span><b>${group.key}<small>${detail}</small></b><i class="visited" aria-hidden="true"></i>`;
+      button.setAttribute("aria-label", `${group.parent && level === "province" ? `${group.parent}，` : ""}${group.key}，${group.indexes.length} 个到访城市`);
       button.addEventListener("click", () => {
         setActiveHierarchyButton(button);
         const lat = group.latTotal / group.indexes.length;
@@ -1479,6 +1657,8 @@
     presentedHierarchyKey = key;
     updateMapHierarchyUi(level);
     if (changed || refreshList) {
+      const eligibleIndexes = visiblePlaceIndexesForHierarchy(level);
+      if (!eligibleIndexes.includes(selectedPlace) && eligibleIndexes.length) choosePlace(eligibleIndexes[0], false);
       activeHierarchyKey = "";
       renderedCityListKey = "";
       syncPlaceHierarchy(level);
@@ -1516,48 +1696,10 @@
     return ranked.map(candidate => candidate.code);
   };
 
-  const allProvinceCodesByDistance = () => {
-    if (!travelMap || !geoLayer || mapScope !== "china") return [];
-    const mapCenter = travelMap.getSize().divideBy(2);
-    const candidates = [];
-    geoLayer.eachLayer(layer => {
-      const code = String(layer.feature?.properties?.adcode || "");
-      if (!/^\d{6}$/.test(code) || typeof layer.getBounds !== "function") return;
-      const point = travelMap.latLngToContainerPoint(layer.getBounds().getCenter());
-      candidates.push({ code, distance: point.distanceTo(mapCenter) });
-    });
-    return candidates.sort((left, right) => left.distance - right.distance).map(candidate => candidate.code);
-  };
-
-  const visibleProvinceCodesForCoverage = () => {
-    if (!travelMap || !geoLayer || mapScope !== "china") return [];
-    const mapBounds = travelMap.getBounds();
-    const viewport = mapBounds.pad(innerWidth <= 700 ? 0.1 : 0.08);
-    const retentionViewport = mapBounds.pad(innerWidth <= 700 ? 0.18 : 0.16);
-    const activeCodes = new Set(activeCityBoundaryEntries().map(entry => entry.code));
-    const mapCenter = travelMap.getSize().divideBy(2);
-    const candidates = [];
-    geoLayer.eachLayer(layer => {
-      const code = String(layer.feature?.properties?.adcode || "");
-      if (!/^\d{6}$/.test(code) || typeof layer.getBounds !== "function") return;
-      const bounds = layer.getBounds();
-      const point = travelMap.latLngToContainerPoint(bounds.getCenter());
-      candidates.push({
-        code,
-        visible: bounds.intersects(viewport),
-        retained: activeCodes.has(code) && bounds.intersects(retentionViewport),
-        distance: point.distanceTo(mapCenter)
-      });
-    });
-    const visible = candidates
-      .filter(candidate => candidate.visible || candidate.retained)
-      .sort((left, right) => left.code.localeCompare(right.code));
-    if (visible.length) return visible.map(candidate => candidate.code);
-    return candidates
-      .sort((left, right) => left.distance - right.distance)
-      .slice(0, 1)
-      .map(candidate => candidate.code);
-  };
+  // High-resolution city polygons behave like map tiles. The low-resolution
+  // nationwide city overview handles broad scales, so this working set can stay
+  // small and stable without producing mixed province/city patches.
+  const visibleProvinceCodesForCoverage = () => visibleProvinceCodes(cityBoundaryViewportLimit());
 
   const loadCityBoundaryData = code => {
     if (window.__CHINA_CITY_ADMIN__?.[code]) return Promise.resolve(window.__CHINA_CITY_ADMIN__[code]);
@@ -1677,24 +1819,10 @@
     const token = ++cityBoundaryPrefetchToken;
     try {
       if (!travelMap || mapScope !== "china" || travelMap.getZoom() < hierarchyThreshold("china") - hierarchyPrefetchLead.china) return;
-      if (travelMap.getZoom() >= hierarchyThreshold("china")) return;
-      const codes = allProvinceCodesByDistance();
-      if (!codes.length) return;
-      const desiredCodes = new Set(codes);
-      mapRoot.dataset.cityBoundaryPrefetch = "loading";
-      // Network/parse work can happen concurrently; geometry construction stays
-      // frame-budgeted below so the visible province map remains responsive.
-      const payloads = await Promise.all(codes.map(async code => [code, await loadCityBoundaryData(code)]));
-      if (token !== cityBoundaryPrefetchToken || mapScope !== "china") return;
-      for (const [code, data] of payloads) {
-        if (!data) continue;
-        const entry = await ensureCityBoundaryEntry(code, data);
-        if (token !== cityBoundaryPrefetchToken || mapScope !== "china" || travelMap.getZoom() >= hierarchyThreshold("china")) return;
-        stageCityBoundaryEntry(entry);
+      await prepareCityOverview();
+      if (token === cityBoundaryPrefetchToken && mapScope === "china") {
+        mapRoot.dataset.cityBoundaryPrefetch = cityOverviewLayer ? "ready" : "idle";
       }
-      refreshCityBoundaryEntries();
-      pruneCityBoundaryCache(desiredCodes);
-      if (mapScope === "china") mapRoot.dataset.cityBoundaryPrefetch = "ready";
     } finally {
       cityBoundaryPrefetchScheduled = false;
     }
@@ -1702,7 +1830,6 @@
 
   const scheduleCityBoundaryPrefetch = () => {
     if (cityBoundaryPrefetchScheduled || !travelMap || mapScope !== "china") return;
-    if (travelMap.getZoom() >= hierarchyThreshold("china")) return;
     if (travelMap.getZoom() < hierarchyThreshold("china") - hierarchyPrefetchLead.china) return;
     cityBoundaryPrefetchScheduled = true;
     if ("requestIdleCallback" in window) {
@@ -1721,11 +1848,14 @@
   };
 
   const updateCityBoundaryLabelVisibility = () => {
-    if (!travelMap || mapScope !== "china" || mapLevel() !== "city") return;
+    if (!travelMap || mapScope !== "china" || mapLevel() !== "city" || cityResolutionAtZoom() !== "detail") return;
     const viewport = travelMap.getSize();
     const occupied = [];
     const decisions = [];
-    const labelBudget = clamp(Math.round((viewport.x * viewport.y) / 16000), innerWidth <= 700 ? 14 : 26, innerWidth <= 700 ? 28 : 64);
+    const overview = travelMap.getZoom() < hierarchyThreshold("china") + 0.55;
+    const labelBudget = overview
+      ? (innerWidth <= 700 ? 10 : 22)
+      : clamp(Math.round((viewport.x * viewport.y) / 16000), innerWidth <= 700 ? 14 : 26, innerWidth <= 700 ? 28 : 64);
     const collisionGap = travelMap.getZoom() >= 7.4 ? 2 : 5;
     const labels = [...cityBoundaryLayers.values()]
       .filter(entry => entry.active)
@@ -1734,6 +1864,10 @@
     labels.forEach(label => {
       const element = label.marker.getElement();
       if (!element) return;
+      if (overview && label.priority < 3) {
+        decisions.push({ element, hidden: true });
+        return;
+      }
       const point = travelMap.latLngToContainerPoint(label.marker.getLatLng());
       const width = Math.min(94, Math.max(38, label.name.length * 11 + 10));
       const box = { left: point.x - width / 2, right: point.x + width / 2, top: point.y - 10, bottom: point.y + 10 };
@@ -1748,19 +1882,15 @@
 
   const renderCityBoundaryList = () => {
     if (!placeSelector) return;
-    const visitedIndexes = mapPoints.reduce((indexes, point, index) => {
+    const visitedIndexes = orderedPlaceIndexes(mapPoints.reduce((indexes, point, index) => {
       if (point.scope === "china" && point.status === "visited") indexes.push(index);
       return indexes;
-    }, []);
+    }, []));
     const listKey = `visited:${visitedIndexes.join("|")}`;
     if (listKey !== renderedCityListKey) {
       renderedCityListKey = listKey;
       qa("[data-hierarchy-place]", placeSelector).forEach(button => button.remove());
-      const visibleIndexes = new Set(visitedIndexes);
-      placeButtons.forEach(button => {
-        const index = Number(button.dataset.place);
-        button.classList.toggle("hidden", !visibleIndexes.has(index));
-      });
+      orderVisiblePlaceButtons(visitedIndexes);
       placeSelector.scrollLeft = 0;
     }
     placeSelector.setAttribute("aria-label", "选择已经到访的城市");
@@ -1830,8 +1960,133 @@
     return { code: provinceCode, layer, outlineLayer, labels, records, active: false, mounted: false, lastUsed: performance.now() };
   };
 
+  const updateCityOverviewLabelVisibility = () => {
+    if (!travelMap || mapScope !== "china" || mapLevel() !== "city" || targetCityResolution !== "overview") return;
+    const viewport = travelMap.getSize();
+    const occupied = [];
+    const compact = innerWidth <= 700;
+    const zoom = travelMap.getZoom();
+    const showEveryVisibleCity = zoom >= (compact ? 6.1 : 5.75);
+    const budget = compact
+      ? Math.min(32, Math.max(12, Math.round(12 + (zoom - 3) * 10)))
+      : Math.min(64, Math.max(24, Math.round(24 + (zoom - 3) * 20)));
+    const accepted = new Set();
+    const ordered = [...cityOverviewLabels].sort((left, right) => (
+      Number(Boolean(right.visit.direct)) - Number(Boolean(left.visit.direct))
+      || left.name.localeCompare(right.name, "zh-CN")
+    ));
+    ordered.forEach(label => {
+      const point = travelMap.latLngToContainerPoint(label.center);
+      const width = Math.min(94, Math.max(38, label.name.length * 11 + 10));
+      const box = { left: point.x - width / 2, right: point.x + width / 2, top: point.y - 10, bottom: point.y + 10 };
+      const offscreen = box.right < 0 || box.left > viewport.x || box.bottom < 0 || box.top > viewport.y;
+      const collision = occupied.some(other => !(box.right + 5 < other.left || box.left - 5 > other.right || box.bottom + 3 < other.top || box.top - 3 > other.bottom));
+      if (offscreen || (!showEveryVisibleCity && (collision || occupied.length >= budget))) return;
+      accepted.add(label.key);
+      occupied.push(box);
+      if (!label.marker) {
+        label.marker = leaflet.marker(label.center, {
+          interactive: false,
+          pane: "cityOverviewLabels",
+          icon: leaflet.divIcon({
+            className: `map-region-name-marker city ${label.visit.direct ? "visited" : "unvisited"}`,
+            html: `<span>${label.shortName}</span>`,
+            iconSize: [96, 20],
+            iconAnchor: [48, 10]
+          })
+        });
+      }
+      if (!travelMap.hasLayer(label.marker)) label.marker.addTo(travelMap);
+    });
+    cityOverviewLabels.forEach(label => {
+      if (label.marker && !accepted.has(label.key) && travelMap.hasLayer(label.marker)) {
+        label.marker.removeFrom(travelMap);
+      }
+    });
+    mapRoot.dataset.cityLabelTotalCount = String(cityOverviewLabels.length);
+    mapRoot.dataset.cityLabelVisibleCount = String(accepted.size);
+    mapRoot.dataset.cityLabelMode = showEveryVisibleCity ? "all-visible" : "decluttered";
+  };
+
+  const createCityOverviewLayer = data => {
+    cityOverviewRenderer ||= leaflet.canvas({ pane: "cityOverview", padding: 0.28, tolerance: 3 });
+    cityOverviewLabels = [];
+    cityOverviewLayer = leaflet.geoJSON(data, {
+      pane: "cityOverview",
+      renderer: cityOverviewRenderer,
+      style: feature => {
+        const provinceCode = String(feature.properties?.provinceCode || "");
+        const visit = cityFeatureVisit(feature, provinceCode);
+        return visit.direct
+          ? { color: "#efb66d", weight: 1.28, opacity: 0.98, fillColor: "#87513f", fillOpacity: 0.72, lineCap: "round", lineJoin: "round" }
+          : { color: "#607684", weight: 0.58, opacity: 0.72, fillColor: "#102532", fillOpacity: 0.52, lineCap: "round", lineJoin: "round" };
+      },
+      onEachFeature: (feature, featureLayer) => {
+        const provinceCode = String(feature.properties?.provinceCode || "");
+        const visit = cityFeatureVisit(feature, provinceCode);
+        const name = cityFeatureName(feature);
+        const stateText = visit.direct ? "已有共同足迹" : visit.inherited ? "所属区域已到访" : "尚未共同抵达";
+        registerBoundaryLabel(featureLayer, {
+          name,
+          content: `<b>${name}</b><small>${stateText}</small>`,
+          anchor: () => featureVisualCenter(feature, featureLayer),
+          owner: () => cityOverviewLayer,
+          visited: visit.visited,
+          onOpen: visit.direct ? () => choosePlace(visit.direct.index, false) : undefined
+        });
+        featureLayer.on({
+          mouseover: () => {
+            if (selectedBoundary?.layer !== featureLayer) featureLayer.setStyle({ weight: visit.direct ? 1.8 : 1.05, opacity: 1, fillOpacity: visit.direct ? 0.82 : 0.64 });
+          },
+          mouseout: () => resetBoundaryHover(cityOverviewLayer, featureLayer)
+        });
+      }
+    }).addTo(travelMap);
+    cityOverviewOutlineLayer = leaflet.geoJSON(window.__CHINA_ADMIN__, {
+      pane: "cityOverview",
+      renderer: cityOverviewRenderer,
+      interactive: false,
+      filter: feature => /^\d{6}$/.test(String(feature.properties?.adcode || "")),
+      style: { className: "map-province-outline-overview", color: "#9aabb4", weight: 1.5, opacity: 0.82, fill: false, fillOpacity: 0, lineCap: "round", lineJoin: "round" }
+    }).addTo(travelMap);
+    data.features.forEach((feature, index) => {
+      const provinceCode = String(feature.properties?.provinceCode || "");
+      const visit = cityFeatureVisit(feature, provinceCode);
+      const name = cityFeatureName(feature);
+      const center = featureVisualCenter(feature);
+      cityOverviewLabels.push({
+        key: `${provinceCode}:${feature.properties?.adcode || feature.properties?.name || index}`,
+        marker: null,
+        center,
+        name,
+        shortName: feature.properties?.name || name,
+        visit
+      });
+    });
+    return cityOverviewLayer;
+  };
+
+  const prepareCityOverview = () => {
+    if (cityOverviewLayer) return Promise.resolve(cityOverviewLayer);
+    if (cityOverviewPromise) return cityOverviewPromise;
+    mapRoot.dataset.cityOverviewState = "loading";
+    cityOverviewPromise = loadMapScript("./assets/maps/china-city-overview.data.js")
+      .then(() => {
+        if (!window.__CHINA_CITY_OVERVIEW__) throw new Error("City overview data unavailable");
+        const layer = createCityOverviewLayer(window.__CHINA_CITY_OVERVIEW__);
+        mapRoot.dataset.cityOverviewState = "ready";
+        return layer;
+      })
+      .catch(() => {
+        cityOverviewPromise = null;
+        mapRoot.dataset.cityOverviewState = "unavailable";
+        return null;
+      });
+    return cityOverviewPromise;
+  };
+
   const syncCityBoundaryLayers = async (force = false) => {
-    if (!travelMap || mapScope !== "china" || mapLevel() !== "city") return;
+    if (!travelMap || mapScope !== "china" || mapLevel() !== "city" || cityResolutionAtZoom() !== "detail") return;
     const codes = visibleProvinceCodesForCoverage();
     const key = codes.join(",");
     const desiredCodes = new Set(codes);
@@ -1852,11 +2107,12 @@
       return;
     }
     if (!force && key === cityBoundaryRequestedKey && mapRoot.dataset.cityBoundaryState === "loading") return;
-    const retainCityPresentation = presentedHierarchyKey === "china:city" && hasActiveCityBoundaries();
+    const retainOverview = Boolean(cityOverviewLayer) && mapRoot.dataset.cityResolution === "overview";
+    const retainCityPresentation = retainOverview || (presentedHierarchyKey === "china:city" && hasActiveCityBoundaries());
     const token = ++cityBoundaryLoadToken;
     cityBoundaryRequestedKey = key;
     mapRoot.dataset.cityBoundaryState = "loading";
-    setBoundaryLevelPresentation("city", retainCityPresentation);
+    setBoundaryLevelPresentation("city", retainCityPresentation, retainOverview ? "overview" : "detail");
     presentHierarchyLevel(retainCityPresentation ? "city" : "province");
     showMapPreparationNote(retainCityPresentation ? "正在更新当前视野的城市边界" : "正在准备城市边界，当前保持省份地图");
     if (retainCityPresentation) {
@@ -1864,12 +2120,12 @@
       mapRoot.setAttribute("aria-busy", "true");
     }
     const results = await Promise.all(codes.map(async code => ({ code, data: await loadCityBoundaryData(code) })));
-    if (token !== cityBoundaryLoadToken || cityBoundaryRequestedKey !== key || mapScope !== "china" || mapLevel() !== "city") return;
+    if (token !== cityBoundaryLoadToken || cityBoundaryRequestedKey !== key || mapScope !== "china" || mapLevel() !== "city" || cityResolutionAtZoom() !== "detail") return;
     const nextEntries = [];
     let frameStartedAt = performance.now();
     for (const { code, data } of results.filter(result => result.data)) {
       const entry = await ensureCityBoundaryEntry(code, data);
-      if (token !== cityBoundaryLoadToken || cityBoundaryRequestedKey !== key || mapScope !== "china" || mapLevel() !== "city") return;
+      if (token !== cityBoundaryLoadToken || cityBoundaryRequestedKey !== key || mapScope !== "china" || mapLevel() !== "city" || cityResolutionAtZoom() !== "detail") return;
       if (!entry.mounted && performance.now() - frameStartedAt > 8) {
         await waitForCityBuildSlot();
         frameStartedAt = performance.now();
@@ -1883,11 +2139,11 @@
     }
     if (!codes.length || nextEntries.length !== codes.length) {
       mapRoot.dataset.cityBoundaryState = "unavailable";
-      setBoundaryLevelPresentation("city", retainCityPresentation);
+      setBoundaryLevelPresentation("city", retainCityPresentation, retainOverview ? "overview" : "detail");
       presentHierarchyLevel(retainCityPresentation ? "city" : "province");
       return;
     }
-    if (token !== cityBoundaryLoadToken || cityBoundaryRequestedKey !== key || mapScope !== "china" || mapLevel() !== "city") return;
+    if (token !== cityBoundaryLoadToken || cityBoundaryRequestedKey !== key || mapScope !== "china" || mapLevel() !== "city" || cityResolutionAtZoom() !== "detail") return;
     nextEntries.forEach(activateCityBoundaryEntry);
     cityBoundaryLayers.forEach((entry, code) => {
       if (entry.active && !desiredCodes.has(code)) deactivateCityBoundaryEntry(entry);
@@ -1908,6 +2164,37 @@
         presentHierarchyLevel("province");
       }
       updateCityBoundaryLabelVisibility();
+    });
+  };
+
+  const syncCityOverview = async () => {
+    if (!travelMap || mapScope !== "china" || mapLevel() !== "city" || cityResolutionAtZoom() !== "overview") return;
+    const requestScope = mapScope;
+    mapRoot.dataset.cityBoundaryRequiredCount = "0";
+    mapRoot.dataset.cityBoundaryState = cityOverviewLayer ? "ready" : "loading";
+    setBoundaryLevelPresentation("city", Boolean(cityOverviewLayer), "overview");
+    if (!cityOverviewLayer) {
+      presentHierarchyLevel("province");
+      syncMapLevelSwitchUi("province", "city");
+      showMapPreparationNote("正在准备全国市界，当前保持省份地图");
+    }
+    const layer = cityOverviewLayer || await prepareCityOverview();
+    if (!layer || requestScope !== mapScope || mapLevel() !== "city" || cityResolutionAtZoom() !== "overview") return;
+    mapRoot.dataset.cityBoundaryState = "ready";
+    requestAnimationFrame(() => {
+      if (requestScope !== mapScope || mapLevel() !== "city" || cityResolutionAtZoom() !== "overview") return;
+      setBoundaryLevelPresentation("city", true, "overview");
+      presentHierarchyLevel("city");
+      renderCityBoundaryList();
+      updateCityOverviewLabelVisibility();
+      if (hasActiveCityBoundaries()) {
+        const deactivate = () => {
+          if (mapScope === "china" && mapLevel() === "city" && cityResolutionAtZoom() === "detail") return;
+          deactivateCityBoundaryLayers();
+        };
+        if (reduceMotion) deactivate();
+        else setTimeout(deactivate, 170);
+      }
     });
   };
 
@@ -1988,23 +2275,34 @@
         cityBoundaryDeactivateTimer = 0;
       }
       if (geoLayer && !travelMap.hasLayer(geoLayer)) geoLayer.addTo(travelMap);
-      const codes = visibleProvinceCodesForCoverage();
-      const ready = codes.length > 0 && codes.every(code => cityBoundaryLayers.get(code)?.active);
-      const retainCityPresentation = presentedHierarchyKey === "china:city" && hasActiveCityBoundaries();
-      mapRoot.dataset.cityBoundaryRequiredCount = String(codes.length);
-      setBoundaryLevelPresentation(level, ready || retainCityPresentation);
-      if (ready) {
-        presentHierarchyLevel("city");
-        renderCityBoundaryList();
-        requestAnimationFrame(updateCityBoundaryLabelVisibility);
-      } else if (retainCityPresentation) {
-        presentHierarchyLevel("city");
-        mapRoot.dataset.mapTransition = "preparing";
-        mapRoot.setAttribute("aria-busy", "true");
+      const resolution = cityResolutionAtZoom();
+      if (mapRoot.dataset.cityResolution !== "none" && mapRoot.dataset.cityResolution !== resolution) clearBoundarySelection();
+      if (resolution === "overview") {
+        cityBoundaryLoadToken += 1;
+        cityBoundaryRequestedKey = "";
+        syncCityOverview();
       } else {
-        presentHierarchyLevel("province");
+        const codes = visibleProvinceCodesForCoverage();
+        const ready = codes.length > 0 && codes.every(code => cityBoundaryLayers.get(code)?.active);
+        const retainOverview = Boolean(cityOverviewLayer) && mapRoot.dataset.cityResolution === "overview";
+        const retainCityPresentation = retainOverview || (presentedHierarchyKey === "china:city" && hasActiveCityBoundaries());
+        mapRoot.dataset.cityBoundaryRequiredCount = String(codes.length);
+        setBoundaryLevelPresentation(level, ready || retainCityPresentation, ready ? "detail" : retainOverview ? "overview" : "detail");
+        if (ready) {
+          presentHierarchyLevel("city");
+          renderCityBoundaryList();
+          requestAnimationFrame(updateCityBoundaryLabelVisibility);
+        } else if (retainCityPresentation) {
+          presentHierarchyLevel("city");
+          mapRoot.dataset.mapTransition = "preparing";
+          mapRoot.setAttribute("aria-busy", "true");
+          showMapPreparationNote("正在细化当前视野的城市边界");
+        } else {
+          presentHierarchyLevel("province");
+          syncMapLevelSwitchUi("province", "city");
+        }
+        syncCityBoundaryLayers(force);
       }
-      syncCityBoundaryLayers(force);
     } else {
       cityBoundaryLoadToken += 1;
       cityBoundaryRequestedKey = "";
@@ -2029,6 +2327,7 @@
         mapRoot.dataset.mapTargetLevel = level;
         mapRoot.dataset.mapTransition = "preparing";
         mapRoot.setAttribute("aria-busy", "true");
+        syncMapLevelSwitchUi(presentedLevel, level);
         showMapPreparationNote("正在准备省州边界，当前保持国家地图");
       }
     }
@@ -2039,8 +2338,10 @@
       : level;
     const visibleRegionLabels = [];
     regionLabelMarkers.forEach(marker => {
+      const show = marker.__regionLabel?.level === presentedLevel;
+      if (show && !travelMap.hasLayer(marker)) marker.addTo(travelMap);
+      else if (!show && travelMap.hasLayer(marker)) travelMap.removeLayer(marker);
       const element = marker.getElement();
-      const show = element?.classList.contains(presentedLevel);
       element?.classList.toggle("hierarchy-hidden", !show);
       if (show && element) visibleRegionLabels.push(marker);
     });
@@ -2138,27 +2439,23 @@
         iconSize: [96, 20],
         iconAnchor: [48, 10]
       })
-    }).addTo(travelMap);
+    });
+    const initialLevel = presentedHierarchyKey.startsWith(`${mapScope}:`)
+      ? presentedMapLevel()
+      : hierarchyLevels[mapScope].base;
     marker.__regionLabel = { name, level, visited: state?.status === "visited", extraClass };
+    if (level === initialLevel) marker.addTo(travelMap);
     regionLabelMarkers.push(marker);
     return marker;
   };
 
   const createWorldProvinceDetail = () => {
-    const chinaData = window.__CHINA_ADMIN__;
     const internationalData = window.__WORLD_ADMIN1__;
-    if (!chinaData || !internationalData || mapScope !== "world" || detailGeoLayer) return detailGeoLayer;
-    const chinaFeatures = chinaData.features.map(feature => ({
-      ...feature,
-      properties: {
-        ...feature.properties,
-        id: String(feature.properties?.adcode || ""),
-        countryCode: "CHN",
-        country: "中国",
-        name: provinceNames[feature.properties?.adcode] || feature.properties?.name || ""
-      }
-    }));
-    const detailData = { type: "FeatureCollection", features: [...chinaFeatures, ...internationalData.features] };
+    if (!internationalData || mapScope !== "world" || detailGeoLayer) return detailGeoLayer;
+    const detailData = {
+      ...internationalData,
+      features: internationalData.features.filter(feature => feature?.properties?.countryCode !== "CHN")
+    };
     detailGeoLayer = leaflet.geoJSON(detailData, {
       pane: "provinceDetail",
       style: feature => {
@@ -2191,10 +2488,10 @@
       if (!name) return;
       const state = worldProvinceVisit(layer.feature);
       removeBoundaryFromTabOrder(layer);
-      if (state.status === "visited") {
-        makeBoundaryAccessible(layer, name, "已有共同足迹", () => {
-          syncHierarchyBoundary(state.label);
-        });
+        if (state.status === "visited") {
+          makeBoundaryAccessible(layer, name, "已有共同足迹", () => {
+          syncHierarchyBoundary(state.hierarchyKey || state.label);
+          });
       }
       const centroid = layer.feature?.properties?.centroid;
       const center = Array.isArray(centroid) && centroid.every(Number.isFinite)
@@ -2489,13 +2786,13 @@
       zoomSnap: 0,
       zoomDelta: 0.5,
       wheelDebounceTime: 12,
-      wheelPxPerZoomLevel: 120,
+      wheelPxPerZoomLevel: wheelPxPerZoomLevel[mapScope],
       worldCopyJump: false,
       zoomAnimation: !reduceMotion,
       fadeAnimation: false,
       markerZoomAnimation: !reduceMotion
     });
-    const paneTransition = reduceMotion ? "none" : "opacity 260ms cubic-bezier(0.16, 1, 0.3, 1)";
+    const paneTransition = reduceMotion ? "none" : "opacity 150ms cubic-bezier(0.16, 1, 0.3, 1)";
     const primaryPane = travelMap.createPane("primaryBoundary");
     primaryPane.style.zIndex = "400";
     primaryPane.style.opacity = "1";
@@ -2515,16 +2812,31 @@
     cityBoundaryPane.style.opacity = "0";
     cityBoundaryPane.style.pointerEvents = "none";
     cityBoundaryPane.style.transition = paneTransition;
+    const cityOverviewPane = travelMap.createPane("cityOverview");
+    cityOverviewPane.style.zIndex = "418";
+    cityOverviewPane.style.opacity = "0";
+    cityOverviewPane.style.pointerEvents = "none";
+    cityOverviewPane.style.transition = paneTransition;
     const provinceOutlinePane = travelMap.createPane("provinceOutline");
     provinceOutlinePane.style.zIndex = "425";
     provinceOutlinePane.style.opacity = "0";
     provinceOutlinePane.style.pointerEvents = "none";
     provinceOutlinePane.style.transition = paneTransition;
+    const cityOverviewOutlinePane = travelMap.createPane("cityOverviewOutline");
+    cityOverviewOutlinePane.style.zIndex = "425";
+    cityOverviewOutlinePane.style.opacity = "0";
+    cityOverviewOutlinePane.style.pointerEvents = "none";
+    cityOverviewOutlinePane.style.transition = paneTransition;
     const cityLabelPane = travelMap.createPane("cityLabels");
     cityLabelPane.style.zIndex = "430";
     cityLabelPane.style.opacity = "0";
     cityLabelPane.style.pointerEvents = "none";
     cityLabelPane.style.transition = paneTransition;
+    const cityOverviewLabelPane = travelMap.createPane("cityOverviewLabels");
+    cityOverviewLabelPane.style.zIndex = "430";
+    cityOverviewLabelPane.style.opacity = "0";
+    cityOverviewLabelPane.style.pointerEvents = "none";
+    cityOverviewLabelPane.style.transition = paneTransition;
     travelMap.on("click", event => {
       if (boundaryLabelClickInProgress || event.originalEvent?.__mapBoundaryLabelHandled) return;
       closeBoundaryLabel();
@@ -2533,6 +2845,25 @@
     mapRoot.dataset.mapAssets = "ready";
     renderTravelMap();
     travelMap.on("move zoom", positionCityMarkers);
+    const cancelMapHierarchyPreview = () => {
+      if (mapHierarchyPreviewFrame) cancelAnimationFrame(mapHierarchyPreviewFrame);
+      mapHierarchyPreviewFrame = 0;
+      previewHierarchy = null;
+    };
+    const scheduleMapHierarchyPreview = () => {
+      if (mapHierarchyPreviewFrame) return;
+      const scopeAtSchedule = mapScope;
+      mapHierarchyPreviewFrame = requestAnimationFrame(() => {
+        mapHierarchyPreviewFrame = 0;
+        if (!travelMap || mapRoot.dataset.mapState !== "ready" || mapScope !== scopeAtSchedule) return;
+        const nextLevel = mapLevel();
+        if (`${mapScope}:${nextLevel}` === renderedHierarchyKey) return;
+        // Cross the semantic boundary while the camera is still moving. The
+        // final zoomend commit remains the source of truth, but the layer
+        // preparation and crossfade no longer wait behind the zoom animation.
+        renderMapHierarchy();
+      });
+    };
     const scheduleMapHierarchyCommit = () => {
       if (mapHierarchyFrame) return;
       mapHierarchyFrame = requestAnimationFrame(() => {
@@ -2558,9 +2889,10 @@
         mapHierarchyIdleTimer = 0;
         mapWheelInputIdle = true;
         commitWheelHierarchyIfReady();
-      }, 110);
+      }, 72);
     };
     travelMap.getContainer().addEventListener("wheel", () => {
+      cancelMapHierarchyPreview();
       mapWheelGestureActive = true;
       if (mapHierarchyFrame) cancelAnimationFrame(mapHierarchyFrame);
       mapHierarchyFrame = 0;
@@ -2572,6 +2904,15 @@
       if (mapScope === "china") scheduleCityBoundaryPrefetch();
       else scheduleWorldProvinceDetailPrefetch();
     });
+    travelMap.on("zoomanim", event => {
+      // An explicit level choice is sticky. Camera movement must never
+      // silently replace a user-selected province/city layer.
+      if (manualHierarchyLevel[mapScope]) return;
+      const level = hierarchyLevelAtZoom(mapScope, event.zoom);
+      if (`${mapScope}:${level}` === renderedHierarchyKey) return;
+      previewHierarchy = { scope: mapScope, level };
+      scheduleMapHierarchyPreview();
+    });
     travelMap.on("zoomstart", () => {
       mapZoomAnimationActive = true;
       mapRoot.dataset.mapInteraction = "zooming";
@@ -2582,6 +2923,7 @@
       if (mapScope === "china" && mapLevel() === "city") mapRoot.dataset.cityBoundaryState = "settling";
     });
     travelMap.on("zoomend", () => {
+      cancelMapHierarchyPreview();
       mapZoomAnimationActive = false;
       if (mapWheelGestureActive) commitWheelHierarchyIfReady();
       else scheduleMapHierarchyCommit();
@@ -2652,6 +2994,7 @@
   }));
   const applyTravelScope = nextScope => {
     pendingMapScope = "";
+    manualHierarchyLevel[nextScope] = "";
     if (nextScope === mapScope) {
       syncTravelScopeUi();
       return;
@@ -2662,12 +3005,49 @@
       scopeCameraState[mapScope] = { center: [center.lat, center.lng], zoom: travelMap.getZoom() };
     }
     mapScope = nextScope;
+    if (travelMap) travelMap.options.wheelPxPerZoomLevel = wheelPxPerZoomLevel[mapScope];
     syncTravelScopeUi();
     selectedPlace = resolvePlaceIndex(mapScope, lastSelectedPlace[mapScope]);
     renderTravelMap();
     syncTravelUrl();
     requestAnimationFrame(schedulePlaceScrollControls);
   };
+
+  const requestMapHierarchyLevel = level => {
+    if (!travelMap || mapRoot?.dataset.mapState === "error") return;
+    const config = hierarchyLevels[mapScope];
+    if (![config.base, config.detail].includes(level)) return;
+    const presentedLevel = presentedMapLevel();
+    if (level === presentedLevel && level === manualHierarchyLevel[mapScope]) return;
+    travelStateTouched = true;
+    stopTravelMapMotion();
+    if (mapHierarchyIdleTimer) clearTimeout(mapHierarchyIdleTimer);
+    mapHierarchyIdleTimer = 0;
+    if (mapHierarchyFrame) cancelAnimationFrame(mapHierarchyFrame);
+    mapHierarchyFrame = 0;
+    mapWheelGestureActive = false;
+    mapWheelInputIdle = false;
+    manualHierarchyLevel[mapScope] = level;
+    targetHierarchyLevel[mapScope] = level;
+    closeBoundaryLabel();
+    clearBoundarySelection();
+    syncMapLevelSwitchUi(presentedLevel, level);
+    mapRoot.dataset.mapTargetLevel = level;
+    mapRoot.dataset.mapLevelMode = "manual";
+    mapRoot.dataset.mapTransition = "preparing";
+    mapRoot.setAttribute("aria-busy", "true");
+    showMapPreparationNote(level === config.detail
+      ? `正在切换到${mapScope === "world" ? "省州" : "市级"}边界`
+      : `正在返回${mapScope === "world" ? "国家" : "省份"}总览`);
+
+    // Manual granularity is independent from camera scale. Keep the exact
+    // center and zoom, and only prepare/swap the semantic boundary layer.
+    renderMapHierarchy(true);
+  };
+
+  levelButtons.forEach(button => {
+    button.addEventListener("click", () => requestMapHierarchyLevel(button.dataset.mapLevelOption || ""));
+  });
 
   scopeButtons.forEach(button => button.addEventListener("click", () => {
     const nextScope = button.dataset.scope;
@@ -2704,6 +3084,8 @@
     if (mapScopeSwitchFrame) cancelAnimationFrame(mapScopeSwitchFrame);
     mapScopeSwitchFrame = 0;
     pendingMapScope = "";
+    manualHierarchyLevel[mapScope] = "";
+    mapRoot.dataset.mapLevelMode = "auto";
     scopeCameraState[mapScope] = null;
     targetHierarchyLevel[mapScope] = hierarchyLevels[mapScope].base;
     cityBoundaryLoadToken += 1;
