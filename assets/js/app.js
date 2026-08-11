@@ -506,13 +506,17 @@
       const unit = q(`[data-flip-unit="${key}"]`, flipClock);
       if (!unit) return;
       const value = q("[data-flip-value]", unit);
-      const oldValue = q("[data-flip-old]", unit);
+      const oldValues = qa("[data-flip-old]", unit);
+      const nextValueLeaf = q("[data-flip-next]", unit);
       const previousValue = flipClockValues.get(key);
       if (previousValue === undefined) {
         if (value) value.textContent = nextValue;
-        if (oldValue) oldValue.textContent = nextValue;
+        oldValues.forEach(element => { element.textContent = nextValue; });
+        if (nextValueLeaf) nextValueLeaf.textContent = nextValue;
       } else if (previousValue !== nextValue) {
-        if (oldValue) oldValue.textContent = previousValue;
+        oldValues.forEach(element => { element.textContent = previousValue; });
+        if (nextValueLeaf) nextValueLeaf.textContent = nextValue;
+        if (value) value.textContent = nextValue;
         const activeTimers = flipClockTimers.get(unit) || [];
         activeTimers.forEach(window.clearTimeout);
         flipClockTimers.delete(unit);
@@ -520,18 +524,16 @@
         if (!reducedClockMotion.matches) {
           void unit.offsetWidth;
           unit.classList.add("is-flipping");
-          const swapTimer = window.setTimeout(() => {
-            if (value) value.textContent = nextValue;
-          }, 176);
           const finishTimer = window.setTimeout(() => {
             unit.classList.remove("is-flipping");
-            if (oldValue) oldValue.textContent = nextValue;
+            oldValues.forEach(element => { element.textContent = nextValue; });
             flipClockTimers.delete(unit);
-          }, 220);
-          flipClockTimers.set(unit, [swapTimer, finishTimer]);
+          }, 440);
+          flipClockTimers.set(unit, [finishTimer]);
         } else {
           if (value) value.textContent = nextValue;
-          if (oldValue) oldValue.textContent = nextValue;
+          oldValues.forEach(element => { element.textContent = nextValue; });
+          if (nextValueLeaf) nextValueLeaf.textContent = nextValue;
         }
       }
       flipClockValues.set(key, nextValue);
