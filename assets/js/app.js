@@ -435,8 +435,116 @@
     const totalDays = Math.floor((end - start) / 86400000);
     return { future, text, totalDays };
   };
+  const preciseCalendarDuration = value => {
+    const [year, month, day] = value.split("-").map(Number);
+    const source = new Date(year, month - 1, day, 0, 0, 0, 0);
+    const current = new Date();
+    const future = source > current;
+    const start = future ? current : source;
+    const end = future ? source : current;
+    const addMonthsExact = (date, totalMonths) => {
+      const monthIndex = date.getMonth() + totalMonths;
+      const targetYear = date.getFullYear() + Math.floor(monthIndex / 12);
+      const targetMonth = ((monthIndex % 12) + 12) % 12;
+      const lastDay = new Date(targetYear, targetMonth + 1, 0).getDate();
+      return new Date(
+        targetYear,
+        targetMonth,
+        Math.min(date.getDate(), lastDay),
+        date.getHours(),
+        date.getMinutes(),
+        date.getSeconds(),
+        date.getMilliseconds()
+      );
+    };
+    let totalMonths = (end.getFullYear() - start.getFullYear()) * 12 + end.getMonth() - start.getMonth();
+    let cursor = addMonthsExact(start, totalMonths);
+    if (cursor > end) {
+      totalMonths -= 1;
+      cursor = addMonthsExact(start, totalMonths);
+    }
+    let days = 0;
+    while (days < 31) {
+      const nextDay = new Date(cursor);
+      nextDay.setDate(nextDay.getDate() + 1);
+      if (nextDay > end) break;
+      cursor = nextDay;
+      days += 1;
+    }
+    let remainder = Math.max(0, end - cursor);
+    const hours = Math.floor(remainder / 3600000);
+    remainder -= hours * 3600000;
+    const minutes = Math.floor(remainder / 60000);
+    remainder -= minutes * 60000;
+    const seconds = Math.floor(remainder / 1000);
+    return {
+      future,
+      years: Math.floor(totalMonths / 12),
+      months: totalMonths % 12,
+      days,
+      hours,
+      minutes,
+      seconds
+    };
+  };
+  const flipClock = q("[data-flip-clock]");
+  const flipClockValues = new Map();
+  const flipClockTimers = new WeakMap();
+  const reducedClockMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const renderFlipClock = () => {
+    if (!flipClock) return;
+    const duration = preciseCalendarDuration(flipClock.dataset.durationFrom);
+    const values = {
+      years: String(duration.years),
+      months: String(duration.months),
+      days: String(duration.days),
+      hours: String(duration.hours).padStart(2, "0"),
+      minutes: String(duration.minutes).padStart(2, "0"),
+      seconds: String(duration.seconds).padStart(2, "0")
+    };
+    Object.entries(values).forEach(([key, nextValue]) => {
+      const unit = q(`[data-flip-unit="${key}"]`, flipClock);
+      if (!unit) return;
+      const value = q("[data-flip-value]", unit);
+      const oldValue = q("[data-flip-old]", unit);
+      const previousValue = flipClockValues.get(key);
+      if (previousValue === undefined) {
+        if (value) value.textContent = nextValue;
+        if (oldValue) oldValue.textContent = nextValue;
+      } else if (previousValue !== nextValue) {
+        if (oldValue) oldValue.textContent = previousValue;
+        const activeTimers = flipClockTimers.get(unit) || [];
+        activeTimers.forEach(window.clearTimeout);
+        flipClockTimers.delete(unit);
+        unit.classList.remove("is-flipping");
+        if (!reducedClockMotion.matches) {
+          void unit.offsetWidth;
+          unit.classList.add("is-flipping");
+          const swapTimer = window.setTimeout(() => {
+            if (value) value.textContent = nextValue;
+          }, 176);
+          const finishTimer = window.setTimeout(() => {
+            unit.classList.remove("is-flipping");
+            if (oldValue) oldValue.textContent = nextValue;
+            flipClockTimers.delete(unit);
+          }, 220);
+          flipClockTimers.set(unit, [swapTimer, finishTimer]);
+        } else {
+          if (value) value.textContent = nextValue;
+          if (oldValue) oldValue.textContent = nextValue;
+        }
+      }
+      flipClockValues.set(key, nextValue);
+    });
+    const spokenDuration = `${values.years}年 ${values.months}月 ${values.days}天 ${values.hours}时 ${values.minutes}分 ${values.seconds}秒`;
+    flipClock.setAttribute("aria-label", `${duration.future ? "距离相伴" : "相伴至今"} ${spokenDuration}`);
+    q("[data-flip-time]", flipClock)?.setAttribute(
+      "datetime",
+      `P${values.years}Y${values.months}M${values.days}DT${values.hours}H${values.minutes}M${values.seconds}S`
+    );
+  };
   const updateDurations = () => {
-    qa("[data-duration-from]:not([data-duration-total]):not([data-duration-days]):not([data-live-days])").forEach(element => {
+    qa("[data-duration-from]:not([data-duration-total]):not([data-duration-days]):not([data-live-days]):not([data-flip-clock])").forEach(element => {
       const duration = calendarDuration(element.dataset.durationFrom);
       element.textContent = element.hasAttribute("data-duration-plain")
         ? duration.text
@@ -450,9 +558,6 @@
       const duration = calendarDuration(element.dataset.durationFrom);
       element.textContent = duration.totalDays.toLocaleString("zh-CN");
     });
-    const total = q("[data-duration-total]");
-    if (total) total.textContent = calendarDuration(total.dataset.durationFrom).text;
-
     const milestoneDates = qa("[data-milestone-item][data-milestone-date]").map(element => {
       const source = parseCalendarDate(element.dataset.milestoneDate);
       const today = new Date();
@@ -485,6 +590,16 @@
   };
   updateDurations();
   setInterval(updateDurations, 3600000);
+  let flipClockTimer = 0;
+  const scheduleFlipClock = () => {
+    window.clearTimeout(flipClockTimer);
+    renderFlipClock();
+    flipClockTimer = window.setTimeout(scheduleFlipClock, 1020 - (Date.now() % 1000));
+  };
+  scheduleFlipClock();
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) scheduleFlipClock();
+  });
 
   const archive = q("[data-archive]");
   const archiveEvents = archive ? JSON.parse(archive.dataset.events || "[]") : [];
